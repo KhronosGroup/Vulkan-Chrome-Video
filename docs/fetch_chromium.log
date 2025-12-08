@@ -1,0 +1,40 @@
+WARNING: Your metrics.cfg file was invalid or nonexistent. A new one will be created.
+[0:01:00] Still working on:
+[0:01:00]   src
+[0:01:10] Still working on:
+[0:01:10]   src
+[0:01:20] Still working on:
+[0:01:20]   src
+[0:01:30] Still working on:
+[0:01:30]   src
+[0:01:40] Still working on:
+[0:01:40]   src
+[0:01:50] Still working on:
+[0:01:50]   src
+[0:02:00] Still working on:
+[0:02:00]   src
+[0:02:10] Still working on:
+[0:02:10]   src
+[0:02:14] Still working on:
+[0:02:14]   src
+
+
+Warnings:
+git update is recommended.
+Installed git version is 2.43.0;
+depot_tools recommends version 2.46.0 or later.
+Disable this warning by setting the GCLIENT_SUPPRESS_GIT_VERSION_WARNING
+environment variable to 1.
+Running: gclient root
+Running: gclient config --spec 'solutions = [
+  {
+    "name": "src",
+    "url": "https://chromium.googlesource.com/chromium/src.git",
+    "managed": False,
+    "custom_deps": {},
+    "custom_vars": {},
+  },
+]
+'
+Running: gclient sync --nohooks --no-history
+Running: git config diff.ignoreSubmodules dirty

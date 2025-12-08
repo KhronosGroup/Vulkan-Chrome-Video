@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900">
+  <defs>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90D9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2C5A8C;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#5CB85C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3D8B3D;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F0AD4E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#C87F0A;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#9B59B6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6C3483;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="redGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#E74C3C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A93226;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="3" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#555"/>
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="900" fill="#F8F9FA"/>
+  
+  <!-- Title -->
+  <text x="600" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#2C3E50">
+    Chromium Hardware Video Decode Architecture
+  </text>
+  <text x="600" y="65" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#7F8C8D">
+    VA-API Integration Points for Vulkan Video
+  </text>
+  
+  <!-- Legend -->
+  <g transform="translate(950, 80)">
+    <rect x="0" y="0" width="220" height="130" fill="white" stroke="#DDD" rx="5" filter="url(#shadow)"/>
+    <text x="110" y="20" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold">Legend</text>
+    <rect x="10" y="35" width="20" height="15" fill="url(#blueGrad)" rx="2"/>
+    <text x="40" y="47" font-family="Arial, sans-serif" font-size="11">Pipeline / Framework</text>
+    <rect x="10" y="55" width="20" height="15" fill="url(#greenGrad)" rx="2"/>
+    <text x="40" y="67" font-family="Arial, sans-serif" font-size="11">Codec Parser (reusable)</text>
+    <rect x="10" y="75" width="20" height="15" fill="url(#orangeGrad)" rx="2"/>
+    <text x="40" y="87" font-family="Arial, sans-serif" font-size="11">VA-API Backend</text>
+    <rect x="10" y="95" width="20" height="15" fill="url(#purpleGrad)" rx="2"/>
+    <text x="40" y="107" font-family="Arial, sans-serif" font-size="11" fill="#9B59B6" font-weight="bold">NEW: Vulkan Video</text>
+    <rect x="10" y="115" width="20" height="15" fill="#888" rx="2"/>
+    <text x="40" y="127" font-family="Arial, sans-serif" font-size="11">Hardware / Driver</text>
+  </g>
+
+  <!-- VideoDecoderPipeline -->
+  <g transform="translate(100, 100)">
+    <rect x="0" y="0" width="800" height="70" fill="url(#blueGrad)" rx="8" filter="url(#shadow)"/>
+    <text x="400" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">VideoDecoderPipeline</text>
+    <text x="400" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#E8F0FE">media/gpu/chromeos/video_decoder_pipeline.h</text>
+  </g>
+  
+  <!-- Arrow from Pipeline to Mixin -->
+  <line x1="500" y1="170" x2="500" y2="195" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- VideoDecoderMixin -->
+  <g transform="translate(200, 200)">
+    <rect x="0" y="0" width="600" height="60" fill="url(#blueGrad)" rx="8" filter="url(#shadow)"/>
+    <text x="300" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">VideoDecoderMixin (Abstract Base)</text>
+    <text x="300" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E8F0FE">Initialize() | Decode() | Reset() | ApplyResolutionChange()</text>
+  </g>
+  
+  <!-- Arrows from Mixin to Decoders -->
+  <line x1="350" y1="260" x2="200" y2="295" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="500" y1="260" x2="500" y2="295" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="650" y1="260" x2="800" y2="295" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- VaapiVideoDecoder -->
+  <g transform="translate(50, 300)">
+    <rect x="0" y="0" width="280" height="70" fill="url(#orangeGrad)" rx="8" filter="url(#shadow)"/>
+    <text x="140" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">VaapiVideoDecoder</text>
+    <text x="140" y="48" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">media/gpu/vaapi/vaapi_video_decoder.h</text>
+    <text x="140" y="62" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#FFF5E6">Implements VaapiDecodeSurfaceHandler</text>
+  </g>
+  
+  <!-- V4L2VideoDecoder -->
+  <g transform="translate(360, 300)">
+    <rect x="0" y="0" width="280" height="70" fill="#888" rx="8" filter="url(#shadow)"/>
+    <text x="140" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">V4L2VideoDecoder</text>
+    <text x="140" y="48" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">media/gpu/v4l2/</text>
+    <text x="140" y="62" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#DDD">Linux V4L2 stateless API</text>
+  </g>
+  
+  <!-- VulkanVideoDecoder (NEW) -->
+  <g transform="translate(670, 300)">
+    <rect x="0" y="0" width="280" height="70" fill="url(#purpleGrad)" rx="8" filter="url(#shadow)" stroke="#E74C3C" stroke-width="3" stroke-dasharray="5,5"/>
+    <text x="140" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">VulkanVideoDecoder</text>
+    <text x="140" y="48" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">media/gpu/vulkan/ [NEW]</text>
+    <text x="140" y="62" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#E8D4F0">TO BE IMPLEMENTED</text>
+  </g>
+  
+  <!-- Arrows to AcceleratedVideoDecoder -->
+  <line x1="190" y1="370" x2="190" y2="415" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="810" y1="370" x2="810" y2="415" stroke="#9B59B6" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  
+  <!-- AcceleratedVideoDecoder (Parser) - Shared! -->
+  <g transform="translate(100, 420)">
+    <rect x="0" y="0" width="800" height="55" fill="url(#greenGrad)" rx="8" filter="url(#shadow)"/>
+    <text x="400" y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">AcceleratedVideoDecoder (Codec Parsers - REUSABLE!)</text>
+    <text x="400" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E8F8E8">H264Decoder | H265Decoder | VP8Decoder | VP9Decoder | AV1Decoder</text>
+  </g>
+  
+  <!-- Codec Parser boxes -->
+  <g transform="translate(100, 490)">
+    <rect x="0" y="0" width="150" height="40" fill="#4CAF50" rx="5"/>
+    <text x="75" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">H264Decoder</text>
+  </g>
+  <g transform="translate(165, 490)">
+    <rect x="0" y="0" width="150" height="40" fill="#4CAF50" rx="5"/>
+    <text x="75" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">H265Decoder</text>
+  </g>
+  <g transform="translate(330, 490)">
+    <rect x="0" y="0" width="130" height="40" fill="#4CAF50" rx="5"/>
+    <text x="65" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">VP8Decoder</text>
+  </g>
+  <g transform="translate(475, 490)">
+    <rect x="0" y="0" width="130" height="40" fill="#4CAF50" rx="5"/>
+    <text x="65" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">VP9Decoder</text>
+  </g>
+  <g transform="translate(620, 490)">
+    <rect x="0" y="0" width="130" height="40" fill="#4CAF50" rx="5"/>
+    <text x="65" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">AV1Decoder</text>
+  </g>
+  
+  <!-- Arrows to Delegates -->
+  <line x1="175" y1="530" x2="175" y2="555" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="500" y1="530" x2="500" y2="555" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="825" y1="530" x2="825" y2="555" stroke="#9B59B6" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  
+  <!-- Accelerator Delegates -->
+  <g transform="translate(50, 560)">
+    <rect x="0" y="0" width="250" height="65" fill="url(#orangeGrad)" rx="8" filter="url(#shadow)"/>
+    <text x="125" y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">VA-API Delegates</text>
+    <text x="125" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="white">H264VaapiVideoDecoderDelegate</text>
+    <text x="125" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="white">SubmitFrameMetadata | SubmitSlice | SubmitDecode</text>
+  </g>
+  
+  <g transform="translate(375, 560)">
+    <rect x="0" y="0" width="250" height="65" fill="#888" rx="8" filter="url(#shadow)"/>
+    <text x="125" y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">V4L2 Delegates</text>
+    <text x="125" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="white">V4L2VideoDecoderDelegate</text>
+    <text x="125" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#DDD">Stateless V4L2 requests</text>
+  </g>
+  
+  <g transform="translate(700, 560)">
+    <rect x="0" y="0" width="250" height="65" fill="url(#purpleGrad)" rx="8" filter="url(#shadow)" stroke="#E74C3C" stroke-width="3" stroke-dasharray="5,5"/>
+    <text x="125" y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">Vulkan Video Delegates [NEW]</text>
+    <text x="125" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="white">H264VulkanVideoDecoderDelegate</text>
+    <text x="125" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#E8D4F0">vkCmdDecodeVideoKHR</text>
+  </g>
+  
+  <!-- Arrows to Wrappers -->
+  <line x1="175" y1="625" x2="175" y2="655" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="825" y1="625" x2="825" y2="655" stroke="#9B59B6" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  
+  <!-- API Wrappers -->
+  <g transform="translate(50, 660)">
+    <rect x="0" y="0" width="250" height="60" fill="url(#orangeGrad)" rx="8" filter="url(#shadow)"/>
+    <text x="125" y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="white">VaapiWrapper</text>
+    <text x="125" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="white">vaapi_wrapper.h</text>
+    <text x="125" y="52" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#FFF5E6">VADisplay | VASurface | VAContext</text>
+  </g>
+  
+  <g transform="translate(700, 660)">
+    <rect x="0" y="0" width="250" height="60" fill="url(#purpleGrad)" rx="8" filter="url(#shadow)" stroke="#E74C3C" stroke-width="3" stroke-dasharray="5,5"/>
+    <text x="125" y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="white">VulkanWrapper [NEW]</text>
+    <text x="125" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="white">vulkan_wrapper.h</text>
+    <text x="125" y="52" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#E8D4F0">VkVideoSessionKHR | VkImage</text>
+  </g>
+  
+  <!-- Arrows to libva/Vulkan -->
+  <line x1="175" y1="720" x2="175" y2="755" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="825" y1="720" x2="825" y2="755" stroke="#9B59B6" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  
+  <!-- Driver Layer -->
+  <g transform="translate(50, 760)">
+    <rect x="0" y="0" width="250" height="50" fill="#555" rx="8" filter="url(#shadow)"/>
+    <text x="125" y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">libva</text>
+    <text x="125" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#DDD">i965 | iHD | AMD drivers</text>
+  </g>
+  
+  <g transform="translate(700, 760)">
+    <rect x="0" y="0" width="250" height="50" fill="#555" rx="8" filter="url(#shadow)"/>
+    <text x="125" y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">Vulkan + Video Extensions</text>
+    <text x="125" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#DDD">NVIDIA | AMD | Intel drivers</text>
+  </g>
+  
+  <!-- Hardware -->
+  <g transform="translate(300, 830)">
+    <rect x="0" y="0" width="400" height="45" fill="#2C3E50" rx="8" filter="url(#shadow)"/>
+    <text x="200" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">GPU Hardware Video Decode Engine</text>
+  </g>
+  
+  <!-- Arrows to hardware -->
+  <line x1="175" y1="810" x2="400" y2="830" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="825" y1="810" x2="600" y2="830" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Key insight box -->
+  <g transform="translate(765, 480)">
+    <rect x="0" y="0" width="210" height="70" fill="#FFF3CD" stroke="#FFE69C" stroke-width="2" rx="5"/>
+    <text x="105" y="18" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#856404">💡 Key Insight</text>
+    <text x="105" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#856404">Codec parsers are SHARED!</text>
+    <text x="105" y="48" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#856404">Only implement delegates +</text>
+    <text x="105" y="61" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#856404">wrapper for Vulkan Video</text>
+  </g>
+  
+</svg>
+

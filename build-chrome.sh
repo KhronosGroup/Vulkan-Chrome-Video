@@ -1,0 +1,1 @@
+cd $CHROME_SRC_AND_TOOLS_DIR/chromium/src && export PATH="$CHROME_SRC_AND_TOOLS_DIR/depot_tools:$PATH" && echo "Starting Chrome build at $(date)" && autoninja -C out/Default chrome 2>&1 | tee /data/LinuxExtra/chrome/build.log

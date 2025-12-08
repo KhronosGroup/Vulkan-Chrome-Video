@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 380">
+  <defs>
+    <linearGradient id="primaryPlaneGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#60A5FA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="overlayPlaneGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#34D399;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cursorPlaneGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A78BFA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="700" height="380" fill="#ffffff"/>
+  
+  <!-- Title -->
+  <text x="350" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1e293b">DRM/KMS Integration (Linux/ChromeOS)</text>
+  
+  <!-- DRM Display Controller outer box -->
+  <rect x="40" y="50" width="620" height="310" rx="12" fill="#f8fafc" stroke="#64748b" stroke-width="2"/>
+  <text x="60" y="75" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1e293b">DRM Display Controller</text>
+  
+  <!-- Primary Plane -->
+  <rect x="60" y="95" width="580" height="55" rx="8" fill="url(#primaryPlaneGrad)"/>
+  <text x="90" y="120" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Primary Plane (CRTC)</text>
+  <text x="90" y="138" font-family="Arial, sans-serif" font-size="10" fill="#dbeafe">Browser UI + composited content</text>
+  <rect x="520" y="105" width="100" height="35" rx="4" fill="#1e40af"/>
+  <text x="570" y="127" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">Composited</text>
+  
+  <!-- Overlay Plane 1 -->
+  <rect x="60" y="160" width="580" height="55" rx="8" fill="url(#overlayPlaneGrad)"/>
+  <text x="90" y="185" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Overlay Plane 1</text>
+  <text x="90" y="203" font-family="Arial, sans-serif" font-size="10" fill="#d1fae5">Video frame (direct scanout, zero-copy)</text>
+  <rect x="520" y="170" width="100" height="35" rx="4" fill="#047857"/>
+  <text x="570" y="192" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">Zero-Copy</text>
+  
+  <!-- Overlay Plane 2 -->
+  <rect x="60" y="225" width="580" height="55" rx="8" fill="url(#overlayPlaneGrad)" opacity="0.7"/>
+  <text x="90" y="250" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Overlay Plane 2</text>
+  <text x="90" y="268" font-family="Arial, sans-serif" font-size="10" fill="#d1fae5">Additional content (picture-in-picture, etc.)</text>
+  <rect x="520" y="235" width="100" height="35" rx="4" fill="#059669"/>
+  <text x="570" y="257" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">Optional</text>
+  
+  <!-- Cursor Plane -->
+  <rect x="60" y="290" width="580" height="55" rx="8" fill="url(#cursorPlaneGrad)"/>
+  <text x="90" y="315" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Cursor Plane</text>
+  <text x="90" y="333" font-family="Arial, sans-serif" font-size="10" fill="#ede9fe">Hardware cursor</text>
+  <rect x="520" y="300" width="100" height="35" rx="4" fill="#5b21b6"/>
+  <text x="570" y="322" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">HW Cursor</text>
+  
+  <!-- Layer ordering indicator -->
+  <text x="670" y="125" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#94a3b8">↑</text>
+  <text x="670" y="200" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">Z-order</text>
+  <text x="670" y="315" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#94a3b8">↓</text>
+  
+  <!-- Legend -->
+  <text x="350" y="375" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Overlay planes enable zero-copy video display, bypassing GPU composition</text>
+</svg>
+

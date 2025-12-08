@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 520" font-family="Segoe UI, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="pipelineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#198754;stop-opacity:0.1"/>
+      <stop offset="100%" style="stop-color:#198754;stop-opacity:0.05"/>
+    </linearGradient>
+    <linearGradient id="wrapperGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d6efd;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#0d6efd;stop-opacity:0.08"/>
+    </linearGradient>
+    <filter id="shadow2" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrow2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#495057"/>
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="850" height="520" fill="#ffffff"/>
+  
+  <!-- Title -->
+  <text x="425" y="30" text-anchor="middle" font-size="18" font-weight="600" fill="#212529">Chrome Parser Integration Architecture</text>
+  
+  <!-- Main container -->
+  <rect x="30" y="50" width="790" height="450" rx="12" fill="url(#pipelineGradient)" stroke="#198754" stroke-width="2" filter="url(#shadow2)"/>
+  <text x="425" y="75" text-anchor="middle" font-size="14" font-weight="600" fill="#198754">Chrome Media Pipeline</text>
+  
+  <!-- VideoDecoderPipeline -->
+  <rect x="200" y="90" width="450" height="45" rx="8" fill="#ffffff" stroke="#dee2e6" stroke-width="1.5"/>
+  <text x="425" y="118" text-anchor="middle" font-size="13" font-weight="600" fill="#212529">VideoDecoderPipeline</text>
+  
+  <!-- Arrow from pipeline to parsers -->
+  <path d="M425 135 L425 155" stroke="#495057" stroke-width="2" marker-end="url(#arrow2)"/>
+  
+  <!-- Branch lines to parsers -->
+  <path d="M425 165 L150 165 M425 165 L700 165" stroke="#495057" stroke-width="1.5"/>
+  <path d="M150 165 L150 175 M287 165 L287 175 M425 165 L425 175 M563 165 L563 175 M700 165 L700 175" stroke="#495057" stroke-width="1.5"/>
+  
+  <!-- Parsers row -->
+  <g transform="translate(50, 185)">
+    <rect width="140" height="60" rx="8" fill="#ffffff" stroke="#0d6efd" stroke-width="2"/>
+    <text x="70" y="28" text-anchor="middle" font-size="12" font-weight="600" fill="#212529">H264Decoder</text>
+    <text x="70" y="45" text-anchor="middle" font-size="10" fill="#6c757d">(Parser)</text>
+  </g>
+  
+  <g transform="translate(220, 185)">
+    <rect width="140" height="60" rx="8" fill="#ffffff" stroke="#198754" stroke-width="2"/>
+    <text x="70" y="28" text-anchor="middle" font-size="12" font-weight="600" fill="#212529">H265Decoder</text>
+    <text x="70" y="45" text-anchor="middle" font-size="10" fill="#6c757d">(Parser)</text>
+  </g>
+  
+  <g transform="translate(390, 185)">
+    <rect width="140" height="60" rx="8" fill="#ffffff" stroke="#fd7e14" stroke-width="2"/>
+    <text x="70" y="28" text-anchor="middle" font-size="12" font-weight="600" fill="#212529">AV1Decoder</text>
+    <text x="70" y="45" text-anchor="middle" font-size="10" fill="#6c757d">(Parser)</text>
+  </g>
+  
+  <g transform="translate(560, 185)">
+    <rect width="140" height="60" rx="8" fill="#ffffff" stroke="#6f42c1" stroke-width="2"/>
+    <text x="70" y="28" text-anchor="middle" font-size="12" font-weight="600" fill="#212529">VP9Decoder</text>
+    <text x="70" y="45" text-anchor="middle" font-size="10" fill="#6c757d">(Parser)</text>
+  </g>
+  
+  <!-- Arrows from parsers to accelerators -->
+  <path d="M120 255 L120 275 M290 255 L290 275 M460 255 L460 275 M630 255 L630 275" stroke="#495057" stroke-width="1.5" marker-end="url(#arrow2)"/>
+  
+  <!-- Accelerators row -->
+  <g transform="translate(50, 285)">
+    <rect width="140" height="55" rx="8" fill="#e7f1ff" stroke="#0d6efd" stroke-width="1.5"/>
+    <text x="70" y="25" text-anchor="middle" font-size="9" font-weight="600" fill="#0d6efd">H264VulkanDelegate</text>
+    <text x="70" y="42" text-anchor="middle" font-size="8" fill="#6c757d">H264Accelerator impl</text>
+  </g>
+  
+  <g transform="translate(220, 285)">
+    <rect width="140" height="55" rx="8" fill="#d1e7dd" stroke="#198754" stroke-width="1.5"/>
+    <text x="70" y="25" text-anchor="middle" font-size="9" font-weight="600" fill="#198754">H265VulkanDelegate</text>
+    <text x="70" y="42" text-anchor="middle" font-size="8" fill="#6c757d">H265Accelerator impl</text>
+  </g>
+  
+  <g transform="translate(390, 285)">
+    <rect width="140" height="55" rx="8" fill="#fff3cd" stroke="#fd7e14" stroke-width="1.5"/>
+    <text x="70" y="25" text-anchor="middle" font-size="9" font-weight="600" fill="#e65100">AV1VulkanDelegate</text>
+    <text x="70" y="42" text-anchor="middle" font-size="8" fill="#6c757d">AV1Accelerator impl</text>
+  </g>
+  
+  <g transform="translate(560, 285)">
+    <rect width="140" height="55" rx="8" fill="#e2d9f3" stroke="#6f42c1" stroke-width="1.5"/>
+    <text x="70" y="25" text-anchor="middle" font-size="9" font-weight="600" fill="#6f42c1">VP9VulkanDelegate</text>
+    <text x="70" y="42" text-anchor="middle" font-size="8" fill="#6c757d">VP9Accelerator impl</text>
+  </g>
+  
+  <!-- Converging lines to wrapper -->
+  <path d="M120 350 L120 370 L425 380 M290 350 L290 370 L425 380 M460 350 L460 370 L425 380 M630 350 L630 370 L425 380" stroke="#495057" stroke-width="1.5"/>
+  <path d="M425 380 L425 395" stroke="#495057" stroke-width="2" marker-end="url(#arrow2)"/>
+  
+  <!-- VulkanVideoWrapper -->
+  <rect x="125" y="405" width="600" height="70" rx="10" fill="url(#wrapperGradient)" stroke="#0d6efd" stroke-width="2" filter="url(#shadow2)"/>
+  <text x="425" y="435" text-anchor="middle" font-size="14" font-weight="600" fill="#0d6efd">VulkanVideoWrapper</text>
+  <text x="425" y="455" text-anchor="middle" font-size="11" fill="#6c757d">(Phase 1 Library Integration)</text>
+  
+  <!-- Legend -->
+  <g transform="translate(680, 90)">
+    <text x="0" y="0" font-size="10" font-weight="600" fill="#495057">Legend:</text>
+    <rect x="0" y="10" width="12" height="12" fill="#e7f1ff" stroke="#0d6efd"/>
+    <text x="18" y="20" font-size="9" fill="#495057">H.264</text>
+    <rect x="0" y="28" width="12" height="12" fill="#d1e7dd" stroke="#198754"/>
+    <text x="18" y="38" font-size="9" fill="#495057">H.265</text>
+    <rect x="0" y="46" width="12" height="12" fill="#fff3cd" stroke="#fd7e14"/>
+    <text x="18" y="56" font-size="9" fill="#495057">AV1</text>
+    <rect x="0" y="64" width="12" height="12" fill="#e2d9f3" stroke="#6f42c1"/>
+    <text x="18" y="74" font-size="9" fill="#495057">VP9</text>
+  </g>
+</svg>
+

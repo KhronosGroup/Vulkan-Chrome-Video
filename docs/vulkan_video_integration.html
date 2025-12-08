@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulkan Video Integration into Chromium - Complete Design Document</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --accent-blue: #2563eb;
+            --accent-purple: #7c3aed;
+            --accent-green: #16a34a;
+            --accent-orange: #d97706;
+            --accent-red: #dc2626;
+            --accent-pink: #db2777;
+            --border-color: #e2e8f0;
+            --code-bg: #f1f5f9;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 2rem 0;
+            border-bottom: 2px solid var(--accent-purple);
+        }
+        
+        header h1 {
+            font-size: 2rem;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        
+        header .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        
+        header .meta {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        header .meta span {
+            margin-right: 2rem;
+        }
+        
+        /* Navigation */
+        nav {
+            background: #ffffff;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 99;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        nav a:hover {
+            background: #e2e8f0;
+            color: var(--accent-blue);
+        }
+        
+        /* Main Content */
+        main {
+            padding: 3rem 0;
+        }
+        
+        section {
+            margin-bottom: 4rem;
+            scroll-margin-top: 4rem;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            color: var(--accent-blue);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            color: var(--accent-purple);
+            margin: 2rem 0 1rem;
+        }
+        
+        h4 {
+            font-size: 1.2rem;
+            color: var(--accent-green);
+            margin: 1.5rem 0 0.75rem;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Cards */
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        
+        .card.highlight {
+            border-color: var(--accent-purple);
+            border-left: 4px solid var(--accent-purple);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), #ffffff);
+        }
+        
+        .card.success {
+            border-color: var(--accent-green);
+            border-left: 4px solid var(--accent-green);
+            background: linear-gradient(135deg, rgba(22, 163, 74, 0.05), #ffffff);
+        }
+        
+        .card.warning {
+            border-color: var(--accent-orange);
+            border-left: 4px solid var(--accent-orange);
+            background: linear-gradient(135deg, rgba(217, 119, 6, 0.05), #ffffff);
+        }
+        
+        /* Code Blocks */
+        pre {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        
+        code {
+            font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+            color: var(--accent-purple);
+            background: #f1f5f9;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+        
+        pre code {
+            color: #e2e8f0;
+            background: transparent;
+            padding: 0;
+        }
+        
+        .code-comment {
+            color: #64748b;
+        }
+        
+        .code-keyword {
+            color: #c084fc;
+        }
+        
+        .code-function {
+            color: #60a5fa;
+        }
+        
+        .code-string {
+            color: #4ade80;
+        }
+        
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            background: #f1f5f9;
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: rgba(37, 99, 235, 0.03);
+        }
+        
+        /* Diagrams */
+        .diagram-container {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 2rem 0;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        
+        .diagram-container h4 {
+            margin-top: 0;
+            text-align: center;
+        }
+        
+        .diagram-container object,
+        .diagram-container img {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .diagram-container a {
+            display: block;
+            text-align: center;
+            margin-top: 0.5rem;
+            color: var(--accent-blue);
+            font-size: 0.9rem;
+        }
+        
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        }
+        
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+        
+        /* Lists */
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+            color: var(--text-secondary);
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Links */
+        a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Tags/Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+        
+        .badge-new {
+            background: var(--accent-purple);
+            color: white;
+        }
+        
+        .badge-p0 {
+            background: var(--accent-red);
+            color: white;
+        }
+        
+        .badge-p1 {
+            background: var(--accent-orange);
+            color: white;
+        }
+        
+        .badge-p2 {
+            background: var(--accent-green);
+            color: white;
+        }
+        
+        /* ASCII Art Diagrams */
+        .ascii-diagram {
+            font-family: monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            white-space: pre;
+            overflow-x: auto;
+            color: var(--text-muted);
+        }
+        
+        /* Key Insight Box */
+        .key-insight {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(37, 99, 235, 0.05));
+            border-left: 4px solid var(--accent-purple);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 12px 12px 0;
+        }
+        
+        .key-insight h4 {
+            color: var(--accent-purple);
+            margin-top: 0;
+        }
+        
+        /* Footer */
+        footer {
+            background: #f8fafc;
+            padding: 2rem 0;
+            border-top: 1px solid var(--border-color);
+            margin-top: 4rem;
+        }
+        
+        footer .links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+        
+        footer h4 {
+            color: var(--accent-blue);
+            margin-bottom: 1rem;
+        }
+        
+        footer ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        footer li {
+            margin-bottom: 0.5rem;
+        }
+        
+        footer a {
+            color: var(--text-secondary);
+        }
+        
+        footer a:hover {
+            color: var(--accent-blue);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            header h1 {
+                font-size: 1.5rem;
+            }
+            
+            nav ul {
+                flex-direction: column;
+            }
+            
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Print styles */
+        @media print {
+            /* Prevent page breaks inside elements */
+            *, *::before, *::after {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            /* Force color printing */
+            body {
+                background: white !important;
+                color: black !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
+            /* Hide navigation elements */
+            header, nav, footer {
+                display: none !important;
+            }
+            
+            /* Keep cards together */
+            .card, .diagram-container, pre, table {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                border: 1px solid #ccc;
+            }
+
+            /* Prevent breaks after headings */
+            h1, h2, h3, h4, h5, h6 {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+            }
+
+            /* Keep sections together */
+            section {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            /* SVG diagrams - ensure they print */
+            .diagram-container object,
+            .diagram-container img {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+
+            /* Page setup - no margins for continuous look */
+            @page {
+                size: A3 landscape;
+                margin: 10mm;
+            }
+
+            /* First page no margin */
+            @page :first {
+                margin-top: 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🎬 Vulkan Video Integration into Chromium</h1>
+            <p class="subtitle">Complete Design Document for Hardware Video Acceleration</p>
+            <div class="meta">
+                <span>📅 Version 1.0 - December 4, 2025</span>
+                <span>📊 Status: Draft</span>
+                <span>🏗️ Engineering Team</span>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="#executive-summary">Executive Summary</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#shared-parsers">Shared Parsers</a></li>
+                <li><a href="#api-comparison">API Comparison</a></li>
+                <li><a href="#dmabuf">DMA-BUF</a></li>
+                <li><a href="#drm">DRM/Protected Content</a></li>
+                <li><a href="#synchronization">Synchronization</a></li>
+                <li><a href="#frame-output">Frame Output</a></li>
+                <li><a href="#test-infrastructure">Testing</a></li>
+                <li><a href="#implementation">Implementation Plan</a></li>
+                <li><a href="#references">References</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <!-- Executive Summary -->
+            <section id="executive-summary">
+                <h2>1. Executive Summary</h2>
+                
+                <h3>1.1 Project Goal</h3>
+                <p>Integrate Vulkan Video decode and encode extensions as a first-class hardware acceleration backend in Chromium, alongside existing VA-API support, to provide:</p>
+                <ul>
+                    <li>Cross-platform hardware video acceleration</li>
+                    <li>Vendor-agnostic implementation</li>
+                    <li>Modern GPU integration with the Vulkan graphics pipeline</li>
+                    <li>Future-proof architecture for emerging codecs</li>
+                </ul>
+                
+                <div class="key-insight">
+                    <h4>🔑 Key Insight: Codec Parsers are Shared</h4>
+                    <p><strong>Critical discovery:</strong> Chromium's architecture separates:</p>
+                    <ul>
+                        <li><strong>Codec Parsing</strong> (shared) - in <code>media/parsers/</code> and <code>media/gpu/*_decoder.{h,cc}</code></li>
+                        <li><strong>Hardware Acceleration</strong> (per-backend) - in <code>media/gpu/vaapi/</code>, <code>media/gpu/v4l2/</code></li>
+                    </ul>
+                    <p><strong>This means Vulkan Video integration does NOT require reimplementing codec parsing.</strong> However, significant conversion work is still required.</p>
+
+                    <h5 style="margin-top: 1rem; color: var(--accent-green);">What we DON'T need to do:</h5>
+                    <ul>
+                        <li>Write bitstream parsers (NAL unit parsing, entropy decoding)</li>
+                        <li>Implement DPB management logic</li>
+                        <li>Handle reference frame tracking</li>
+                    </ul>
+
+                    <h5 style="margin-top: 1rem; color: var(--accent-orange);">What we DO need to do:</h5>
+                    <ul>
+                        <li>Implement the <code>*Accelerator</code> interface for each codec</li>
+                        <li><strong>Write conversion code</strong> from Chromium's parsed structures to Vulkan Video's <code>StdVideo*</code> structures</li>
+                        <li>This conversion is non-trivial: ~500-700 lines per codec</li>
+                    </ul>
+
+                    <div class="card" style="margin-top: 1rem; background: rgba(220, 53, 69, 0.1); border-left-color: var(--accent-red);">
+                        <h5 style="color: var(--accent-red);">⚠️ Important Note on NVPRO Sample</h5>
+                        <p>The official NVIDIA Vulkan Video sample (NVPRO) includes its own integrated parser. We <strong>cannot</strong> reuse this parser because Chromium's <code>*Accelerator</code> interface receives already-parsed Chromium structures, not raw bitstream. We must write the conversion layer:</p>
+                        <table style="margin-top: 0.5rem; font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>Codec</th>
+                                    <th>Chromium Structures</th>
+                                    <th>Vulkan Structures</th>
+                                    <th>Est. Code</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>H.264</td><td><code>H264SPS</code>, <code>H264PPS</code>, <code>H264SliceHeader</code></td><td><code>StdVideoH264*</code></td><td>~500 lines</td></tr>
+                                <tr><td>H.265</td><td><code>H265VPS</code>, <code>H265SPS</code>, <code>H265PPS</code></td><td><code>StdVideoH265*</code></td><td>~700 lines</td></tr>
+                                <tr><td>VP9</td><td><code>Vp9FrameHeader</code>, <code>Vp9SegmentationParams</code></td><td><code>StdVideoDecodeVP9*</code></td><td>~400 lines</td></tr>
+                                <tr><td>AV1</td><td><code>libgav1::ObuSequenceHeader</code></td><td><code>StdVideoAV1*</code></td><td>~600 lines</td></tr>
+                            </tbody>
+                        </table>
+                        <p style="margin-top: 0.5rem;"><strong>Total estimated conversion code: ~2,200 lines across 4 codecs.</strong></p>
+                    </div>
+                </div>
+                
+                <h3>1.2 Project Scope</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Vulkan Video Decode (H.264)</td>
+                            <td><span class="badge badge-new">New</span></td>
+                            <td><span class="badge badge-p0">P0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Vulkan Video Decode (HEVC)</td>
+                            <td><span class="badge badge-new">New</span></td>
+                            <td><span class="badge badge-p0">P0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Vulkan Video Decode (VP9)</td>
+                            <td><span class="badge badge-new">New</span></td>
+                            <td><span class="badge badge-p1">P1</span></td>
+                        </tr>
+                        <tr>
+                            <td>Vulkan Video Decode (AV1)</td>
+                            <td><span class="badge badge-new">New</span></td>
+                            <td><span class="badge badge-p1">P1</span></td>
+                        </tr>
+                        <tr>
+                            <td>Vulkan Video Encode (H.264)</td>
+                            <td><span class="badge badge-new">New</span></td>
+                            <td><span class="badge badge-p2">P2</span></td>
+                        </tr>
+                        <tr>
+                            <td>Protected Content</td>
+                            <td>Future</td>
+                            <td>P3</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            
+            <!-- Architecture Overview -->
+            <section id="architecture">
+                <h2>2. Architecture Overview</h2>
+                
+                <h3>2.1 Chromium Media Pipeline</h3>
+                <div class="diagram-container">
+                    <h4>📊 Complete Media Pipeline Architecture</h4>
+                    <object type="image/svg+xml" data="diagrams/chromium_media_pipeline.svg" aria-label="Chromium Media Pipeline Diagram">
+                        <img src="diagrams/chromium_media_pipeline.svg" alt="Chromium Media Pipeline">
+                    </object>
+                    <a href="diagrams/chromium_media_pipeline.svg" target="_blank">Open diagram in new tab ↗</a>
+                </div>
+                
+                <h3>2.2 Hardware Acceleration Backends</h3>
+                <div class="diagram-container">
+                    <object type="image/svg+xml" data="diagrams/hw_acceleration_backends.svg" aria-label="Hardware Acceleration Backends">
+                        <img src="diagrams/hw_acceleration_backends.svg" alt="Hardware Acceleration Backends">
+                    </object>
+                    <a href="diagrams/hw_acceleration_backends.svg" target="_blank">Open diagram in new tab</a>
+                </div>
+                
+                <h3>2.3 Class Hierarchy</h3>
+                <div class="diagram-container">
+                    <object type="image/svg+xml" data="diagrams/class_hierarchy.svg" aria-label="Class Hierarchy">
+                        <img src="diagrams/class_hierarchy.svg" alt="Class Hierarchy">
+                    </object>
+                    <a href="diagrams/class_hierarchy.svg" target="_blank">Open diagram in new tab</a>
+                </div>
+            </section>
+            
+            <!-- Shared Codec Parsers -->
+            <section id="shared-parsers">
+                <h2>3. Shared Codec Parsers - Deep Dive</h2>
+                
+                <div class="diagram-container">
+                    <h4>📊 Codec Parser Architecture</h4>
+                    <object type="image/svg+xml" data="diagrams/codec_parser_architecture.svg" aria-label="Codec Parser Architecture">
+                        <img src="diagrams/codec_parser_architecture.svg" alt="Codec Parser Architecture">
+                    </object>
+                    <a href="diagrams/codec_parser_architecture.svg" target="_blank">Open diagram in new tab ↗</a>
+                </div>
+                
+                <h3>3.1 Parser Location and Organization</h3>
+                <p>All bitstream parsers are located in <code>media/parsers/</code>:</p>
+                <pre><code>media/parsers/
+├── h264_parser.{h,cc}      # H.264/AVC NAL unit parsing
+├── h265_parser.{h,cc}      # H.265/HEVC NAL unit parsing  
+├── h266_parser.{h,cc}      # H.266/VVC NAL unit parsing
+├── vp8_parser.{h,cc}       # VP8 frame header parsing
+├── vp9_parser.{h,cc}       # VP9 frame header parsing
+├── ivf_parser.{h,cc}       # IVF container parsing
+└── jpeg_parser.{h,cc}      # JPEG parsing</code></pre>
+                
+                <h3>3.2 AcceleratedVideoDecoder Interface</h3>
+                <pre><code><span class="code-comment">// media/gpu/accelerated_video_decoder.h</span>
+
+<span class="code-keyword">class</span> <span class="code-function">AcceleratedVideoDecoder</span> {
+ <span class="code-keyword">public</span>:
+  <span class="code-comment">// Set compressed bitstream data</span>
+  <span class="code-keyword">virtual</span> <span class="code-keyword">void</span> <span class="code-function">SetStream</span>(int32_t id, <span class="code-keyword">const</span> DecoderBuffer& decoder_buffer) = 0;
+  
+  <span class="code-comment">// Decode next frame - returns DecodeResult</span>
+  <span class="code-keyword">virtual</span> DecodeResult <span class="code-function">Decode</span>() = 0;
+  
+  <span class="code-comment">// Query decoded frame properties</span>
+  <span class="code-keyword">virtual</span> gfx::Size <span class="code-function">GetPicSize</span>() <span class="code-keyword">const</span> = 0;
+  <span class="code-keyword">virtual</span> VideoCodecProfile <span class="code-function">GetProfile</span>() <span class="code-keyword">const</span> = 0;
+  <span class="code-keyword">virtual</span> uint8_t <span class="code-function">GetBitDepth</span>() <span class="code-keyword">const</span> = 0;
+};</code></pre>
+                
+                <h3>3.3 H264Accelerator Interface</h3>
+                <p>This is the interface that hardware backends implement:</p>
+                <pre><code><span class="code-comment">// media/gpu/h264_decoder.h - The Accelerator interface</span>
+
+<span class="code-keyword">class</span> <span class="code-function">H264Accelerator</span> {
+ <span class="code-keyword">public</span>:
+  <span class="code-comment">// Create a picture buffer for decoded output</span>
+  <span class="code-keyword">virtual</span> scoped_refptr&lt;H264Picture&gt; <span class="code-function">CreateH264Picture</span>() = 0;
+  
+  <span class="code-comment">// Submit SPS/PPS for HW configuration</span>
+  <span class="code-keyword">virtual</span> <span class="code-keyword">void</span> <span class="code-function">ProcessSPS</span>(<span class="code-keyword">const</span> H264SPS* sps, base::span&lt;<span class="code-keyword">const</span> uint8_t&gt; data);
+  <span class="code-keyword">virtual</span> <span class="code-keyword">void</span> <span class="code-function">ProcessPPS</span>(<span class="code-keyword">const</span> H264PPS* pps, base::span&lt;<span class="code-keyword">const</span> uint8_t&gt; data);
+  
+  <span class="code-comment">// Submit frame decode parameters</span>
+  <span class="code-keyword">virtual</span> Status <span class="code-function">SubmitFrameMetadata</span>(
+      <span class="code-keyword">const</span> H264SPS* sps,
+      <span class="code-keyword">const</span> H264PPS* pps,
+      <span class="code-keyword">const</span> H264DPB& dpb,                    <span class="code-comment">// Reference frames</span>
+      <span class="code-keyword">const</span> H264Picture::Vector& ref_list_p0,
+      <span class="code-keyword">const</span> H264Picture::Vector& ref_list_b0,
+      <span class="code-keyword">const</span> H264Picture::Vector& ref_list_b1,
+      scoped_refptr&lt;H264Picture&gt; pic) = 0;
+  
+  <span class="code-comment">// Submit slice data</span>
+  <span class="code-keyword">virtual</span> Status <span class="code-function">SubmitSlice</span>(...) = 0;
+  
+  <span class="code-comment">// Execute decode operation</span>
+  <span class="code-keyword">virtual</span> Status <span class="code-function">SubmitDecode</span>(scoped_refptr&lt;H264Picture&gt; pic) = 0;
+};</code></pre>
+                
+                <h3>3.4 Benefits of Shared Parser Architecture</h3>
+                <div class="grid grid-3">
+                    <div class="card success">
+                        <h4>🔄 Code Reuse</h4>
+                        <p>Parsing code tested across multiple backends</p>
+                    </div>
+                    <div class="card success">
+                        <h4>✓ Consistency</h4>
+                        <p>Same parsing behavior for VA-API, V4L2, Vulkan</p>
+                    </div>
+                    <div class="card success">
+                        <h4>🛠️ Maintainability</h4>
+                        <p>Parser fixes benefit all backends</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- API Comparison -->
+            <section id="api-comparison">
+                <h2>4. VA-API vs Vulkan Video Comparison</h2>
+                
+                <div class="diagram-container">
+                    <h4>📊 Decode Flow Comparison</h4>
+                    <object type="image/svg+xml" data="diagrams/decode_flow_comparison.svg" aria-label="Decode Flow Comparison">
+                        <img src="diagrams/decode_flow_comparison.svg" alt="Decode Flow Comparison">
+                    </object>
+                    <a href="diagrams/decode_flow_comparison.svg" target="_blank">Open diagram in new tab ↗</a>
+                </div>
+                
+                <h3>4.1 API Philosophy Comparison</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>VA-API</th>
+                            <th>Vulkan Video</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Design Goal</td>
+                            <td>Video-specific abstraction</td>
+                            <td>Extension to graphics API</td>
+                        </tr>
+                        <tr>
+                            <td>Abstraction Level</td>
+                            <td>High-level (hides GPU details)</td>
+                            <td>Low-level (explicit control)</td>
+                        </tr>
+                        <tr>
+                            <td>Memory Management</td>
+                            <td>Driver-managed</td>
+                            <td>Application-managed</td>
+                        </tr>
+                        <tr>
+                            <td>Synchronization</td>
+                            <td>Implicit (mostly)</td>
+                            <td>Explicit</td>
+                        </tr>
+                        <tr>
+                            <td>Cross-Platform</td>
+                            <td>Linux only</td>
+                            <td>Cross-platform</td>
+                        </tr>
+                        <tr>
+                            <td>GPU Integration</td>
+                            <td>Separate from graphics</td>
+                            <td>Native to Vulkan</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>4.2 Memory and Resource Comparison</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Resource</th>
+                            <th>VA-API</th>
+                            <th>Vulkan Video</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Decode Target</td>
+                            <td><code>VASurfaceID</code></td>
+                            <td><code>VkImage</code> + <code>VkVideoSessionKHR</code></td>
+                        </tr>
+                        <tr>
+                            <td>Parameter Buffers</td>
+                            <td><code>VABufferID</code></td>
+                            <td><code>VkVideoSessionParametersKHR</code></td>
+                        </tr>
+                        <tr>
+                            <td>Bitstream Buffer</td>
+                            <td><code>VASliceDataBufferType</code></td>
+                            <td><code>VkBuffer</code></td>
+                        </tr>
+                        <tr>
+                            <td>Reference Frames</td>
+                            <td><code>VASurfaceID[]</code> in DPB</td>
+                            <td><code>VkVideoPictureResourceInfoKHR[]</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="key-insight">
+                    <h4>🔑 Key Difference: SPS/PPS Handling</h4>
+                    <p><strong>VA-API:</strong> Driver parses and manages SPS/PPS internally</p>
+                    <p><strong>Vulkan Video:</strong> Application provides parsed structures</p>
+                    <p><strong>Implication:</strong> Chromium's existing parsers already extract all needed fields!</p>
+                </div>
+            </section>
+            
+            <!-- DMA-BUF -->
+            <section id="dmabuf">
+                <h2>5. DMA-BUF File Descriptor Management</h2>
+                
+                <div class="diagram-container">
+                    <h4>📊 DMA-BUF Architecture</h4>
+                    <object type="image/svg+xml" data="diagrams/dmabuf_architecture.svg" aria-label="DMA-BUF Architecture">
+                        <img src="diagrams/dmabuf_architecture.svg" alt="DMA-BUF Architecture">
+                    </object>
+                    <a href="diagrams/dmabuf_architecture.svg" target="_blank">Open diagram in new tab ↗</a>
+                </div>
+                
+                <h3>5.1 DMA-BUF Overview</h3>
+                <p>DMA-BUF is a Linux kernel mechanism for sharing buffers between devices/processes. It enables <strong>zero-copy</strong> video frame sharing from decoder to display.</p>
+                
+                <h3>5.2 VA-API Surface Export</h3>
+                <pre><code><span class="code-comment">// media/gpu/vaapi/vaapi_wrapper.cc</span>
+
+VADRMPRIMESurfaceDescriptor descriptor;
+
+<span class="code-comment">// Export surface as DRM PRIME (DMA-BUF)</span>
+VAStatus va_res = <span class="code-function">vaExportSurfaceHandle</span>(
+    va_display_,
+    va_surface_id,
+    VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,  <span class="code-comment">// DMA-BUF export</span>
+    VA_EXPORT_SURFACE_READ_ONLY | VA_EXPORT_SURFACE_SEPARATE_LAYERS,
+    &descriptor);
+
+<span class="code-comment">// descriptor contains: fourcc, width, height, fd, pitch, offset...</span></code></pre>
+                
+                <h3>5.3 Vulkan Video DMA-BUF Export</h3>
+                <pre><code><span class="code-comment">// PROPOSED: media/gpu/vulkan/vulkan_wrapper.cc</span>
+
+<span class="code-comment">// Allocate with external memory</span>
+VkExportMemoryAllocateInfo export_info = {
+    .sType = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO,
+    .handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT,
+};
+
+<span class="code-comment">// Export as DMA-BUF FD</span>
+VkMemoryGetFdInfoKHR fd_info = {
+    .sType = VK_STRUCTURE_TYPE_MEMORY_GET_FD_INFO_KHR,
+    .memory = memory,
+    .handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT,
+};
+
+<span class="code-keyword">int</span> dmabuf_fd;
+<span class="code-function">vkGetMemoryFdKHR</span>(device_, &fd_info, &dmabuf_fd);</code></pre>
+                
+                <div class="diagram-container">
+                    <h4>📊 Frame Resource Flow</h4>
+                    <object type="image/svg+xml" data="diagrams/frame_resource_flow.svg" aria-label="Frame Resource Flow">
+                        <img src="diagrams/frame_resource_flow.svg" alt="Frame Resource Flow">
+                    </object>
+                    <a href="diagrams/frame_resource_flow.svg" target="_blank">Open diagram in new tab ↗</a>
+                </div>
+            </section>
+            
+            <!-- DRM / Protected Content -->
+            <section id="drm">
+                <h2>6. Protected Content (DRM) Architecture</h2>
+                
+                <div class="diagram-container">
+                    <h4>📊 DRM Architecture</h4>
+                    <object type="image/svg+xml" data="diagrams/drm_architecture.svg" aria-label="DRM Architecture">
+                        <img src="diagrams/drm_architecture.svg" alt="DRM Architecture">
+                    </object>
+                    <a href="diagrams/drm_architecture.svg" target="_blank">Open diagram in new tab ↗</a>
+                </div>
+                
+                <h3>6.1 Protected Content Components</h3>
+                <p>Protected content flows through multiple security boundaries:</p>
+                <ol>
+                    <li><strong>EME API (JavaScript)</strong> - Web application requests media key access</li>
+                    <li><strong>CDM Host</strong> - Browser manages Content Decryption Module interface</li>
+                    <li><strong>Widevine CDM</strong> - License negotiation, key management</li>
+                    <li><strong>VaapiVideoDecoderDelegate</strong> - Sets up protected VA-API session</li>
+                    <li><strong>Hardware TEE</strong> - Secure key unwrap and decode</li>
+                    <li><strong>HDCP</strong> - Protected output to display</li>
+                </ol>
+                
+                <h3>6.2 ChromeOS Protected Session Flow</h3>
+                <pre><code><span class="code-comment">// media/gpu/vaapi/vaapi_video_decoder_delegate.cc</span>
+
+VaapiVideoDecoderDelegate::ProtectedSessionState
+<span class="code-function">SetupDecryptDecode</span>(...) {
+  
+  <span class="code-comment">// Step 1: Create protected session (first time)</span>
+  <span class="code-keyword">if</span> (protected_session_state_ == ProtectedSessionState::kNotCreated) {
+    chromeos_cdm_context_-><span class="code-function">GetHwConfigData</span>(...);
+    <span class="code-keyword">return</span> ProtectedSessionState::kInProcess;
+  }
+  
+  <span class="code-comment">// Step 2: Set encryption type</span>
+  crypto_params->encryption_type = ctr 
+      ? VA_ENCRYPTION_TYPE_SUBSAMPLE_CTR 
+      : VA_ENCRYPTION_TYPE_SUBSAMPLE_CBC;
+  
+  <span class="code-comment">// Step 3: Get hardware key data</span>
+  chromeos_cdm_context_-><span class="code-function">GetHwKeyData</span>(...);
+  
+  <span class="code-comment">// Step 4: Fill segment info for each subsample</span>
+  <span class="code-keyword">for</span> (<span class="code-keyword">const</span> auto& entry : subsamples) {
+    VAEncryptionSegmentInfo segment_info = {};
+    <span class="code-comment">// ... fill clear/cypher bytes, IV</span>
+  }
+  
+  <span class="code-keyword">return</span> ProtectedSessionState::kCreated;
+}</code></pre>
+                
+                <h3>6.3 Encryption Schemes Tested</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Scheme</th>
+                            <th>VA-API Type</th>
+                            <th>Test Files</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CENC CTR</td>
+                            <td><code>VA_ENCRYPTION_TYPE_SUBSAMPLE_CTR</code></td>
+                            <td><code>*-cenc.mp4</code></td>
+                        </tr>
+                        <tr>
+                            <td>CENC CBC</td>
+                            <td><code>VA_ENCRYPTION_TYPE_SUBSAMPLE_CBC</code></td>
+                            <td><code>*-cbc1.mp4</code></td>
+                        </tr>
+                        <tr>
+                            <td>CBCS</td>
+                            <td>Pattern encryption</td>
+                            <td><code>*-cbcs.mp4</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="card success">
+                    <h4>✓ Vulkan Video Protected Content - Simpler than VA-API!</h4>
+                    <p>Vulkan uses a <strong>cleaner architecture</strong> than VA-API's decrypt-during-decode:</p>
+                    <ol>
+                        <li><strong>CDM decrypts</strong> slices into a <strong>protected VkBuffer</strong></li>
+                        <li><strong>Decoder reads</strong> from protected buffer (decrypted bitstream)</li>
+                        <li><strong>Decoder writes</strong> to protected VkImage</li>
+                        <li><strong>Security boundary</strong> is the protected memory, not the decode operation</li>
+                    </ol>
+                    <p><strong>Key insight:</strong> The decoder doesn't need crypto awareness - it just decodes! 
+                    The CDM handles all decryption, writing clear NAL units to protected memory that unprivileged code can't read.</p>
+                </div>
+                
+                <h3>6.4 Vulkan Protected Content Architecture (Current Approach)</h3>
+                
+                <div class="diagram-container">
+                    <h4>📊 Vulkan Video Protected Content Flow</h4>
+                    <object type="image/svg+xml" data="diagrams/vulkan_protected_content.svg" aria-label="Vulkan Protected Content">
+                        <img src="diagrams/vulkan_protected_content.svg" alt="Vulkan Protected Content">
+                    </object>
+                    <a href="diagrams/vulkan_protected_content.svg" target="_blank">Open diagram in new tab ↗</a>
+                </div>
+                
+                <div class="diagram-container">
+                    <object type="image/svg+xml" data="diagrams/cdm_protected_process.svg" aria-label="CDM Protected Process">
+                        <img src="diagrams/cdm_protected_process.svg" alt="CDM Protected Process">
+                    </object>
+                    <a href="diagrams/cdm_protected_process.svg" target="_blank">Open diagram in new tab</a>
+                </div>
+
+                <h3>6.5 Vulkan Protected Content API</h3>
+                <pre><code><span class="code-comment">// CDM allocates protected buffer for decrypted bitstream</span>
+VkBufferCreateInfo buffer_info = {...};
+<span class="code-function">vkCreateBuffer</span>(device, &buffer_info, <span class="code-keyword">nullptr</span>, &protected_bitstream);
+
+VkMemoryAllocateInfo alloc = {
+    .memoryTypeIndex = <span class="code-function">FindMemoryType</span>(VK_MEMORY_PROPERTY_PROTECTED_BIT),
+};
+<span class="code-function">vkAllocateMemory</span>(device, &alloc, <span class="code-keyword">nullptr</span>, &protected_memory);
+<span class="code-function">vkBindBufferMemory</span>(device, protected_bitstream, protected_memory, 0);
+
+<span class="code-comment">// CDM writes decrypted NAL units to protected_bitstream</span>
+
+<span class="code-comment">// Decoder just decodes - NO crypto parameters needed!</span>
+VkVideoDecodeInfoKHR decode_info = {
+    .srcBuffer = protected_bitstream,       <span class="code-comment">// Decrypted slices</span>
+    .srcBufferOffset = slice_offset,
+    .srcBufferRange = slice_size,
+    .dstPictureResource = protected_output, <span class="code-comment">// Protected VkImage</span>
+};
+<span class="code-function">vkCmdDecodeVideoKHR</span>(protected_cmd_buffer, &decode_info);</code></pre>
+
+                <div class="key-insight">
+                    <h4>🔑 Why This is Simpler than VA-API</h4>
+                    <p><strong>VA-API:</strong> Driver must handle <code>VAEncryptionParameters</code>, decrypt-during-decode, key injection</p>
+                    <p><strong>Vulkan:</strong> CDM decrypts → protected buffer → decoder just decodes. No special integration needed!</p>
+                </div>
+
+                <h3>6.6 Recommendation: Native Decrypt-During-Decode Extension</h3>
+                
+                <div class="diagram-container">
+                    <h4>📊 Future: Vulkan Video with Native Decryption Support</h4>
+                    <object type="image/svg+xml" data="diagrams/vulkan_protected_content_future.svg" aria-label="Vulkan Protected Content Future">
+                        <img src="diagrams/vulkan_protected_content_future.svg" alt="Vulkan Protected Content Future">
+                    </object>
+                    <a href="diagrams/vulkan_protected_content_future.svg" target="_blank">Open diagram in new tab ↗</a>
+                </div>
+                
+                <div class="card warning">
+                    <h4>💡 Future Enhancement for Vulkan Video</h4>
+                    <p>While the protected buffer approach works, it would be <strong>desirable for Vulkan Video to add 
+                    native support for decryption keys</strong>, similar to VA-API's <code>VAEncryptionParameters</code>:</p>
+                </div>
+                
+                <pre><code><span class="code-comment">// Hypothetical future Vulkan Video extension: VK_KHR_video_decode_encryption</span>
+VkVideoDecodeEncryptionInfoKHR encryption_info = {
+    .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_ENCRYPTION_INFO_KHR,
+    .encryptionScheme = VK_VIDEO_ENCRYPTION_SCHEME_CENC_CTR_KHR,
+    .pKeyData = wrapped_key_blob,
+    .keyDataSize = 16,
+    .pIV = initialization_vector,
+    .pSubsampleInfo = subsample_entries,
+};
+
+VkVideoDecodeInfoKHR decode_info = {
+    .pNext = &encryption_info,  <span class="code-comment">// Attach encryption params</span>
+    .srcBuffer = encrypted_bitstream,
+    .dstPictureResource = protected_output,
+};</code></pre>
+
+                <p><strong>Benefits of native decrypt-during-decode:</strong></p>
+                <ul>
+                    <li><strong>Single HW operation:</strong> Decrypt and decode in one pass</li>
+                    <li><strong>Keys never leave TEE:</strong> Hardware-wrapped keys go directly to secure enclave</li>
+                    <li><strong>Reduced memory bandwidth:</strong> No separate decrypt step</li>
+                    <li><strong>Parity with VA-API:</strong> Easier porting of existing DRM implementations</li>
+                    <li><strong>Simpler CDM integration:</strong> CDM only provides keys, doesn't handle decryption</li>
+                </ul>
+            </section>
+            
+            <!-- Synchronization -->
+            <section id="synchronization">
+                <h2>7. Synchronization Mechanisms</h2>
+                
+                <div class="diagram-container">
+                    <h4>📊 Synchronization Timeline</h4>
+                    <object type="image/svg+xml" data="diagrams/sync_timeline.svg" aria-label="Sync Timeline">
+                        <img src="diagrams/sync_timeline.svg" alt="Sync Timeline">
+                    </object>
+                    <a href="diagrams/sync_timeline.svg" target="_blank">Open diagram in new tab ↗</a>
+                </div>
+                
+                <h3>7.1 VA-API Synchronization</h3>
+                <pre><code><span class="code-comment">// Implicit sync (most common on Intel)</span>
+<span class="code-function">vaEndPicture</span>(display, context);  <span class="code-comment">// Implicitly syncs</span>
+
+<span class="code-comment">// Explicit sync (required for multi-threaded scenarios)</span>
+<span class="code-function">vaSyncSurface</span>(display, surface_id);  <span class="code-comment">// Blocks until decode completes</span></code></pre>
+                
+                <h3>7.2 Vulkan Video Synchronization</h3>
+                <pre><code><span class="code-comment">// Explicit fence-based sync</span>
+VkFence decode_fence;
+<span class="code-function">vkCreateFence</span>(device, &fence_info, <span class="code-keyword">nullptr</span>, &decode_fence);
+
+VkSubmitInfo submit = {
+    .commandBufferCount = 1,
+    .pCommandBuffers = &cmd_buffer,
+};
+<span class="code-function">vkQueueSubmit</span>(decode_queue, 1, &submit, decode_fence);
+
+<span class="code-comment">// Wait for decode completion</span>
+<span class="code-function">vkWaitForFences</span>(device, 1, &decode_fence, VK_TRUE, UINT64_MAX);
+
+<span class="code-comment">// Semaphore-based sync (for queue transitions)</span>
+VkSemaphore decode_complete;
+VkSubmitInfo decode_submit = {
+    .signalSemaphoreCount = 1,
+    .pSignalSemaphores = &decode_complete,
+};</code></pre>
+            </section>
+            
+            <!-- Frame Output -->
+            <section id="frame-output">
+                <h2>8. Frame Output and Display Pipeline</h2>
+                
+                <div class="diagram-container">
+                    <h4>📊 Complete Frame Flow</h4>
+                    <object type="image/svg+xml" data="diagrams/complete_frame_flow.svg" aria-label="Complete Frame Flow">
+                        <img src="diagrams/complete_frame_flow.svg" alt="Complete Frame Flow">
+                    </object>
+                    <a href="diagrams/complete_frame_flow.svg" target="_blank">Open diagram in new tab ↗</a>
+                </div>
+                
+                <h3>8.1 FrameResource and VideoFrame Conversion</h3>
+                <pre><code><span class="code-comment">// media/gpu/chromeos/native_pixmap_frame_resource.h</span>
+
+<span class="code-keyword">class</span> <span class="code-function">NativePixmapFrameResource</span> : <span class="code-keyword">public</span> FrameResource {
+ <span class="code-keyword">public</span>:
+  <span class="code-comment">// Create from DMA-BUF file descriptors</span>
+  <span class="code-keyword">static</span> scoped_refptr&lt;NativePixmapFrameResource&gt; <span class="code-function">Create</span>(
+      <span class="code-keyword">const</span> VideoFrameLayout& layout,
+      <span class="code-keyword">const</span> gfx::Rect& visible_rect,
+      <span class="code-keyword">const</span> gfx::Size& natural_size,
+      std::vector&lt;base::ScopedFD&gt; dmabuf_fds,  <span class="code-comment">// Takes ownership</span>
+      base::TimeDelta timestamp);
+  
+  <span class="code-comment">// Get underlying DMA-BUF FDs</span>
+  size_t <span class="code-function">NumDmabufFds</span>() <span class="code-keyword">const</span>;
+  <span class="code-keyword">int</span> <span class="code-function">GetDmabufFd</span>(size_t i) <span class="code-keyword">const</span>;
+  
+  <span class="code-comment">// Convert to VideoFrame for display</span>
+  scoped_refptr&lt;VideoFrame&gt; <span class="code-function">CreateDmabufVideoFrame</span>() <span class="code-keyword">const</span>;
+};</code></pre>
+                
+                <h3>8.2 Overlay Display Path</h3>
+                <pre><code><span class="code-comment">// Overlay scanout (zero-copy display)</span>
+
+<span class="code-comment">// 1. Video frame has SCANOUT usage</span>
+video_frame-><span class="code-function">metadata</span>().allow_overlay = <span class="code-keyword">true</span>;
+
+<span class="code-comment">// 2. Compositor checks overlay capability</span>
+<span class="code-keyword">if</span> (<span class="code-function">CanPresentAsOverlay</span>(video_frame)) {
+  <span class="code-comment">// Direct scanout - no GPU composition needed</span>
+  overlay_processor_-><span class="code-function">ProcessForOverlay</span>(video_frame);
+} <span class="code-keyword">else</span> {
+  <span class="code-comment">// GPU composition required</span>
+  compositor_-><span class="code-function">CompositeLayers</span>();
+}
+
+<span class="code-comment">// 3. DRM/KMS overlay plane assignment</span>
+<span class="code-function">drmModeSetPlane</span>(drm_fd, plane_id, crtc_id, 
+                video_frame-><span class="code-function">GetDmaBufFd</span>(),
+                0, crtc_x, crtc_y, crtc_w, crtc_h,
+                src_x, src_y, src_w, src_h);</code></pre>
+            </section>
+            
+            <!-- Test Infrastructure -->
+            <section id="test-infrastructure">
+                <h2>9. Test Infrastructure</h2>
+                
+                <h3>9.1 Test Framework Architecture</h3>
+                <div class="diagram-container">
+                    <object type="image/svg+xml" data="diagrams/test_framework_architecture.svg" aria-label="Test Framework Architecture">
+                        <img src="diagrams/test_framework_architecture.svg" alt="Test Framework Architecture">
+                    </object>
+                    <a href="diagrams/test_framework_architecture.svg" target="_blank">Open diagram in new tab</a>
+                </div>
+                
+                <h3>9.2 Main Test Binaries</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Binary</th>
+                            <th>Purpose</th>
+                            <th>Platform</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>video_decode_accelerator_tests</code></td>
+                            <td>HW decode correctness</td>
+                            <td>ChromeOS/Linux</td>
+                        </tr>
+                        <tr>
+                            <td><code>video_decode_accelerator_perf_tests</code></td>
+                            <td>Decode performance</td>
+                            <td>ChromeOS/Linux</td>
+                        </tr>
+                        <tr>
+                            <td><code>video_encode_accelerator_tests</code></td>
+                            <td>HW encode correctness</td>
+                            <td>ChromeOS/Linux</td>
+                        </tr>
+                        <tr>
+                            <td><code>vaapi_unittest</code></td>
+                            <td>VA-API unit tests</td>
+                            <td>Linux/ChromeOS</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>9.3 Test Content</h3>
+                <p>Test data is located in <code>media/test/data/</code>:</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Codec</th>
+                            <th>Profiles</th>
+                            <th>Test Files</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>H.264/AVC</td>
+                            <td>Baseline, Main, High</td>
+                            <td><code>bear-*.h264</code>, <code>bear-*.mp4</code></td>
+                        </tr>
+                        <tr>
+                            <td>H.265/HEVC</td>
+                            <td>Main, Main10</td>
+                            <td><code>bear-*.hevc</code>, <code>bbb.hevc</code></td>
+                        </tr>
+                        <tr>
+                            <td>VP8</td>
+                            <td>Profile 0</td>
+                            <td><code>bear-*.webm</code> (VP8)</td>
+                        </tr>
+                        <tr>
+                            <td>VP9</td>
+                            <td>Profile 0, 2 (10-bit)</td>
+                            <td><code>bear-*.webm</code>, <code>bear-vp9.ivf</code></td>
+                        </tr>
+                        <tr>
+                            <td>AV1</td>
+                            <td>Main</td>
+                            <td><code>av1-*.ivf</code>, <code>bear-av1.webm</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>9.4 Software Decoder Fallback</h3>
+                <p>Chromium uses <code>DecoderSelector</code> to choose between HW and SW decoders:</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Decoder</th>
+                            <th>Codecs</th>
+                            <th>Implementation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>FFmpegVideoDecoder</td>
+                            <td>H.264, H.265*, VP8, VP9</td>
+                            <td><code>media/filters/ffmpeg_video_decoder.cc</code></td>
+                        </tr>
+                        <tr>
+                            <td>VpxVideoDecoder</td>
+                            <td>VP8, VP9</td>
+                            <td><code>media/filters/vpx_video_decoder.cc</code></td>
+                        </tr>
+                        <tr>
+                            <td>Dav1dVideoDecoder</td>
+                            <td>AV1</td>
+                            <td><code>media/filters/dav1d_video_decoder.cc</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>9.5 Running Tests</h3>
+                <pre><code><span class="code-comment"># Build decode tests</span>
+autoninja -C out/Default video_decode_accelerator_tests
+
+<span class="code-comment"># Run with specific codec</span>
+./out/Default/video_decode_accelerator_tests \
+  --gtest_filter="*H264*" \
+  --test_video_data=/path/to/bear-1280x720.h264
+
+<span class="code-comment"># Performance test</span>
+./out/Default/video_decode_accelerator_perf_tests \
+  --test_video_data=/path/to/4k_video.webm</code></pre>
+                
+                <h3>9.6 Test Checklist for New Decoder</h3>
+                <ul>
+                    <li>☐ Basic decode (flush at EOS)</li>
+                    <li>☐ Reset during decode</li>
+                    <li>☐ Resolution change handling</li>
+                    <li>☐ All supported profiles (H.264 Baseline/Main/High, etc.)</li>
+                    <li>☐ All bit depths (8-bit, 10-bit)</li>
+                    <li>☐ Performance benchmarks</li>
+                    <li>☐ Memory leak checks</li>
+                    <li>☐ Error handling (corrupt streams)</li>
+                    <li>☐ Protected content (if supported)</li>
+                </ul>
+            </section>
+            
+            <!-- Implementation Plan -->
+            <section id="implementation">
+                <h2>10. Implementation Plan</h2>
+                
+                <h3>10.1 Phase 1: Foundation (4 weeks)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Description</th>
+                            <th>Files</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>VulkanWrapper</td>
+                            <td>Core Vulkan Video abstraction</td>
+                            <td><code>vulkan_wrapper.{h,cc}</code></td>
+                        </tr>
+                        <tr>
+                            <td>VulkanVideoDecoder</td>
+                            <td>VideoDecoderMixin implementation</td>
+                            <td><code>vulkan_video_decoder.{h,cc}</code></td>
+                        </tr>
+                        <tr>
+                            <td>VulkanVideoDecoderDelegate</td>
+                            <td>Base delegate class</td>
+                            <td><code>vulkan_video_decoder_delegate.{h,cc}</code></td>
+                        </tr>
+                        <tr>
+                            <td>Build Integration</td>
+                            <td>GN files, feature flags</td>
+                            <td><code>BUILD.gn</code>, <code>media_switches.h</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>10.2 Phase 2: H.264 Decode (3 weeks)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>H264VulkanDelegate</td>
+                            <td>H.264 accelerator implementation</td>
+                        </tr>
+                        <tr>
+                            <td>Parameter Translation</td>
+                            <td>H264SPS/PPS → StdVideoH264*</td>
+                        </tr>
+                        <tr>
+                            <td>DPB Management</td>
+                            <td>Reference frame handling</td>
+                        </tr>
+                        <tr>
+                            <td>Testing</td>
+                            <td>Verify against VA-API output</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>10.3 Phase 3: Additional Codecs (6 weeks)</h3>
+                <div class="grid grid-3">
+                    <div class="card">
+                        <h4>HEVC</h4>
+                        <span class="badge badge-p0">P0</span>
+                        <p>2 weeks</p>
+                    </div>
+                    <div class="card">
+                        <h4>VP9</h4>
+                        <span class="badge badge-p1">P1</span>
+                        <p>2 weeks</p>
+                    </div>
+                    <div class="card">
+                        <h4>AV1</h4>
+                        <span class="badge badge-p1">P1</span>
+                        <p>2 weeks</p>
+                    </div>
+                </div>
+                
+                <h3>10.4 Proposed Directory Structure</h3>
+                <pre><code>media/gpu/vulkan/
+├── BUILD.gn
+├── DEPS
+├── OWNERS
+├── vulkan_wrapper.h
+├── vulkan_wrapper.cc
+├── vulkan_video_decoder.h
+├── vulkan_video_decoder.cc
+├── vulkan_video_decoder_delegate.h
+├── vulkan_video_decoder_delegate.cc
+├── h264_vulkan_video_decoder_delegate.h
+├── h264_vulkan_video_decoder_delegate.cc
+├── hevc_vulkan_video_decoder_delegate.h
+├── hevc_vulkan_video_decoder_delegate.cc
+├── vp9_vulkan_video_decoder_delegate.h
+├── vp9_vulkan_video_decoder_delegate.cc
+├── av1_vulkan_video_decoder_delegate.h
+├── av1_vulkan_video_decoder_delegate.cc
+└── test/
+    ├── vulkan_video_decoder_unittest.cc
+    └── vulkan_wrapper_unittest.cc</code></pre>
+            </section>
+            
+            <!-- References -->
+            <section id="references">
+                <h2>11. References and Links</h2>
+                
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h4>🔗 VA-API Documentation</h4>
+                        <ul>
+                            <li><a href="https://github.com/intel/libva/wiki" target="_blank">VA-API Specification</a></li>
+                            <li><a href="https://github.com/intel/libva" target="_blank">VA-API GitHub</a></li>
+                            <li><a href="https://github.com/intel/libva/tree/master/va" target="_blank">VA-API Headers</a></li>
+                            <li><a href="https://github.com/intel/media-driver" target="_blank">Intel Media Driver</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🔗 Vulkan Video Documentation</h4>
+                        <ul>
+                            <li><a href="https://registry.khronos.org/vulkan/specs/1.3-extensions/html/chap45.html" target="_blank">Vulkan Video Spec</a></li>
+                            <li><a href="https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_video_queue.html" target="_blank">VK_KHR_video_queue</a></li>
+                            <li><a href="https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_video_decode_h264.html" target="_blank">VK_KHR_video_decode_h264</a></li>
+                            <li><a href="https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_video_decode_h265.html" target="_blank">VK_KHR_video_decode_h265</a></li>
+                            <li><a href="https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_video_decode_av1.html" target="_blank">VK_KHR_video_decode_av1</a></li>
+                            <li><a href="https://github.com/KhronosGroup/Vulkan-Samples" target="_blank">Vulkan Video Samples</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🔗 Chromium Documentation</h4>
+                        <ul>
+                            <li><a href="https://chromium.googlesource.com/chromium/src/+/main/media/README.md" target="_blank">Chromium Media</a></li>
+                            <li><a href="https://chromium.googlesource.com/chromium/src/+/main/media/gpu/README.md" target="_blank">GPU Video Accel</a></li>
+                            <li><a href="https://chromium.googlesource.com/chromium/src/+/main/docs/gpu/vaapi.md" target="_blank">VA-API in Chrome</a></li>
+                            <li><a href="https://chromium.googlesource.com/chromium/src/+/main/media/gpu/test/README.md" target="_blank">Video Test Suite</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🔗 DRM/EME & DMA-BUF</h4>
+                        <ul>
+                            <li><a href="https://www.w3.org/TR/encrypted-media/" target="_blank">EME Spec (W3C)</a></li>
+                            <li><a href="https://www.widevine.com/solutions/widevine-drm" target="_blank">Widevine</a></li>
+                            <li><a href="https://www.kernel.org/doc/html/latest/driver-api/dma-buf.html" target="_blank">DMA-BUF Kernel Doc</a></li>
+                            <li><a href="https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_EXT_external_memory_dma_buf.html" target="_blank">Vulkan External Memory DMA-BUF</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🔗 Test Resources</h4>
+                        <ul>
+                            <li><a href="https://chromium.googlesource.com/chromium/src/+/main/media/test/data/" target="_blank">Chromium Test Data</a></li>
+                            <li><a href="https://www.webmproject.org/vp9/levels/" target="_blank">VP9 Test Vectors</a></li>
+                            <li><a href="https://hevc.hhi.fraunhofer.de/" target="_blank">HEVC Conformance Streams</a></li>
+                            <li><a href="https://aomedia.org/av1-features/get-started/" target="_blank">AV1 Test Vectors</a></li>
+                            <li><a href="https://chromium.googlesource.com/chromiumos/platform/tast-tests/" target="_blank">Tast Tests</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Diagrams Index -->
+            <section id="diagrams-index">
+                <h2>Diagram Index</h2>
+                <div class="grid grid-3">
+                    <div class="card">
+                        <h4>Media Pipeline</h4>
+                        <a href="diagrams/chromium_media_pipeline.svg" target="_blank">chromium_media_pipeline.svg</a>
+                    </div>
+                    <div class="card">
+                        <h4>HW Acceleration Backends</h4>
+                        <a href="diagrams/hw_acceleration_backends.svg" target="_blank">hw_acceleration_backends.svg</a>
+                    </div>
+                    <div class="card">
+                        <h4>Class Hierarchy</h4>
+                        <a href="diagrams/class_hierarchy.svg" target="_blank">class_hierarchy.svg</a>
+                    </div>
+                    <div class="card">
+                        <h4>Codec Parser Architecture</h4>
+                        <a href="diagrams/codec_parser_architecture.svg" target="_blank">codec_parser_architecture.svg</a>
+                    </div>
+                    <div class="card">
+                        <h4>Decode Flow Comparison</h4>
+                        <a href="diagrams/decode_flow_comparison.svg" target="_blank">decode_flow_comparison.svg</a>
+                    </div>
+                    <div class="card">
+                        <h4>DMA-BUF Architecture</h4>
+                        <a href="diagrams/dmabuf_architecture.svg" target="_blank">dmabuf_architecture.svg</a>
+                    </div>
+                    <div class="card">
+                        <h4>DRM Architecture (VA-API)</h4>
+                        <a href="diagrams/drm_architecture.svg" target="_blank">drm_architecture.svg</a>
+                    </div>
+                    <div class="card">
+                        <h4>CDM Protected Process</h4>
+                        <a href="diagrams/cdm_protected_process.svg" target="_blank">cdm_protected_process.svg</a>
+                    </div>
+                    <div class="card highlight">
+                        <h4>Vulkan Protected Content</h4>
+                        <a href="diagrams/vulkan_protected_content.svg" target="_blank">vulkan_protected_content.svg</a>
+                    </div>
+                    <div class="card highlight">
+                        <h4>Vulkan Protected (Future)</h4>
+                        <a href="diagrams/vulkan_protected_content_future.svg" target="_blank">vulkan_protected_content_future.svg</a>
+                    </div>
+                    <div class="card">
+                        <h4>Sync Timeline</h4>
+                        <a href="diagrams/sync_timeline.svg" target="_blank">sync_timeline.svg</a>
+                    </div>
+                    <div class="card">
+                        <h4>Frame Resource Flow</h4>
+                        <a href="diagrams/frame_resource_flow.svg" target="_blank">frame_resource_flow.svg</a>
+                    </div>
+                    <div class="card">
+                        <h4>Complete Frame Flow</h4>
+                        <a href="diagrams/complete_frame_flow.svg" target="_blank">complete_frame_flow.svg</a>
+                    </div>
+                    <div class="card">
+                        <h4>Test Framework Architecture</h4>
+                        <a href="diagrams/test_framework_architecture.svg" target="_blank">test_framework_architecture.svg</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="links">
+                <div>
+                    <h4>Documentation</h4>
+                    <ul>
+                        <li><a href="VULKAN_VIDEO_INTEGRATION_DESIGN_DOCUMENT.md">Design Document (MD)</a></li>
+                        <li><a href="VAAPI_vs_VULKAN_VIDEO_DETAILED_COMPARISON.md">API Comparison (MD)</a></li>
+                        <li><a href="TEST_INFRASTRUCTURE_AND_FALLBACK.md">Test Infrastructure (MD)</a></li>
+                        <li><a href="VULKAN_VIDEO_INTEGRATION_REPORT.md">Integration Report (MD)</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Source Code</h4>
+                    <ul>
+                        <li><a href="../chromium/src/media/gpu/">media/gpu/</a></li>
+                        <li><a href="../chromium/src/media/parsers/">media/parsers/</a></li>
+                        <li><a href="../chromium/src/media/gpu/vaapi/">media/gpu/vaapi/</a></li>
+                        <li><a href="../chromium/src/media/gpu/test/">media/gpu/test/</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Project</h4>
+                    <ul>
+                        <li>Version: 1.0</li>
+                        <li>Date: December 4, 2025</li>
+                        <li>Status: Draft</li>
+                    </ul>
+                </div>
+            </div>
+            <p style="text-align: center; margin-top: 2rem; color: var(--text-muted);">
+                Generated from Chromium source analysis | Chromium Version: HEAD (December 2025)
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
+

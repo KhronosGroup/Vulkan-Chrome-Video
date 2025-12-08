@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrome Vulkan Video Integration - Documentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --accent-vulkan: #ac2d2d;
+            --accent-chrome: #4285f4;
+            --accent-nvidia: #76b900;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #2d3a4f;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Animated background */
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(172, 45, 45, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(66, 133, 244, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(118, 185, 0, 0.05) 0%, transparent 60%);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-strip {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .logo-strip span {
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .logo-strip .vulkan { color: var(--accent-vulkan); border-color: var(--accent-vulkan); }
+        .logo-strip .chrome { color: var(--accent-chrome); border-color: var(--accent-chrome); }
+        .logo-strip .khronos { color: var(--accent-nvidia); border-color: var(--accent-nvidia); }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Video intro section */
+        .video-intro {
+            margin-bottom: 3rem;
+            animation: fadeIn 0.8s ease-out 0.2s backwards;
+        }
+
+        .video-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+
+        .video-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .video-header h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .video-badge {
+            background: linear-gradient(135deg, var(--accent-vulkan), var(--accent-nvidia));
+            color: white;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .video-wrapper {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .video-wrapper video {
+            width: 100%;
+            display: block;
+            border-radius: 10px;
+        }
+
+        /* Section title */
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .docs-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .doc-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 1.5rem;
+            animation: fadeInUp 0.5s ease-out backwards;
+        }
+
+        .doc-card:nth-child(1) { animation-delay: 0.3s; }
+        .doc-card:nth-child(2) { animation-delay: 0.4s; }
+        .doc-card:nth-child(3) { animation-delay: 0.5s; }
+        .doc-card:nth-child(4) { animation-delay: 0.6s; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .doc-card:hover {
+            border-color: var(--accent-nvidia);
+            transform: translateX(8px);
+            box-shadow: 0 4px 20px rgba(118, 185, 0, 0.15);
+        }
+
+        .doc-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .doc-card:nth-child(1) .doc-icon { background: rgba(118, 185, 0, 0.2); }
+        .doc-card:nth-child(2) .doc-icon { background: rgba(172, 45, 45, 0.2); }
+        .doc-card:nth-child(3) .doc-icon { background: rgba(66, 133, 244, 0.2); }
+        .doc-card:nth-child(4) .doc-icon { background: rgba(118, 185, 0, 0.2); }
+
+        .doc-content h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .doc-content p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .doc-arrow {
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .doc-card:hover .doc-arrow {
+            transform: translateX(5px);
+            color: var(--accent-nvidia);
+        }
+
+        .tag {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            animation: fadeIn 0.6s ease-out 0.7s backwards;
+        }
+
+        footer a {
+            color: var(--accent-nvidia);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .doc-card {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .doc-icon { margin: 0 auto; }
+            .doc-arrow { display: none; }
+            .logo-strip {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    
+    <div class="container">
+        <header>
+            <div class="logo-strip">
+                <span class="vulkan">Vulkan Video</span>
+                <span class="chrome">Chromium</span>
+                <span class="khronos">Khronos Vulkan Video TSG</span>
+            </div>
+            <h1>Chrome Vulkan Video Integration</h1>
+            <p class="subtitle">Hardware-accelerated video decoding using Vulkan Video extensions for Chromium browser</p>
+        </header>
+
+        <!-- Video Introduction -->
+        <div class="video-intro">
+            <div class="video-container">
+                <div class="video-header">
+                    <h2>🎬 Project Introduction</h2>
+                    <span class="video-badge">Video Overview</span>
+                </div>
+                <div class="video-wrapper">
+                    <video controls preload="metadata" poster="">
+                        <source src="video/Chromium_and_Vulkan_Video.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documentation Section -->
+        <div class="section-title">Documentation</div>
+
+        <div class="docs-grid">
+            <a href="mindmap.html" class="doc-card">
+                <div class="doc-icon">🗺️</div>
+                <div class="doc-content">
+                    <h2>Architecture Mind Map</h2>
+                    <p>Visual overview of the complete Chromium and Vulkan Video integration architecture and component relationships.</p>
+                    <span class="tag">Visual Overview</span>
+                </div>
+                <div class="doc-arrow">→</div>
+            </a>
+
+            <a href="vulkan_video_integration.html" class="doc-card">
+                <div class="doc-icon">📋</div>
+                <div class="doc-content">
+                    <h2>Vulkan Video Integration Design</h2>
+                    <p>Complete design document covering architecture, implementation details, and integration strategy for Vulkan Video in Chromium.</p>
+                    <span class="tag">Design Document</span>
+                </div>
+                <div class="doc-arrow">→</div>
+            </a>
+
+            <a href="vulkan_video_development_plan.html" class="doc-card">
+                <div class="doc-icon">🗓️</div>
+                <div class="doc-content">
+                    <h2>Development Plan</h2>
+                    <p>Phased development roadmap, milestones, timelines, and resource planning for the integration project.</p>
+                    <span class="tag">Project Plan</span>
+                </div>
+                <div class="doc-arrow">→</div>
+            </a>
+
+            <a href="chromium_presentation_layer.html" class="doc-card">
+                <div class="doc-icon">🖼️</div>
+                <div class="doc-content">
+                    <h2>Chromium Presentation Layer</h2>
+                    <p>Deep dive into Chromium's graphics stack, Skia integration, compositor architecture, and video frame display paths.</p>
+                    <span class="tag">Architecture</span>
+                </div>
+                <div class="doc-arrow">→</div>
+            </a>
+        </div>
+
+        <footer>
+            <p>NVIDIA Vulkan Video External · <a href="https://gitlab-master.nvidia.com/vulkan-video-external/chrome-vulkan-video-hw-accelerated">GitLab Repository</a></p>
+        </footer>
+    </div>
+</body>
+</html>

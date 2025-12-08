@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1000 700">
+  <defs>
+    <linearGradient id="browserGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1D4ED8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cdmGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D97706;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="vulkanGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="protectedGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="secureGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#EF4444;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DC2626;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="teeGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EA580C;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="futureGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow2" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="3" stdDeviation="4" flood-opacity="0.2"/>
+    </filter>
+    <marker id="arrow2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/>
+    </marker>
+    <marker id="arrowGreen2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#059669"/>
+    </marker>
+    <!-- Lock icon -->
+    <symbol id="lock2" viewBox="0 0 20 20">
+      <rect x="3" y="8" width="14" height="10" rx="2" fill="currentColor"/>
+      <path d="M6 8V6a4 4 0 1 1 8 0v2" fill="none" stroke="currentColor" stroke-width="2"/>
+    </symbol>
+    <!-- Key icon -->
+    <symbol id="key" viewBox="0 0 24 24">
+      <circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="12" y1="12" x2="22" y2="22" stroke="currentColor" stroke-width="2"/>
+      <line x1="18" y1="18" x2="22" y2="14" stroke="currentColor" stroke-width="2"/>
+    </symbol>
+    <!-- Shield icon -->
+    <symbol id="shield2" viewBox="0 0 24 24">
+      <path d="M12 2L4 6v6c0 5.5 3.5 10 8 11 4.5-1 8-5.5 8-11V6l-8-4z" fill="currentColor"/>
+    </symbol>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1000" height="700" fill="#ffffff"/>
+  
+  <!-- Future badge -->
+  <rect x="750" y="10" width="230" height="30" rx="15" fill="url(#futureGrad)" filter="url(#shadow2)"/>
+  <text x="865" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">FUTURE EXTENSION PROPOSAL</text>
+  
+  <!-- Title -->
+  <text x="400" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#1e293b">Vulkan Video with Native Decryption</text>
+  <text x="400" y="58" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#64748b">Proposed: VK_KHR_video_decode_encryption - Decrypt-during-decode like VA-API</text>
+  
+  <!-- Browser/CDM Section -->
+  <rect x="40" y="80" width="920" height="130" rx="10" fill="#f8fafc" stroke="#3b82f6" stroke-width="2"/>
+  <text x="60" y="105" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1d4ed8">Browser / CDM Process</text>
+  
+  <!-- Encrypted Stream Input -->
+  <rect x="60" y="120" width="180" height="70" rx="8" fill="url(#browserGrad2)" filter="url(#shadow2)"/>
+  <use xlink:href="#lock2" x="170" y="125" width="14" height="14" fill="#fff"/>
+  <text x="150" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Encrypted Stream</text>
+  <text x="150" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dbeafe">CENC/CBCS NAL units</text>
+  
+  <!-- Widevine CDM -->
+  <rect x="290" y="120" width="200" height="70" rx="8" fill="url(#cdmGrad2)" filter="url(#shadow2)"/>
+  <use xlink:href="#key" x="420" y="125" width="14" height="14" fill="#fff"/>
+  <text x="390" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Widevine CDM</text>
+  <text x="390" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fef3c7">Provides wrapped keys only</text>
+  
+  <!-- Key Point Box -->
+  <rect x="540" y="120" width="200" height="70" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+  <text x="640" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#16a34a">CDM Simplified:</text>
+  <text x="640" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#15803d">Only provides keys</text>
+  <text x="640" y="182" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#15803d">No decryption code!</text>
+  
+  <!-- Encrypted Buffer to GPU -->
+  <rect x="770" y="120" width="170" height="70" rx="8" fill="url(#secureGrad2)" filter="url(#shadow2)"/>
+  <use xlink:href="#lock2" x="870" y="125" width="14" height="14" fill="#fff"/>
+  <text x="855" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">Encrypted VkBuffer</text>
+  <text x="855" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fecaca">Still encrypted bitstream</text>
+  
+  <!-- GPU Process Section -->
+  <rect x="40" y="230" width="920" height="220" rx="10" fill="#faf5ff" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="60" y="255" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#7c3aed">GPU Process - Vulkan Video Decoder with Encryption Extension</text>
+  
+  <!-- Encryption Parameters -->
+  <rect x="60" y="275" width="280" height="110" rx="8" fill="url(#vulkanGrad2)" filter="url(#shadow2)"/>
+  <text x="200" y="300" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">VkVideoDecodeEncryptionInfoKHR</text>
+  <text x="80" y="325" font-family="monospace" font-size="9" fill="#ede9fe">.encryptionScheme = CENC_CTR</text>
+  <text x="80" y="342" font-family="monospace" font-size="9" fill="#ede9fe">.pKeyData = wrapped_key_blob</text>
+  <text x="80" y="359" font-family="monospace" font-size="9" fill="#ede9fe">.pIV = initialization_vector</text>
+  <text x="80" y="376" font-family="monospace" font-size="9" fill="#ede9fe">.pSubsampleInfo = clear/cipher</text>
+  
+  <!-- Decoder Command -->
+  <rect x="370" y="275" width="280" height="110" rx="8" fill="url(#vulkanGrad2)" filter="url(#shadow2)"/>
+  <text x="510" y="300" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">vkCmdDecodeVideoKHR</text>
+  <text x="390" y="325" font-family="monospace" font-size="9" fill="#ede9fe">.pNext = &amp;encryption_info</text>
+  <text x="390" y="342" font-family="monospace" font-size="9" fill="#ede9fe">.srcBuffer = encrypted_stream</text>
+  <text x="390" y="359" font-family="monospace" font-size="9" fill="#ede9fe">.dstPictureResource =</text>
+  <text x="390" y="376" font-family="monospace" font-size="9" fill="#ede9fe">    protected_output</text>
+  
+  <!-- TEE Box -->
+  <rect x="680" y="275" width="260" height="110" rx="8" fill="url(#teeGrad2)" filter="url(#shadow2)"/>
+  <use xlink:href="#shield2" x="870" y="280" width="14" height="14" fill="#fff"/>
+  <text x="810" y="300" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Hardware TEE / Secure Enclave</text>
+  <text x="810" y="325" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffedd5">1. Unwrap key blob</text>
+  <text x="810" y="345" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffedd5">2. Decrypt during decode</text>
+  <text x="810" y="365" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffedd5">3. Single HW operation</text>
+  <text x="810" y="385" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffedd5">Keys NEVER leave TEE</text>
+  
+  <!-- Benefits highlight -->
+  <rect x="60" y="400" width="580" height="35" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+  <text x="350" y="423" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#c2410c">Single Pass: Decrypt + Decode in ONE hardware operation - No intermediate buffers!</text>
+  
+  <!-- Output -->
+  <rect x="680" y="400" width="260" height="35" rx="6" fill="url(#protectedGrad2)" filter="url(#shadow2)"/>
+  <text x="810" y="423" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Protected VkImage Output</text>
+  
+  <!-- Display Section -->
+  <rect x="40" y="470" width="920" height="100" rx="10" fill="#f0fdf4" stroke="#10b981" stroke-width="2"/>
+  <text x="60" y="495" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#059669">Display Output</text>
+  
+  <!-- Compositor -->
+  <rect x="250" y="510" width="220" height="45" rx="8" fill="url(#protectedGrad2)" filter="url(#shadow2)"/>
+  <text x="360" y="538" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">Compositor / Overlay</text>
+  
+  <!-- HDCP -->
+  <rect x="530" y="510" width="200" height="45" rx="8" fill="url(#secureGrad2)" filter="url(#shadow2)"/>
+  <use xlink:href="#lock2" x="660" y="518" width="12" height="12" fill="#fff"/>
+  <text x="630" y="538" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">HDCP to Display</text>
+  
+  <!-- Arrows -->
+  <!-- Encrypted to CDM -->
+  <line x1="240" y1="155" x2="290" y2="155" stroke="#64748b" stroke-width="2" marker-end="url(#arrow2)"/>
+  
+  <!-- CDM provides keys (not decrypted data) -->
+  <path d="M 390 190 L 390 260 L 200 275" fill="none" stroke="#ea580c" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <text x="280" y="235" font-family="Arial, sans-serif" font-size="9" fill="#c2410c">wrapped keys</text>
+  
+  <!-- Encrypted stream to GPU -->
+  <line x1="490" y1="155" x2="540" y2="155" stroke="#64748b" stroke-width="2" marker-end="url(#arrow2)"/>
+  <line x1="740" y1="155" x2="770" y2="155" stroke="#64748b" stroke-width="2" marker-end="url(#arrow2)"/>
+  <line x1="855" y1="190" x2="855" y2="220" stroke="#dc2626" stroke-width="2"/>
+  <line x1="855" y1="220" x2="510" y2="275" stroke="#dc2626" stroke-width="2" marker-end="url(#arrow2)"/>
+  <text x="700" y="240" font-family="Arial, sans-serif" font-size="9" fill="#dc2626">encrypted</text>
+  
+  <!-- Params to decoder -->
+  <line x1="340" y1="330" x2="370" y2="330" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow2)"/>
+  
+  <!-- Decoder to TEE -->
+  <line x1="650" y1="330" x2="680" y2="330" stroke="#ea580c" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  
+  <!-- TEE to output -->
+  <line x1="810" y1="385" x2="810" y2="400" stroke="#059669" stroke-width="2" marker-end="url(#arrowGreen2)"/>
+  
+  <!-- To display -->
+  <line x1="810" y1="435" x2="810" y2="460" stroke="#059669" stroke-width="2"/>
+  <line x1="810" y1="460" x2="360" y2="460" stroke="#059669" stroke-width="2"/>
+  <line x1="360" y1="460" x2="360" y2="510" stroke="#059669" stroke-width="2" marker-end="url(#arrowGreen2)"/>
+  
+  <line x1="470" y1="532" x2="530" y2="532" stroke="#64748b" stroke-width="2" marker-end="url(#arrow2)"/>
+  
+  <!-- Benefits Section -->
+  <rect x="40" y="590" width="920" height="90" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+  <text x="500" y="615" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1e293b">Benefits of Native Decrypt-During-Decode Extension</text>
+  
+  <text x="80" y="645" font-family="Arial, sans-serif" font-size="11" fill="#16a34a">Single HW Operation</text>
+  <text x="80" y="665" font-family="Arial, sans-serif" font-size="10" fill="#475569">Decrypt + decode in one pass</text>
+  
+  <text x="280" y="645" font-family="Arial, sans-serif" font-size="11" fill="#16a34a">Keys Never Leave TEE</text>
+  <text x="280" y="665" font-family="Arial, sans-serif" font-size="10" fill="#475569">Max security - hardware only</text>
+  
+  <text x="500" y="645" font-family="Arial, sans-serif" font-size="11" fill="#16a34a">Reduced Bandwidth</text>
+  <text x="500" y="665" font-family="Arial, sans-serif" font-size="10" fill="#475569">No intermediate decrypt buffer</text>
+  
+  <text x="720" y="645" font-family="Arial, sans-serif" font-size="11" fill="#16a34a">VA-API Parity</text>
+  <text x="720" y="665" font-family="Arial, sans-serif" font-size="10" fill="#475569">Easy porting from VA-API</text>
+  
+  <text x="900" y="645" font-family="Arial, sans-serif" font-size="11" fill="#16a34a">Simple CDM</text>
+  <text x="900" y="665" font-family="Arial, sans-serif" font-size="10" fill="#475569">Keys only</text>
+</svg>

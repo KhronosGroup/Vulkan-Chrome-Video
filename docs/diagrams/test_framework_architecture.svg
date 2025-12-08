@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 800 550">
+  <defs>
+    <linearGradient id="testGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1D4ED8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="listenerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="wrapperGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D97706;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="pipelineGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="validatorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#EC4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DB2777;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="800" height="550" fill="#ffffff"/>
+  
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1e293b">Test Framework Architecture</text>
+  <text x="400" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#64748b">Chromium Hardware Video Decode Testing</text>
+  
+  <!-- VideoDecodeAcceleratorTest -->
+  <rect x="150" y="70" width="500" height="70" rx="8" fill="url(#testGrad)"/>
+  <text x="400" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">VideoDecodeAcceleratorTest</text>
+  <text x="400" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#dbeafe">(GTest-based test fixture)</text>
+  <text x="400" y="135" text-anchor="middle" font-family="monospace" font-size="9" fill="#93c5fd">media/gpu/test/video_decode_accelerator_tests.cc</text>
+  
+  <!-- Arrow down to DecoderListener -->
+  <line x1="400" y1="140" x2="400" y2="180" stroke="#64748b" stroke-width="2"/>
+  <polygon points="400,185 395,173 405,173" fill="#64748b"/>
+  
+  <!-- DecoderListener -->
+  <rect x="150" y="190" width="500" height="85" rx="8" fill="url(#listenerGrad)"/>
+  <text x="400" y="215" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">DecoderListener</text>
+  <text x="180" y="240" font-family="Arial, sans-serif" font-size="10" fill="#ede9fe">- Wraps DecoderWrapper</text>
+  <text x="180" y="255" font-family="Arial, sans-serif" font-size="10" fill="#ede9fe">- Handles decode events (frame ready, error, flush)</text>
+  <text x="180" y="270" font-family="Arial, sans-serif" font-size="10" fill="#ede9fe">- Routes frames to validators/writers</text>
+  
+  <!-- Arrow down to DecoderWrapper -->
+  <line x1="400" y1="275" x2="400" y2="310" stroke="#64748b" stroke-width="2"/>
+  <polygon points="400,315 395,303 405,303" fill="#64748b"/>
+  
+  <!-- DecoderWrapper -->
+  <rect x="150" y="320" width="500" height="85" rx="8" fill="url(#wrapperGrad2)"/>
+  <text x="400" y="345" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">DecoderWrapper</text>
+  <text x="180" y="370" font-family="Arial, sans-serif" font-size="10" fill="#fef3c7">- Creates VideoDecoderPipeline (HW decode path)</text>
+  <text x="180" y="385" font-family="Arial, sans-serif" font-size="10" fill="#fef3c7">- Manages decode task queue</text>
+  <text x="180" y="400" font-family="Arial, sans-serif" font-size="10" fill="#fef3c7">- Handles resolution changes</text>
+  
+  <!-- Arrow down to VideoDecoderPipeline -->
+  <line x1="400" y1="405" x2="400" y2="440" stroke="#64748b" stroke-width="2"/>
+  <polygon points="400,445 395,433 405,433" fill="#64748b"/>
+  
+  <!-- VideoDecoderPipeline -->
+  <rect x="150" y="450" width="500" height="70" rx="8" fill="url(#pipelineGrad2)"/>
+  <text x="400" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">VideoDecoderPipeline</text>
+  <text x="400" y="495" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dcfce7">VaapiVideoDecoder / V4L2VideoDecoder / VulkanVideoDecoder</text>
+  <text x="400" y="510" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#bbf7d0">Production decode path under test</text>
+  
+  <!-- Right side - Validators -->
+  <rect x="680" y="190" width="110" height="115" rx="8" fill="url(#validatorGrad)"/>
+  <text x="735" y="215" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">Validators</text>
+  <text x="695" y="240" font-family="Arial, sans-serif" font-size="9" fill="#fce7f3">- MD5 hash</text>
+  <text x="695" y="255" font-family="Arial, sans-serif" font-size="9" fill="#fce7f3">- SSIM</text>
+  <text x="695" y="270" font-family="Arial, sans-serif" font-size="9" fill="#fce7f3">- PSNR</text>
+  <text x="695" y="285" font-family="Arial, sans-serif" font-size="9" fill="#fce7f3">- Frame count</text>
+  <text x="695" y="300" font-family="Arial, sans-serif" font-size="9" fill="#fce7f3">- Latency</text>
+  
+  <!-- Arrow to validators (right arrow) -->
+  <line x1="650" y1="232" x2="675" y2="232" stroke="#64748b" stroke-width="2"/>
+  <polygon points="680,232 668,227 668,237" fill="#64748b"/>
+  <text x="665" y="223" font-family="Arial, sans-serif" font-size="8" fill="#64748b">frames</text>
+  
+  <!-- Left side - Test Data -->
+  <rect x="10" y="190" width="110" height="115" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="65" y="215" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1e293b">Test Data</text>
+  <text x="25" y="240" font-family="Arial, sans-serif" font-size="9" fill="#475569">- H.264 streams</text>
+  <text x="25" y="255" font-family="Arial, sans-serif" font-size="9" fill="#475569">- VP9 streams</text>
+  <text x="25" y="270" font-family="Arial, sans-serif" font-size="9" fill="#475569">- AV1 streams</text>
+  <text x="25" y="285" font-family="Arial, sans-serif" font-size="9" fill="#475569">- HEVC streams</text>
+  <text x="25" y="300" font-family="Arial, sans-serif" font-size="9" fill="#475569">- VP8 streams</text>
+  
+  <!-- Arrow from test data (right arrow) -->
+  <line x1="120" y1="232" x2="145" y2="232" stroke="#64748b" stroke-width="2"/>
+  <polygon points="150,232 138,227 138,237" fill="#64748b"/>
+  <text x="135" y="223" font-family="Arial, sans-serif" font-size="8" fill="#64748b">input</text>
+  
+  <!-- Legend -->
+  <rect x="10" y="525" width="780" height="20" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="400" y="539" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Test path: GTest fixture → DecoderListener → DecoderWrapper → VideoDecoderPipeline (production HW decoder) → Validators</text>
+</svg>

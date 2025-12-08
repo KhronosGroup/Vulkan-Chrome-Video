@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 520">
+  <defs>
+    <linearGradient id="decoderGradVF" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F472B6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="sharedImageGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#60A5FA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="compositedGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#34D399;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="overlayGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A78BFA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="750" height="520" fill="#ffffff"/>
+  
+  <!-- Title -->
+  <text x="375" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1e293b">Video Frame to Display Path</text>
+  
+  <!-- Video Decoder Section -->
+  <rect x="40" y="50" width="670" height="120" rx="10" fill="url(#decoderGradVF)" opacity="0.15"/>
+  <rect x="40" y="50" width="670" height="120" rx="10" fill="none" stroke="#EC4899" stroke-width="2"/>
+  <text x="60" y="75" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#9d174d">Video Decoder</text>
+  
+  <rect x="60" y="90" width="630" height="65" rx="6" fill="#fff" stroke="#EC4899" stroke-width="1.5"/>
+  <text x="375" y="115" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#9d174d">Decoded Frame (GPU Memory)</text>
+  <text x="150" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#be185d">VA-API: VASurface → DMA-BUF</text>
+  <text x="375" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#be185d">Vulkan Video: VkImage → DMA-BUF</text>
+  <text x="580" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#be185d">V4L2: DMA-BUF directly</text>
+  
+  <!-- Arrow down -->
+  <line x1="375" y1="170" x2="375" y2="195" stroke="#64748b" stroke-width="2"/>
+  <polygon points="375,200 370,190 380,190" fill="#64748b"/>
+  
+  <!-- SharedImage System Section -->
+  <rect x="40" y="205" width="670" height="110" rx="10" fill="url(#sharedImageGrad)" opacity="0.15"/>
+  <rect x="40" y="205" width="670" height="110" rx="10" fill="none" stroke="#3B82F6" stroke-width="2"/>
+  <text x="60" y="230" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#1e40af">SharedImage System</text>
+  
+  <rect x="60" y="245" width="630" height="55" rx="6" fill="#fff" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="375" y="265" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1e40af">SharedImageBacking (DMA-BUF backed)</text>
+  <text x="180" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#3B82F6">GL texture (EGLImage)</text>
+  <text x="375" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#3B82F6">Vulkan VkImage</text>
+  <text x="560" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#3B82F6">Direct scanout (overlay)</text>
+  
+  <!-- Arrow down and split -->
+  <line x1="375" y1="315" x2="375" y2="340" stroke="#64748b" stroke-width="2"/>
+  <line x1="200" y1="345" x2="550" y2="345" stroke="#64748b" stroke-width="2"/>
+  <line x1="200" y1="345" x2="200" y2="365" stroke="#64748b" stroke-width="2"/>
+  <line x1="550" y1="345" x2="550" y2="365" stroke="#64748b" stroke-width="2"/>
+  <polygon points="200,370 195,360 205,360" fill="#64748b"/>
+  <polygon points="550,370 545,360 555,360" fill="#64748b"/>
+  
+  <!-- Composited Path -->
+  <rect x="60" y="375" width="280" height="120" rx="10" fill="url(#compositedGrad)" opacity="0.15"/>
+  <rect x="60" y="375" width="280" height="120" rx="10" fill="none" stroke="#10B981" stroke-width="2"/>
+  <text x="200" y="400" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#047857">Composited Path</text>
+  
+  <rect x="80" y="415" width="240" height="65" rx="6" fill="#fff" stroke="#10B981" stroke-width="1.5"/>
+  <text x="200" y="438" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#047857">Import as GL/Vk texture</text>
+  <text x="200" y="455" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#10B981">Draw to compositor surface</text>
+  <text x="200" y="472" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#64748b">(GPU composition)</text>
+  
+  <!-- Overlay Path -->
+  <rect x="410" y="375" width="280" height="120" rx="10" fill="url(#overlayGrad)" opacity="0.15"/>
+  <rect x="410" y="375" width="280" height="120" rx="10" fill="none" stroke="#8B5CF6" stroke-width="2"/>
+  <text x="550" y="400" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#5b21b6">Overlay Path</text>
+  
+  <rect x="430" y="415" width="240" height="65" rx="6" fill="#fff" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="550" y="438" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#5b21b6">Direct Scanout</text>
+  <text x="550" y="455" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#8B5CF6">via DRM plane</text>
+  <text x="550" y="472" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#22c55e" font-weight="bold">(zero GPU copy)</text>
+  
+  <!-- Legend -->
+  <text x="375" y="510" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Overlay path is preferred for lowest power and latency</text>
+</svg>
+

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 420">
+  <defs>
+    <linearGradient id="rendererGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#60A5FA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="canvasGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#34D399;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="ganeshGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F472B6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="graphiteGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A78BFA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="gpuGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FB923C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F97316;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="700" height="420" fill="#ffffff"/>
+  
+  <!-- Title -->
+  <text x="350" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1e293b">Skia in Chrome Architecture</text>
+  
+  <!-- SkiaRenderer outer box -->
+  <rect x="40" y="45" width="620" height="360" rx="12" fill="url(#rendererGrad)" opacity="0.1"/>
+  <rect x="40" y="45" width="620" height="360" rx="12" fill="none" stroke="#3B82F6" stroke-width="2"/>
+  <text x="60" y="70" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1e40af">SkiaRenderer</text>
+  
+  <!-- SkCanvas API box -->
+  <rect x="80" y="90" width="540" height="70" rx="8" fill="url(#canvasGrad)"/>
+  <text x="350" y="118" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">SkCanvas API</text>
+  <text x="350" y="142" text-anchor="middle" font-family="monospace" font-size="11" fill="#d1fae5">drawRect(), drawImage(), drawTextBlob(), clipPath()</text>
+  
+  <!-- Arrow down from SkCanvas -->
+  <line x1="350" y1="160" x2="350" y2="185" stroke="#64748b" stroke-width="2"/>
+  
+  <!-- Branch lines -->
+  <line x1="200" y1="190" x2="500" y2="190" stroke="#64748b" stroke-width="2"/>
+  <line x1="200" y1="190" x2="200" y2="210" stroke="#64748b" stroke-width="2"/>
+  <line x1="500" y1="190" x2="500" y2="210" stroke="#64748b" stroke-width="2"/>
+  
+  <!-- Arrow heads for branches -->
+  <polygon points="200,215 195,205 205,205" fill="#64748b"/>
+  <polygon points="500,215 495,205 505,205" fill="#64748b"/>
+  
+  <!-- GrDirectContext (Ganesh) box -->
+  <rect x="80" y="220" width="240" height="80" rx="8" fill="url(#ganeshGrad)"/>
+  <text x="200" y="250" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#fff">GrDirectContext</text>
+  <text x="200" y="272" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#fce7f3">(Ganesh)</text>
+  <text x="200" y="290" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fbcfe8">Current Production Backend</text>
+  
+  <!-- Graphite Recorder box -->
+  <rect x="380" y="220" width="240" height="80" rx="8" fill="url(#graphiteGrad)"/>
+  <text x="500" y="250" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#fff">skgpu::graphite::Recorder</text>
+  <text x="500" y="272" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#ede9fe">(Graphite)</text>
+  <text x="500" y="290" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ddd6fe">Next-Gen Backend</text>
+  
+  <!-- Arrows down to GPU layer -->
+  <line x1="200" y1="300" x2="200" y2="325" stroke="#64748b" stroke-width="2"/>
+  <polygon points="200,330 195,320 205,320" fill="#64748b"/>
+  <line x1="500" y1="300" x2="500" y2="325" stroke="#64748b" stroke-width="2"/>
+  <polygon points="500,330 495,320 505,320" fill="#64748b"/>
+  
+  <!-- GrGLGpu / GrVkGpu box -->
+  <rect x="80" y="335" width="240" height="55" rx="8" fill="url(#gpuGrad)"/>
+  <text x="200" y="358" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">GrGLGpu / GrVkGpu</text>
+  <text x="200" y="378" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#fed7aa">GrMtlGpu / GrD3DGpu</text>
+  
+  <!-- Dawn WebGPU API box -->
+  <rect x="380" y="335" width="240" height="55" rx="8" fill="url(#gpuGrad)"/>
+  <text x="500" y="358" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Dawn WebGPU API</text>
+  <text x="500" y="378" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#fed7aa">Vulkan / D3D12 / Metal</text>
+  
+  <!-- Labels on sides -->
+  <rect x="60" y="258" width="10" height="40" rx="2" fill="#EC4899"/>
+  <rect x="630" y="258" width="10" height="40" rx="2" fill="#8B5CF6"/>
+</svg>
+

@@ -1,0 +1,20 @@
+# GitLab CI/CD Configuration
+# Vulkan Video Chrome Integration
+
+stages:
+  - deploy
+
+# GitLab Pages deployment
+pages:
+  stage: deploy
+  tags:
+    - pages
+  image: busybox:latest
+  script:
+    - mkdir -p public
+    - cp -r docs/* public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900">
+  <defs>
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90D9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#357ABD;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="browserGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#98D977;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7BC558;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="gpuGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFB347;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF9933;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="hwGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EE5A5A;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="vulkanGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A855F7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#9333EA;stop-opacity:1" />
+    </linearGradient>
+    <!-- Shadow filter removed for cleaner look -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#555"/>
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="900" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="600" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#1e293b">
+    Chromium Media Pipeline Architecture
+  </text>
+  
+  <!-- Browser Process Section -->
+  <rect x="50" y="70" width="1100" height="200" rx="10" fill="url(#browserGrad)" opacity="0.3"/>
+  <text x="70" y="95" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2d5016">Browser Process</text>
+  
+  <!-- HTML5 Video -->
+  <rect x="80" y="110" width="150" height="60" rx="8" fill="#fff" stroke="#5a8f3e" stroke-width="2"/>
+  <text x="155" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#2d5016">&lt;video&gt; Element</text>
+  <text x="155" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#4a7030">HTML5 Media API</text>
+  
+  <!-- Media Element -->
+  <rect x="280" y="110" width="180" height="60" rx="8" fill="#fff" stroke="#5a8f3e" stroke-width="2"/>
+  <text x="370" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#2d5016">HTMLMediaElement</text>
+  <text x="370" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#4a7030">blink/renderer/core/html</text>
+  
+  <!-- Pipeline Controller -->
+  <rect x="510" y="110" width="180" height="60" rx="8" fill="#fff" stroke="#5a8f3e" stroke-width="2"/>
+  <text x="600" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#2d5016">PipelineController</text>
+  <text x="600" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#4a7030">media/filters/</text>
+  
+  <!-- Demuxer -->
+  <rect x="740" y="110" width="150" height="60" rx="8" fill="#fff" stroke="#5a8f3e" stroke-width="2"/>
+  <text x="815" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#2d5016">FFmpegDemuxer</text>
+  <text x="815" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#4a7030">Container parsing</text>
+  
+  <!-- Decoder Selector -->
+  <rect x="940" y="110" width="180" height="60" rx="8" fill="#fff" stroke="#5a8f3e" stroke-width="2"/>
+  <text x="1030" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#2d5016">DecoderSelector</text>
+  <text x="1030" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#4a7030">HW/SW Selection</text>
+  
+  <!-- Mojo IPC -->
+  <rect x="350" y="195" width="500" height="50" rx="8" fill="#e2e8f0" stroke="#64748b" stroke-width="2" stroke-dasharray="5,5"/>
+  <text x="600" y="225" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#475569">Mojo IPC Boundary</text>
+  
+  <!-- GPU Process Section -->
+  <rect x="50" y="280" width="1100" height="280" rx="10" fill="url(#gpuGrad)" opacity="0.3"/>
+  <text x="70" y="305" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#7c4a03">GPU Process</text>
+  
+  <!-- Mojo Video Decoder Service -->
+  <rect x="200" y="320" width="200" height="70" rx="8" fill="#fff" stroke="#cc7000" stroke-width="2"/>
+  <text x="300" y="345" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7c4a03">MojoVideoDecoder</text>
+  <text x="300" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7c4a03">Service</text>
+  <text x="300" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#996600">media/mojo/services/</text>
+  
+  <!-- Video Decoder Pipeline -->
+  <rect x="500" y="320" width="200" height="70" rx="8" fill="#fff" stroke="#cc7000" stroke-width="2"/>
+  <text x="600" y="345" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7c4a03">VideoDecoder</text>
+  <text x="600" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7c4a03">Pipeline</text>
+  <text x="600" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#996600">media/gpu/chromeos/</text>
+  
+  <!-- Frame Pool -->
+  <rect x="800" y="320" width="200" height="70" rx="8" fill="#fff" stroke="#cc7000" stroke-width="2"/>
+  <text x="900" y="345" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7c4a03">DmabufVideoFrame</text>
+  <text x="900" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7c4a03">Pool</text>
+  <text x="900" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#996600">Buffer management</text>
+  
+  <!-- Decoder Backends Row -->
+  <text x="400" y="430" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#7c4a03">Video Decoder Backends</text>
+  
+  <!-- VA-API Decoder -->
+  <rect x="100" y="450" width="180" height="80" rx="8" fill="#fff" stroke="#cc7000" stroke-width="2"/>
+  <text x="190" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7c4a03">VaapiVideoDecoder</text>
+  <text x="190" y="495" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#996600">media/gpu/vaapi/</text>
+  <text x="190" y="515" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">Linux/ChromeOS</text>
+  
+  <!-- V4L2 Decoder -->
+  <rect x="320" y="450" width="180" height="80" rx="8" fill="#fff" stroke="#cc7000" stroke-width="2"/>
+  <text x="410" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7c4a03">V4L2VideoDecoder</text>
+  <text x="410" y="495" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#996600">media/gpu/v4l2/</text>
+  <text x="410" y="515" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">ARM/ChromeOS</text>
+  
+  <!-- Vulkan Decoder (NEW) -->
+  <rect x="540" y="450" width="180" height="80" rx="8" fill="url(#vulkanGrad)" stroke="#7c3aed" stroke-width="3"/>
+  <text x="630" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">VulkanVideoDecoder</text>
+  <text x="630" y="495" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#e9d5ff">media/gpu/vulkan/</text>
+  <text x="630" y="515" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fff">★ NEW ★</text>
+  
+  <!-- D3D11 Decoder -->
+  <rect x="760" y="450" width="180" height="80" rx="8" fill="#fff" stroke="#cc7000" stroke-width="2"/>
+  <text x="850" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7c4a03">D3D11VideoDecoder</text>
+  <text x="850" y="495" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#996600">media/gpu/windows/</text>
+  <text x="850" y="515" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">Windows</text>
+  
+  <!-- VideoToolbox Decoder -->
+  <rect x="980" y="450" width="150" height="80" rx="8" fill="#fff" stroke="#cc7000" stroke-width="2"/>
+  <text x="1055" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7c4a03">VideoToolbox</text>
+  <text x="1055" y="495" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#996600">media/gpu/mac/</text>
+  <text x="1055" y="515" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">macOS</text>
+  
+  <!-- Hardware Layer Section -->
+  <rect x="50" y="580" width="1100" height="160" rx="10" fill="url(#hwGrad)" opacity="0.3"/>
+  <text x="70" y="605" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#7f1d1d">Hardware / Driver Layer</text>
+  
+  <!-- VA-API Driver -->
+  <rect x="100" y="620" width="180" height="60" rx="8" fill="#fff" stroke="#dc2626" stroke-width="2"/>
+  <text x="190" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7f1d1d">libva + Driver</text>
+  <text x="190" y="665" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#991b1b">Intel/AMD/NVIDIA</text>
+  
+  <!-- V4L2 Kernel -->
+  <rect x="320" y="620" width="180" height="60" rx="8" fill="#fff" stroke="#dc2626" stroke-width="2"/>
+  <text x="410" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7f1d1d">V4L2 Kernel API</text>
+  <text x="410" y="665" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#991b1b">Stateless Codec</text>
+  
+  <!-- Vulkan Driver -->
+  <rect x="540" y="620" width="180" height="60" rx="8" fill="url(#vulkanGrad)" stroke="#7c3aed" stroke-width="2"/>
+  <text x="630" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Vulkan Driver</text>
+  <text x="630" y="665" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#e9d5ff">VK_KHR_video_*</text>
+  
+  <!-- DXVA -->
+  <rect x="760" y="620" width="180" height="60" rx="8" fill="#fff" stroke="#dc2626" stroke-width="2"/>
+  <text x="850" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7f1d1d">DXVA / D3D11</text>
+  <text x="850" y="665" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#991b1b">Windows Driver</text>
+  
+  <!-- VT Hardware -->
+  <rect x="980" y="620" width="150" height="60" rx="8" fill="#fff" stroke="#dc2626" stroke-width="2"/>
+  <text x="1055" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#7f1d1d">Apple VT</text>
+  <text x="1055" y="665" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#991b1b">Apple Silicon</text>
+  
+  <!-- GPU Hardware -->
+  <rect x="100" y="700" width="1030" height="40" rx="8" fill="#374151"/>
+  <text x="615" y="725" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">GPU Video Decode Hardware (Intel QSV / AMD VCN / NVIDIA NVDEC)</text>
+  
+  <!-- Arrows -->
+  <!-- Browser to GPU Process -->
+  <line x1="155" y1="170" x2="155" y2="195" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="230" y1="140" x2="280" y2="140" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="460" y1="140" x2="510" y2="140" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="690" y1="140" x2="740" y2="140" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="890" y1="140" x2="940" y2="140" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- GPU Process internal -->
+  <line x1="300" y1="245" x2="300" y2="320" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="400" y1="355" x2="500" y2="355" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="700" y1="355" x2="800" y2="355" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- To backends -->
+  <line x1="600" y1="390" x2="190" y2="450" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="600" y1="390" x2="410" y2="450" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="600" y1="390" x2="630" y2="450" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <line x1="600" y1="390" x2="850" y2="450" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="600" y1="390" x2="1055" y2="450" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- To drivers -->
+  <line x1="190" y1="530" x2="190" y2="620" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="410" y1="530" x2="410" y2="620" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="630" y1="530" x2="630" y2="620" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <line x1="850" y1="530" x2="850" y2="620" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="1055" y1="530" x2="1055" y2="620" stroke="#555" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Legend -->
+  <rect x="50" y="760" width="300" height="80" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="70" y="785" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e293b">Legend</text>
+  <rect x="70" y="795" width="20" height="12" fill="url(#vulkanGrad)"/>
+  <text x="100" y="805" font-family="Arial, sans-serif" font-size="11" fill="#1e293b">New Vulkan Video path</text>
+  <line x1="70" y1="820" x2="90" y2="820" stroke="#555" stroke-width="2"/>
+  <text x="100" y="825" font-family="Arial, sans-serif" font-size="11" fill="#1e293b">Existing data flow</text>
+  
+  <!-- Version info -->
+  <text x="1100" y="880" text-anchor="end" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">
+    Chromium Media Pipeline v1.0 - December 2025
+  </text>
+</svg>
+

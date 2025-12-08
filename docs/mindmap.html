@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture Mind Map - Chrome Vulkan Video Integration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --accent-vulkan: #ac2d2d;
+            --accent-chrome: #4285f4;
+            --accent-nvidia: #76b900;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #2d3a4f;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Outfit', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Grid pattern background */
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                linear-gradient(rgba(118, 185, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(118, 185, 0, 0.03) 1px, transparent 1px),
+                radial-gradient(ellipse at 30% 30%, rgba(172, 45, 45, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 70%, rgba(66, 133, 244, 0.1) 0%, transparent 50%);
+            background-size: 50px 50px, 50px 50px, 100% 100%, 100% 100%;
+        }
+
+        /* Navigation header */
+        .nav-header {
+            background: rgba(10, 14, 23, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .nav-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--accent-nvidia);
+            border-color: var(--accent-nvidia);
+            background: rgba(118, 185, 0, 0.1);
+        }
+
+        .page-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .nav-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            background: rgba(118, 185, 0, 0.2);
+            color: var(--accent-nvidia);
+            text-transform: uppercase;
+        }
+
+        /* Main content area */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Image container with zoom capability */
+        .mindmap-container {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mindmap-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            cursor: grab;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .mindmap-wrapper:active {
+            cursor: grabbing;
+        }
+
+        .mindmap-wrapper img {
+            max-width: none;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+            background: #000000;
+        }
+
+        /* Zoom controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .zoom-btn {
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .zoom-btn:hover {
+            border-color: var(--accent-nvidia);
+            background: rgba(118, 185, 0, 0.1);
+            color: var(--accent-nvidia);
+        }
+
+        .zoom-level {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 0 1rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Fullscreen button */
+        .fullscreen-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 10;
+        }
+
+        /* Info panel */
+        .info-panel {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            max-width: 350px;
+            z-index: 10;
+        }
+
+        .info-panel h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--accent-nvidia);
+        }
+
+        .info-panel p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Keyboard hints */
+        .keyboard-hints {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .hint {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .key {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-header {
+                padding: 1rem;
+            }
+            .page-title {
+                display: none;
+            }
+            .info-panel {
+                display: none;
+            }
+            .main-content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+
+    <nav class="nav-header">
+        <div class="nav-content">
+            <div class="nav-left">
+                <a href="index.html" class="back-link">← Back to Index</a>
+                <span class="page-title">Architecture Mind Map</span>
+            </div>
+            <span class="nav-badge">Interactive Diagram</span>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="mindmap-container">
+            <div class="mindmap-wrapper" id="mapWrapper">
+                <img src="video/NotebookLM Mind Map.png" alt="Chromium and Vulkan Video Architecture Mind Map" id="mindmapImg">
+            </div>
+
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoomOut" title="Zoom Out">−</button>
+                <div class="zoom-level" id="zoomLevel">100%</div>
+                <button class="zoom-btn" id="zoomIn" title="Zoom In">+</button>
+                <button class="zoom-btn" id="zoomReset" title="Reset Zoom">⟲</button>
+            </div>
+
+            <button class="zoom-btn fullscreen-btn" id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
+
+            <div class="info-panel">
+                <h3>Chromium & Vulkan Video Integration</h3>
+                <p>Complete architecture overview showing all components, data flows, and integration points for hardware-accelerated video decoding.</p>
+                <div class="keyboard-hints">
+                    <span class="hint"><span class="key">+</span>/<span class="key">−</span> Zoom</span>
+                    <span class="hint"><span class="key">0</span> Reset</span>
+                    <span class="hint"><span class="key">F</span> Fullscreen</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const img = document.getElementById('mindmapImg');
+        const wrapper = document.getElementById('mapWrapper');
+        const zoomLevelDisplay = document.getElementById('zoomLevel');
+        const zoomInBtn = document.getElementById('zoomIn');
+        const zoomOutBtn = document.getElementById('zoomOut');
+        const zoomResetBtn = document.getElementById('zoomReset');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+        let scale = 0.2;
+        const minScale = 0.1;
+        const maxScale = 2;
+        const scaleStep = 0.1;
+
+        function updateZoom() {
+            img.style.transform = `scale(${scale})`;
+            img.style.transformOrigin = 'center top';
+            zoomLevelDisplay.textContent = Math.round(scale * 100) + '%';
+        }
+
+        function zoomIn() {
+            if (scale < maxScale) {
+                scale = Math.min(scale + scaleStep, maxScale);
+                updateZoom();
+            }
+        }
+
+        function zoomOut() {
+            if (scale > minScale) {
+                scale = Math.max(scale - scaleStep, minScale);
+                updateZoom();
+            }
+        }
+
+        function resetZoom() {
+            scale = 1;
+            updateZoom();
+            wrapper.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        }
+
+        zoomInBtn.addEventListener('click', zoomIn);
+        zoomOutBtn.addEventListener('click', zoomOut);
+        zoomResetBtn.addEventListener('click', resetZoom);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '+' || e.key === '=') zoomIn();
+            if (e.key === '-') zoomOut();
+            if (e.key === '0') resetZoom();
+            if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+        });
+
+        // Mouse wheel zoom
+        wrapper.addEventListener('wheel', (e) => {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) zoomIn();
+                else zoomOut();
+            }
+        }, { passive: false });
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+        // Drag to pan
+        let isDragging = false;
+        let startX, startY, scrollLeft, scrollTop;
+
+        wrapper.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.pageX - wrapper.offsetLeft;
+            startY = e.pageY - wrapper.offsetTop;
+            scrollLeft = wrapper.scrollLeft;
+            scrollTop = wrapper.scrollTop;
+        });
+
+        wrapper.addEventListener('mouseleave', () => isDragging = false);
+        wrapper.addEventListener('mouseup', () => isDragging = false);
+
+        wrapper.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const x = e.pageX - wrapper.offsetLeft;
+            const y = e.pageY - wrapper.offsetTop;
+            wrapper.scrollLeft = scrollLeft - (x - startX);
+            wrapper.scrollTop = scrollTop - (y - startY);
+        });
+
+        // Apply initial zoom on load
+        updateZoom();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900">
+  <defs>
+    <linearGradient id="inputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#94A3B8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#64748B;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="decodeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="vulkanGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="dmabufGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D97706;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="converterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#EC4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DB2777;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="displayGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#22C55E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16A34A;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <marker id="arrowWhite" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#fff"/>
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="900" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="600" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#1e293b">
+    Complete Video Frame Flow: Decode → Display
+  </text>
+  
+  <!-- Input Stage -->
+  <rect x="50" y="70" width="200" height="120" rx="8" fill="url(#inputGrad)" filter="url(#shadow)"/>
+  <text x="150" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">Compressed Video</text>
+  <text x="150" y="125" text-anchor="middle" font-family="monospace" font-size="10" fill="#e2e8f0">DecoderBuffer</text>
+  <text x="150" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#e2e8f0">H.264 / HEVC / VP9 / AV1</text>
+  <text x="150" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#e2e8f0">NAL units / OBUs</text>
+  
+  <!-- Parser Stage -->
+  <rect x="300" y="70" width="200" height="120" rx="8" fill="url(#decodeGrad)" filter="url(#shadow)"/>
+  <text x="400" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">Codec Parser</text>
+  <text x="400" y="125" text-anchor="middle" font-family="monospace" font-size="10" fill="#dbeafe">H264Decoder</text>
+  <text x="400" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dbeafe">• Parse SPS/PPS/Slice</text>
+  <text x="400" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dbeafe">• Manage DPB state</text>
+  
+  <!-- HW Accelerator Stage -->
+  <rect x="550" y="70" width="220" height="120" rx="8" fill="url(#vulkanGrad)" filter="url(#shadow)"/>
+  <text x="660" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">HW Accelerator</text>
+  <text x="660" y="125" text-anchor="middle" font-family="monospace" font-size="10" fill="#ede9fe">VulkanVideoDecoderDelegate</text>
+  <text x="660" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ede9fe">• Fill Vulkan structures</text>
+  <text x="660" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ede9fe">• Submit decode command</text>
+  
+  <!-- GPU Decode Stage -->
+  <rect x="820" y="70" width="200" height="120" rx="8" fill="url(#vulkanGrad)" filter="url(#shadow)"/>
+  <text x="920" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">GPU Decode HW</text>
+  <text x="920" y="125" text-anchor="middle" font-family="monospace" font-size="10" fill="#ede9fe">vkCmdDecodeVideoKHR</text>
+  <text x="920" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ede9fe">Fixed-function decode</text>
+  <text x="920" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ede9fe">Output: VkImage</text>
+  
+  <!-- VkImage to DMA-BUF -->
+  <rect x="820" y="230" width="200" height="120" rx="8" fill="url(#dmabufGrad)" filter="url(#shadow)"/>
+  <text x="920" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">Export DMA-BUF</text>
+  <text x="920" y="285" text-anchor="middle" font-family="monospace" font-size="10" fill="#fef3c7">vkGetMemoryFdKHR</text>
+  <text x="920" y="305" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fef3c7">VK_EXT_external_memory</text>
+  <text x="920" y="325" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fef3c7">_dma_buf</text>
+  
+  <!-- NativePixmap -->
+  <rect x="550" y="230" width="220" height="120" rx="8" fill="url(#dmabufGrad)" filter="url(#shadow)"/>
+  <text x="660" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">NativePixmap</text>
+  <text x="660" y="285" text-anchor="middle" font-family="monospace" font-size="10" fill="#fef3c7">gfx::NativePixmapDmaBuf</text>
+  <text x="660" y="305" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fef3c7">Wraps DMA-BUF FD</text>
+  <text x="660" y="325" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fef3c7">stride, offset, modifier</text>
+  
+  <!-- FrameResource -->
+  <rect x="300" y="230" width="200" height="120" rx="8" fill="url(#dmabufGrad)" filter="url(#shadow)"/>
+  <text x="400" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">FrameResource</text>
+  <text x="400" y="285" text-anchor="middle" font-family="monospace" font-size="10" fill="#fef3c7">NativePixmapFrame</text>
+  <text x="400" y="300" text-anchor="middle" font-family="monospace" font-size="10" fill="#fef3c7">Resource</text>
+  <text x="400" y="325" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fef3c7">GetDmabufFd(plane)</text>
+  
+  <!-- FramePool -->
+  <rect x="50" y="230" width="200" height="120" rx="8" fill="url(#decodeGrad)" filter="url(#shadow)"/>
+  <text x="150" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">Frame Pool</text>
+  <text x="150" y="285" text-anchor="middle" font-family="monospace" font-size="10" fill="#dbeafe">DmabufVideoFramePool</text>
+  <text x="150" y="305" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dbeafe">Pre-allocates buffers</text>
+  <text x="150" y="325" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dbeafe">Recycles on release</text>
+  
+  <!-- Converter Stage -->
+  <rect x="300" y="390" width="200" height="120" rx="8" fill="url(#converterGrad)" filter="url(#shadow)"/>
+  <text x="400" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">Frame Converter</text>
+  <text x="400" y="445" text-anchor="middle" font-family="monospace" font-size="10" fill="#fce7f3">MailboxVideoFrame</text>
+  <text x="400" y="460" text-anchor="middle" font-family="monospace" font-size="10" fill="#fce7f3">Converter</text>
+  <text x="400" y="485" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fce7f3">DMA-BUF → SharedImage</text>
+  
+  <!-- SharedImage -->
+  <rect x="550" y="390" width="220" height="120" rx="8" fill="url(#converterGrad)" filter="url(#shadow)"/>
+  <text x="660" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">SharedImage</text>
+  <text x="660" y="445" text-anchor="middle" font-family="monospace" font-size="10" fill="#fce7f3">gpu::Mailbox</text>
+  <text x="660" y="465" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fce7f3">GPU-visible handle</text>
+  <text x="660" y="485" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fce7f3">Cross-process sharing</text>
+  
+  <!-- VideoFrame -->
+  <rect x="820" y="390" width="200" height="120" rx="8" fill="url(#displayGrad)" filter="url(#shadow)"/>
+  <text x="920" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">VideoFrame</text>
+  <text x="920" y="445" text-anchor="middle" font-family="monospace" font-size="10" fill="#dcfce7">media::VideoFrame</text>
+  <text x="920" y="465" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dcfce7">STORAGE_OPAQUE</text>
+  <text x="920" y="485" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dcfce7">metadata, timestamp</text>
+  
+  <!-- Compositor -->
+  <rect x="550" y="550" width="220" height="120" rx="8" fill="url(#displayGrad)" filter="url(#shadow)"/>
+  <text x="660" y="580" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">Compositor</text>
+  <text x="660" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dcfce7">• Overlay promotion check</text>
+  <text x="660" y="625" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dcfce7">• GL/Vulkan composition</text>
+  <text x="660" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dcfce7">• Color management</text>
+  
+  <!-- Overlay Path -->
+  <rect x="300" y="550" width="200" height="120" rx="8" fill="url(#displayGrad)" filter="url(#shadow)"/>
+  <text x="400" y="580" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff">HW Overlay</text>
+  <text x="400" y="605" text-anchor="middle" font-family="monospace" font-size="10" fill="#dcfce7">drmModeSetPlane()</text>
+  <text x="400" y="625" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dcfce7">Direct scanout</text>
+  <text x="400" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#dcfce7">Zero GPU composition</text>
+  
+  <!-- Display -->
+  <rect x="420" y="710" width="350" height="100" rx="8" fill="#1e293b" filter="url(#shadow)"/>
+  <text x="595" y="745" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#fff">Display Output</text>
+  <text x="595" y="775" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8">KMS/DRM Scanout → Physical Display</text>
+  
+  <!-- Arrows Row 1 -->
+  <line x1="250" y1="130" x2="300" y2="130" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="500" y1="130" x2="550" y2="130" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="770" y1="130" x2="820" y2="130" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- Arrow down from GPU -->
+  <line x1="920" y1="190" x2="920" y2="230" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- Arrows Row 2 -->
+  <line x1="820" y1="290" x2="770" y2="290" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="550" y1="290" x2="500" y2="290" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="300" y1="290" x2="250" y2="290" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- Pool to FrameResource (return) -->
+  <path d="M 150 350 L 150 380 L 300 380 L 300 350" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="225" y="395" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#64748b">recycle</text>
+  
+  <!-- Down to converter -->
+  <line x1="400" y1="350" x2="400" y2="390" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- Converter to SharedImage -->
+  <line x1="500" y1="450" x2="550" y2="450" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- SharedImage to VideoFrame -->
+  <line x1="770" y1="450" x2="820" y2="450" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- VideoFrame to Compositor -->
+  <line x1="920" y1="510" x2="920" y2="540" stroke="#64748b" stroke-width="2"/>
+  <line x1="920" y1="540" x2="770" y2="610" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- Overlay path -->
+  <line x1="550" y1="610" x2="500" y2="610" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="525" y="600" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#22c55e">overlay</text>
+  
+  <!-- To Display -->
+  <line x1="400" y1="670" x2="400" y2="700" stroke="#64748b" stroke-width="2"/>
+  <line x1="400" y1="700" x2="505" y2="700" stroke="#64748b" stroke-width="2"/>
+  <line x1="505" y1="700" x2="505" y2="710" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <line x1="660" y1="670" x2="660" y2="710" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- Zero-copy indicator -->
+  <rect x="50" y="830" width="1100" height="50" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <text x="600" y="855" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#166534">
+    ZERO-COPY PATH: DMA-BUF FD passed through entire pipeline - same GPU memory from decode to display!
+  </text>
+  <text x="600" y="872" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#15803d">
+    No pixel copies between: VkImage → NativePixmap → FrameResource → SharedImage → Compositor → Overlay
+  </text>
+</svg>
+

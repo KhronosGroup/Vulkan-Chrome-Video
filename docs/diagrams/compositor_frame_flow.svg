@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 400">
+  <defs>
+    <linearGradient id="rendererProcGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#60A5FA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="browserProcGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#34D399;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="vizProcGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A78BFA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="700" height="400" fill="#ffffff"/>
+  
+  <!-- Title -->
+  <text x="350" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1e293b">Compositor Frame Flow</text>
+  
+  <!-- Process boxes at top -->
+  <rect x="40" y="50" width="160" height="50" rx="8" fill="url(#rendererProcGrad)"/>
+  <text x="120" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Renderer</text>
+  <text x="120" y="88" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#dbeafe">Process</text>
+  
+  <rect x="270" y="50" width="160" height="50" rx="8" fill="url(#browserProcGrad)"/>
+  <text x="350" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Browser</text>
+  <text x="350" y="88" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#d1fae5">Process</text>
+  
+  <rect x="500" y="50" width="160" height="50" rx="8" fill="url(#vizProcGrad)"/>
+  <text x="580" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Viz</text>
+  <text x="580" y="88" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#ede9fe">(GPU Process)</text>
+  
+  <!-- Vertical timeline lines -->
+  <line x1="120" y1="100" x2="120" y2="380" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4,4"/>
+  <line x1="350" y1="100" x2="350" y2="380" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4,4"/>
+  <line x1="580" y1="100" x2="580" y2="380" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4,4"/>
+  
+  <!-- Step 1: CompositorFrame from Renderer to Browser -->
+  <line x1="120" y1="130" x2="340" y2="130" stroke="#3B82F6" stroke-width="2"/>
+  <polygon points="345,130 335,125 335,135" fill="#3B82F6"/>
+  <rect x="170" y="115" width="120" height="22" rx="4" fill="#dbeafe"/>
+  <text x="230" y="130" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#1e40af">CompositorFrame</text>
+  
+  <!-- Step 2: SubmitCompositorFrame from Browser to Viz -->
+  <line x1="350" y1="170" x2="570" y2="170" stroke="#10B981" stroke-width="2"/>
+  <polygon points="575,170 565,165 565,175" fill="#10B981"/>
+  <rect x="390" y="150" width="140" height="30" rx="4" fill="#d1fae5"/>
+  <text x="460" y="163" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#047857">SubmitCompositor</text>
+  <text x="460" y="175" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#047857">Frame</text>
+  
+  <!-- Step 3: Aggregate Surfaces (internal in Viz) -->
+  <rect x="530" y="200" width="100" height="30" rx="4" fill="#ede9fe"/>
+  <text x="580" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#5b21b6">Aggregate</text>
+  <line x1="580" y1="230" x2="580" y2="245" stroke="#8B5CF6" stroke-width="2"/>
+  <polygon points="580,250 575,240 585,240" fill="#8B5CF6"/>
+  
+  <!-- Step 4: Draw Frame -->
+  <rect x="530" y="255" width="100" height="25" rx="4" fill="#ede9fe"/>
+  <text x="580" y="272" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#5b21b6">Draw Frame</text>
+  <line x1="580" y1="280" x2="580" y2="295" stroke="#8B5CF6" stroke-width="2"/>
+  <polygon points="580,300 575,290 585,290" fill="#8B5CF6"/>
+  
+  <!-- Step 5: Swap Buffers -->
+  <rect x="530" y="305" width="100" height="25" rx="4" fill="#ede9fe"/>
+  <text x="580" y="322" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#5b21b6">Swap Buffers</text>
+  
+  <!-- Step 6: Presentation Feedback back to Browser -->
+  <line x1="580" y1="330" x2="580" y2="355" stroke="#8B5CF6" stroke-width="2"/>
+  <line x1="580" y1="355" x2="360" y2="355" stroke="#8B5CF6" stroke-width="2"/>
+  <polygon points="355,355 365,350 365,360" fill="#8B5CF6"/>
+  <rect x="400" y="340" width="120" height="22" rx="4" fill="#fce7f3"/>
+  <text x="460" y="355" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#9d174d">Presentation Feedback</text>
+  
+  <!-- Legend -->
+  <rect x="40" y="360" width="200" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="55" y="378" font-family="Arial, sans-serif" font-size="9" fill="#64748b">Timeline: Request → Process → Display</text>
+</svg>
+

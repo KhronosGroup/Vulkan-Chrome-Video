@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulkan Video Decode Integration Development Plan</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #e9ecef;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #6c757d;
+            --border-color: #dee2e6;
+            --accent-blue: #0d6efd;
+            --accent-green: #198754;
+            --accent-orange: #fd7e14;
+            --accent-red: #dc3545;
+            --accent-purple: #6f42c1;
+            --accent-cyan: #0dcaf0;
+            --card-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --phase1-color: #0d6efd;
+            --phase2-color: #198754;
+            --phase3-color: #fd7e14;
+            --phase4-color: #6f42c1;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--phase1-color), var(--phase4-color));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        nav {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.75rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-right: 1.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        
+        nav a:hover {
+            color: var(--accent-blue);
+        }
+        
+        nav a.phase1 { border-bottom: 3px solid var(--phase1-color); padding-bottom: 0.5rem; }
+        nav a.phase2 { border-bottom: 3px solid var(--phase2-color); padding-bottom: 0.5rem; }
+        nav a.phase3 { border-bottom: 3px solid var(--phase3-color); padding-bottom: 0.5rem; }
+        nav a.phase4 { border-bottom: 3px solid var(--phase4-color); padding-bottom: 0.5rem; }
+        
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        section {
+            margin-bottom: 3rem;
+        }
+        
+        h2 {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        h2.phase1 { border-color: var(--phase1-color); }
+        h2.phase2 { border-color: var(--phase2-color); }
+        h2.phase3 { border-color: var(--phase3-color); }
+        h2.phase4 { border-color: var(--phase4-color); }
+        
+        h3 {
+            font-size: 1.25rem;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        h4 {
+            font-size: 1.1rem;
+            margin: 1rem 0 0.5rem;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+        }
+        
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .card.phase1 { border-left: 4px solid var(--phase1-color); }
+        .card.phase2 { border-left: 4px solid var(--phase2-color); }
+        .card.phase3 { border-left: 4px solid var(--phase3-color); }
+        .card.phase4 { border-left: 4px solid var(--phase4-color); }
+        
+        .executive-summary {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .executive-summary h2 {
+            border: none;
+            margin-bottom: 1rem;
+        }
+        
+        .codecs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .codec-badge {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .codec-badge.h264 { border-top: 3px solid var(--phase1-color); }
+        .codec-badge.h265 { border-top: 3px solid var(--phase2-color); }
+        .codec-badge.av1 { border-top: 3px solid var(--phase3-color); }
+        .codec-badge.vp9 { border-top: 3px solid var(--phase4-color); }
+        
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin: 1rem 0;
+        }
+        
+        code {
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+        
+        :not(pre) > code {
+            background: var(--bg-tertiary);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            color: var(--accent-red);
+        }
+        
+        .keyword { color: #569cd6; }
+        .type { color: #4ec9b0; }
+        .string { color: #ce9178; }
+        .number { color: #b5cea8; }
+        .comment { color: #6a9955; }
+        .function { color: #dcdcaa; }
+        .struct { color: #4ec9b0; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border: 1px solid var(--border-color);
+        }
+        
+        th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background: var(--bg-secondary);
+        }
+        
+        .architecture-diagram {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+        
+        .architecture-diagram pre {
+            background: transparent;
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+        }
+        
+        .phase-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+            margin-right: 0.5rem;
+        }
+        
+        .phase-badge.p1 { background: var(--phase1-color); }
+        .phase-badge.p2 { background: var(--phase2-color); }
+        .phase-badge.p3 { background: var(--phase3-color); }
+        .phase-badge.p4 { background: var(--phase4-color); }
+        
+        .timeline {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+        
+        .timeline pre {
+            background: transparent;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        
+        .risk-table tr.high { background: #ffebee; }
+        .risk-table tr.medium { background: #fff8e1; }
+        .risk-table tr.low { background: #e8f5e9; }
+        
+        .benefit-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .benefit-card {
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        
+        .benefit-card.before {
+            background: #ffebee;
+            border: 1px solid #f44336;
+        }
+        
+        .benefit-card.after {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+        }
+        
+        .milestone-list {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .milestone {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-blue);
+        }
+        
+        .milestone-month {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            min-width: 80px;
+        }
+        
+        .milestone-content h4 {
+            margin: 0;
+        }
+        
+        .milestone-content p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        ul, ol {
+            margin: 0.5rem 0 1rem 1.5rem;
+        }
+        
+        li {
+            margin-bottom: 0.25rem;
+        }
+        
+        .dependencies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .dep-badge {
+            background: var(--bg-tertiary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+        
+        @media print {
+            *, *::before, *::after {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            
+            body {
+                background: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            header, nav {
+                position: static;
+            }
+            
+            nav {
+                display: none;
+            }
+            
+            .card, pre, table {
+                page-break-inside: avoid !important;
+            }
+            
+            h2, h3, h4 {
+                page-break-after: avoid !important;
+            }
+            
+            @page {
+                size: A3 landscape;
+                margin: 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Vulkan Video Decode Integration</h1>
+        <p>Development Plan for Chromium</p>
+    </header>
+    
+    <nav>
+        <a href="#executive-summary">Executive Summary</a>
+        <a href="#phase1" class="phase1">Phase 1: Driver Layer</a>
+        <a href="#phase2" class="phase2">Phase 2: Parser Integration</a>
+        <a href="#phase3" class="phase3">Phase 3: Protected Content</a>
+        <a href="#phase4" class="phase4">Phase 4: Native Decrypt</a>
+        <a href="#timeline">Timeline</a>
+        <a href="#risks">Risks</a>
+    </nav>
+    
+    <main>
+        <!-- Executive Summary -->
+        <section id="executive-summary" class="executive-summary">
+            <h2>Executive Summary</h2>
+            <p>This document outlines the development plan for integrating Vulkan Video decode capabilities into Chromium. The plan is structured into four phases that can be developed with some degree of parallelism.</p>
+            
+            <h3>Target Codecs</h3>
+            <div class="codecs-grid">
+                <div class="codec-badge h264">H.264/AVC</div>
+                <div class="codec-badge h265">H.265/HEVC</div>
+                <div class="codec-badge vp9">VP9</div>
+                <div class="codec-badge av1">AV1</div>
+            </div>
+            
+            <h3>Key Vulkan Extensions Required</h3>
+            <div class="dependencies">
+                <span class="dep-badge">VK_KHR_video_queue</span>
+                <span class="dep-badge">VK_KHR_video_decode_queue</span>
+                <span class="dep-badge">VK_KHR_video_decode_h264</span>
+                <span class="dep-badge">VK_KHR_video_decode_h265</span>
+                <span class="dep-badge">VK_KHR_video_decode_av1</span>
+                <span class="dep-badge">VK_EXT_video_decode_vp9</span>
+                <span class="dep-badge">VK_KHR_video_maintenance1</span>
+            </div>
+        </section>
+        
+        <!-- Phase 1 -->
+        <section id="phase1">
+            <h2 class="phase1"><span class="phase-badge p1">Phase 1</span> Vulkan Video Driver Layer (NVPRO-based)</h2>
+            
+            <div class="card phase1">
+                <h3>Objectives</h3>
+                <p>Develop a standalone Vulkan Video decode library based on NVIDIA's NVPRO sample, providing:</p>
+                <ul>
+                    <li>Video session management</li>
+                    <li>Parameter buffer handling</li>
+                    <li>Decode command buffer construction</li>
+                    <li>DMA-BUF FD export for zero-copy output</li>
+                </ul>
+            </div>
+            
+            <h3>Architecture Overview</h3>
+            <div class="architecture-diagram" style="text-align: center;">
+                <object type="image/svg+xml" data="diagrams/phase1_architecture.svg" style="max-width: 100%; height: auto;">
+                    Phase 1 Architecture Diagram
+                </object>
+            </div>
+            
+            <h3>1.1 Session Manager</h3>
+            <p>File: <code>vulkan_video_session.h/cc</code></p>
+            
+<pre><span class="comment">// Core session management class</span>
+<span class="keyword">class</span> <span class="type">VulkanVideoSession</span> {
+<span class="keyword">public</span>:
+    <span class="keyword">struct</span> <span class="type">SessionConfig</span> {
+        <span class="type">VkVideoCodecOperationFlagBitsKHR</span> codec_operation;
+        <span class="type">VkFormat</span> picture_format;           <span class="comment">// VK_FORMAT_G8_B8R8_2PLANE_420_UNORM</span>
+        <span class="type">VkFormat</span> dpb_format;               <span class="comment">// Usually same as picture_format</span>
+        <span class="type">VkExtent2D</span> max_coded_extent;       <span class="comment">// Max resolution (4096x2160)</span>
+        <span class="type">uint32_t</span> max_dpb_slots;            <span class="comment">// 16-17 for H.264, 8 for others</span>
+        <span class="type">uint32_t</span> max_active_reference_pictures;
+        <span class="type">VkVideoChromaSubsamplingFlagsKHR</span> chroma_subsampling;
+        <span class="type">VkVideoComponentBitDepthFlagsKHR</span> luma_bit_depth;
+        <span class="type">VkVideoComponentBitDepthFlagsKHR</span> chroma_bit_depth;
+        <span class="keyword">const void</span>* codec_profile;         <span class="comment">// Codec-specific profile info</span>
+    };
+
+    <span class="comment">// Initialization</span>
+    <span class="keyword">static</span> std::unique_ptr&lt;<span class="type">VulkanVideoSession</span>&gt; <span class="function">Create</span>(
+        <span class="type">VkDevice</span> device,
+        <span class="type">VkPhysicalDevice</span> physical_device,
+        <span class="keyword">const</span> <span class="type">SessionConfig</span>&amp; config);
+    
+    <span class="comment">// Session lifecycle</span>
+    <span class="type">VkResult</span> <span class="function">Initialize</span>();
+    <span class="keyword">void</span> <span class="function">Destroy</span>();
+    
+    <span class="comment">// Accessors</span>
+    <span class="type">VkVideoSessionKHR</span> <span class="function">GetHandle</span>() <span class="keyword">const</span> { <span class="keyword">return</span> session_; }
+
+<span class="keyword">private</span>:
+    <span class="type">VkDevice</span> device_;
+    <span class="type">VkVideoSessionKHR</span> session_ = <span class="number">VK_NULL_HANDLE</span>;
+    <span class="type">VkVideoSessionParametersKHR</span> session_params_ = <span class="number">VK_NULL_HANDLE</span>;
+};
+</pre>
+
+            <h3>1.2 DPB (Decoded Picture Buffer) Manager</h3>
+            <p>File: <code>vulkan_dpb_manager.h/cc</code></p>
+            
+<pre><span class="keyword">struct</span> <span class="type">DPBSlot</span> {
+    <span class="type">int32_t</span> slot_index;                    <span class="comment">// -1 if unused</span>
+    <span class="type">VkImage</span> image;
+    <span class="type">VkImageView</span> image_view;
+    <span class="type">VkDeviceMemory</span> memory;
+    <span class="type">int</span> fd;                                <span class="comment">// DMA-BUF FD for export</span>
+    
+    <span class="comment">// Reference frame state</span>
+    <span class="type">bool</span> is_reference;
+    <span class="type">int32_t</span> picture_order_count;           <span class="comment">// POC for H.264/H.265</span>
+    <span class="type">int32_t</span> frame_num;
+    <span class="type">uint64_t</span> timestamp;
+    
+    <span class="comment">// Vulkan video structures</span>
+    <span class="type">VkVideoPictureResourceInfoKHR</span> picture_resource;
+    <span class="type">VkVideoReferenceSlotInfoKHR</span> reference_slot;
+};
+
+<span class="keyword">class</span> <span class="type">VulkanDPBManager</span> {
+<span class="keyword">public</span>:
+    <span class="keyword">static constexpr</span> <span class="type">uint32_t</span> kMaxDPBSlots = <span class="number">17</span>;  <span class="comment">// H.264 Level 5.2 max</span>
+    
+    <span class="type">VkResult</span> <span class="function">Initialize</span>(<span class="keyword">const</span> <span class="type">Config</span>&amp; config);
+    
+    <span class="comment">// Slot management</span>
+    <span class="type">DPBSlot</span>* <span class="function">AcquireSlot</span>();
+    <span class="keyword">void</span> <span class="function">ReleaseSlot</span>(<span class="type">int32_t</span> slot_index);
+    
+    <span class="comment">// DMA-BUF export</span>
+    <span class="type">int</span> <span class="function">ExportDmaBufFd</span>(<span class="type">int32_t</span> slot_index);
+};
+</pre>
+
+            <h3>1.3 DMA-BUF Export Implementation</h3>
+            <p><strong>Critical for Chromium integration - enables zero-copy frame sharing.</strong></p>
+            
+<pre><span class="type">VkResult</span> <span class="type">VulkanDmaBufExporter</span>::<span class="function">CreateExportableImage</span>(
+    <span class="type">VkDevice</span> device,
+    <span class="type">VkPhysicalDevice</span> physical_device,
+    <span class="type">VkFormat</span> format,
+    <span class="type">VkExtent2D</span> extent,
+    <span class="type">VkImageUsageFlags</span> usage,
+    <span class="type">ExportableImage</span>* out_image)
+{
+    <span class="comment">// 1. Create image with external memory</span>
+    <span class="type">VkExternalMemoryImageCreateInfo</span> external_info = {
+        .sType = <span class="number">VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO</span>,
+        .handleTypes = <span class="number">VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT</span>
+    };
+    
+    <span class="type">VkImageCreateInfo</span> image_info = {
+        .sType = <span class="number">VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO</span>,
+        .pNext = &amp;external_info,
+        .imageType = <span class="number">VK_IMAGE_TYPE_2D</span>,
+        .format = format,
+        .extent = { extent.width, extent.height, <span class="number">1</span> },
+        .tiling = <span class="number">VK_IMAGE_TILING_DRM_FORMAT_MODIFIER_EXT</span>,
+        .usage = usage | <span class="number">VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR</span>,
+    };
+    
+    <span class="function">VK_CHECK</span>(<span class="function">vkCreateImage</span>(device, &amp;image_info, <span class="keyword">nullptr</span>, &amp;out_image-&gt;image));
+    
+    <span class="comment">// 2. Allocate exportable memory</span>
+    <span class="type">VkExportMemoryAllocateInfo</span> export_info = {
+        .sType = <span class="number">VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO</span>,
+        .handleTypes = <span class="number">VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT</span>
+    };
+    
+    <span class="comment">// 3. Export FD</span>
+    <span class="type">VkMemoryGetFdInfoKHR</span> fd_info = {
+        .sType = <span class="number">VK_STRUCTURE_TYPE_MEMORY_GET_FD_INFO_KHR</span>,
+        .memory = out_image-&gt;memory,
+        .handleType = <span class="number">VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT</span>
+    };
+    
+    <span class="function">VK_CHECK</span>(<span class="function">vkGetMemoryFdKHR</span>(device, &amp;fd_info, &amp;out_image-&gt;dmabuf_fd));
+    
+    <span class="keyword">return</span> <span class="number">VK_SUCCESS</span>;
+}
+</pre>
+
+            <h3>Phase 1 Tasks</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Task</th>
+                        <th>Dependencies</th>
+                        <th>Effort</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>1.1</td><td>Project setup, build system, NVPRO integration</td><td>-</td><td>3d</td></tr>
+                    <tr><td>1.2</td><td>Vulkan instance/device creation with video extensions</td><td>1.1</td><td>3d</td></tr>
+                    <tr><td>1.3</td><td>Video capabilities query and validation</td><td>1.2</td><td>2d</td></tr>
+                    <tr><td>1.4</td><td>Session manager implementation</td><td>1.3</td><td>5d</td></tr>
+                    <tr><td>1.5</td><td>H.264 session parameters</td><td>1.4</td><td>3d</td></tr>
+                    <tr><td>1.6</td><td>H.265 session parameters</td><td>1.4</td><td>3d</td></tr>
+                    <tr><td>1.7</td><td>AV1 session parameters</td><td>1.4</td><td>3d</td></tr>
+                    <tr><td>1.8</td><td>VP9 session parameters (provisional)</td><td>1.4</td><td>2d</td></tr>
+                    <tr><td>1.9</td><td>DPB manager implementation</td><td>1.4</td><td>5d</td></tr>
+                    <tr><td>1.10</td><td>Bitstream buffer manager</td><td>1.4</td><td>3d</td></tr>
+                    <tr><td>1.11</td><td>Decode command processor</td><td>1.9, 1.10</td><td>5d</td></tr>
+                    <tr><td>1.12</td><td>DMA-BUF export implementation</td><td>1.9</td><td>4d</td></tr>
+                    <tr><td>1.13</td><td>Synchronization (fences, semaphores)</td><td>1.11</td><td>3d</td></tr>
+                    <tr><td>1.14</td><td>Unit tests for each component</td><td>All</td><td>5d</td></tr>
+                    <tr><td>1.15</td><td>Integration test with test vectors</td><td>1.14</td><td>3d</td></tr>
+                </tbody>
+            </table>
+            <p><strong>Total Phase 1 Effort: ~50 days</strong></p>
+        </section>
+        
+        <!-- Phase 2 -->
+        <section id="phase2">
+            <h2 class="phase2"><span class="phase-badge p2">Phase 2</span> Chrome Parser Integration</h2>
+            
+            <div class="card phase2">
+                <h3>Objectives</h3>
+                <p>Integrate Chromium's existing codec parsers with the Vulkan Video backend, implementing the <code>*Accelerator</code> interfaces for each codec:</p>
+                <ul>
+                    <li>H.264 Accelerator (H264VulkanDelegateelerator)</li>
+                    <li>H.265 Accelerator (H265VulkanDelegateelerator)</li>
+                    <li>AV1 Accelerator (AV1VulkanDelegateelerator)</li>
+                    <li>VP9 Accelerator (VP9VulkanDelegateelerator)</li>
+                </ul>
+            </div>
+            
+            <h3>Architecture</h3>
+            <div class="architecture-diagram" style="text-align: center;">
+                <object type="image/svg+xml" data="diagrams/phase2_architecture.svg" style="max-width: 100%; height: auto;">
+                    Phase 2 Architecture Diagram
+                </object>
+            </div>
+            
+            <h3>2.1 H.264 Accelerator</h3>
+            <p>File: <code>media/gpu/vulkan/h264_vulkan_video_decoder_delegate.h/cc</code></p>
+            
+<pre><span class="keyword">class</span> <span class="type">H264VulkanDelegateelerator</span> : <span class="keyword">public</span> <span class="type">H264Decoder</span>::<span class="type">H264Accelerator</span> {
+<span class="keyword">public</span>:
+    <span class="keyword">explicit</span> <span class="function">H264VulkanDelegateelerator</span>(<span class="type">VulkanVideoWrapper</span>* vk_wrapper);
+
+    <span class="comment">// H264Accelerator interface</span>
+    scoped_refptr&lt;<span class="type">H264Picture</span>&gt; <span class="function">CreateH264Picture</span>() <span class="keyword">override</span>;
+    
+    <span class="type">Status</span> <span class="function">SubmitFrameMetadata</span>(
+        <span class="keyword">const</span> <span class="type">H264SPS</span>* sps,
+        <span class="keyword">const</span> <span class="type">H264PPS</span>* pps,
+        <span class="keyword">const</span> <span class="type">H264DPB</span>&amp; dpb,
+        <span class="keyword">const</span> <span class="type">H264Picture</span>::<span class="type">Vector</span>&amp; ref_pic_listp0,
+        <span class="keyword">const</span> <span class="type">H264Picture</span>::<span class="type">Vector</span>&amp; ref_pic_listb0,
+        <span class="keyword">const</span> <span class="type">H264Picture</span>::<span class="type">Vector</span>&amp; ref_pic_listb1,
+        scoped_refptr&lt;<span class="type">H264Picture</span>&gt; pic) <span class="keyword">override</span>;
+    
+    <span class="type">Status</span> <span class="function">SubmitSlice</span>(
+        <span class="keyword">const</span> <span class="type">H264PPS</span>* pps,
+        <span class="keyword">const</span> <span class="type">H264SliceHeader</span>* slice_hdr,
+        <span class="keyword">const</span> <span class="type">H264Picture</span>::<span class="type">Vector</span>&amp; ref_pic_list0,
+        <span class="keyword">const</span> <span class="type">H264Picture</span>::<span class="type">Vector</span>&amp; ref_pic_list1,
+        scoped_refptr&lt;<span class="type">H264Picture</span>&gt; pic,
+        <span class="keyword">const</span> <span class="type">uint8_t</span>* data,
+        <span class="type">size_t</span> size,
+        <span class="keyword">const</span> std::vector&lt;<span class="type">SubsampleEntry</span>&gt;&amp; subsamples) <span class="keyword">override</span>;
+    
+    <span class="type">Status</span> <span class="function">SubmitDecode</span>(scoped_refptr&lt;<span class="type">H264Picture</span>&gt; pic) <span class="keyword">override</span>;
+    
+    <span class="type">bool</span> <span class="function">OutputPicture</span>(scoped_refptr&lt;<span class="type">H264Picture</span>&gt; pic) <span class="keyword">override</span>;
+
+<span class="keyword">private</span>:
+    <span class="comment">// Convert Chrome SPS to Vulkan StdVideoH264SequenceParameterSet</span>
+    <span class="keyword">void</span> <span class="function">ConvertSPS</span>(<span class="keyword">const</span> <span class="type">H264SPS</span>* sps, <span class="type">StdVideoH264SequenceParameterSet</span>* vk_sps);
+    
+    <span class="comment">// Convert Chrome PPS to Vulkan StdVideoH264PictureParameterSet</span>  
+    <span class="keyword">void</span> <span class="function">ConvertPPS</span>(<span class="keyword">const</span> <span class="type">H264PPS</span>* pps, <span class="type">StdVideoH264PictureParameterSet</span>* vk_pps);
+
+    <span class="type">VulkanVideoWrapper</span>* vk_wrapper_;
+};
+</pre>
+
+            <h3>SPS Conversion Example</h3>
+<pre><span class="keyword">void</span> <span class="type">H264VulkanDelegateelerator</span>::<span class="function">ConvertSPS</span>(
+    <span class="keyword">const</span> <span class="type">H264SPS</span>* sps,
+    <span class="type">StdVideoH264SequenceParameterSet</span>* vk_sps) 
+{
+    *vk_sps = {};
+    
+    <span class="comment">// Profile/Level</span>
+    vk_sps-&gt;profile_idc = <span class="keyword">static_cast</span>&lt;<span class="type">StdVideoH264ProfileIdc</span>&gt;(sps-&gt;profile_idc);
+    vk_sps-&gt;level_idc = <span class="keyword">static_cast</span>&lt;<span class="type">StdVideoH264LevelIdc</span>&gt;(sps-&gt;level_idc);
+    vk_sps-&gt;seq_parameter_set_id = sps-&gt;seq_parameter_set_id;
+    
+    <span class="comment">// Chroma format</span>
+    vk_sps-&gt;chroma_format_idc = 
+        <span class="keyword">static_cast</span>&lt;<span class="type">StdVideoH264ChromaFormatIdc</span>&gt;(sps-&gt;chroma_format_idc);
+    vk_sps-&gt;bit_depth_luma_minus8 = sps-&gt;bit_depth_luma_minus8;
+    vk_sps-&gt;bit_depth_chroma_minus8 = sps-&gt;bit_depth_chroma_minus8;
+    
+    <span class="comment">// Picture dimensions</span>
+    vk_sps-&gt;pic_width_in_mbs_minus1 = sps-&gt;pic_width_in_mbs_minus1;
+    vk_sps-&gt;pic_height_in_map_units_minus1 = sps-&gt;pic_height_in_map_units_minus1;
+    
+    <span class="comment">// DPB parameters</span>
+    vk_sps-&gt;max_num_ref_frames = sps-&gt;max_num_ref_frames;
+    vk_sps-&gt;log2_max_frame_num_minus4 = sps-&gt;log2_max_frame_num_minus4;
+    vk_sps-&gt;pic_order_cnt_type = sps-&gt;pic_order_cnt_type;
+    
+    <span class="comment">// Flags</span>
+    vk_sps-&gt;flags.direct_8x8_inference_flag = sps-&gt;direct_8x8_inference_flag;
+    vk_sps-&gt;flags.frame_mbs_only_flag = sps-&gt;frame_mbs_only_flag;
+    <span class="comment">// ... more flags</span>
+}
+</pre>
+
+            <h3>Phase 2 Tasks</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Task</th>
+                        <th>Dependencies</th>
+                        <th>Effort</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>2.1</td><td>VulkanVideoWrapper design and scaffolding</td><td>Phase 1</td><td>3d</td></tr>
+                    <tr><td>2.2</td><td>H.264 Accelerator - SPS/PPS conversion</td><td>2.1</td><td>4d</td></tr>
+                    <tr><td>2.3</td><td>H.264 Accelerator - slice submission</td><td>2.2</td><td>4d</td></tr>
+                    <tr><td>2.4</td><td>H.264 Accelerator - DPB management</td><td>2.3</td><td>3d</td></tr>
+                    <tr><td>2.5</td><td>H.264 Accelerator - complete integration</td><td>2.4</td><td>3d</td></tr>
+                    <tr><td>2.6</td><td>H.265 Accelerator - VPS/SPS/PPS conversion</td><td>2.1</td><td>4d</td></tr>
+                    <tr><td>2.7</td><td>H.265 Accelerator - slice submission</td><td>2.6</td><td>4d</td></tr>
+                    <tr><td>2.8</td><td>H.265 Accelerator - complete integration</td><td>2.7</td><td>3d</td></tr>
+                    <tr><td>2.9</td><td>AV1 Accelerator - sequence header</td><td>2.1</td><td>3d</td></tr>
+                    <tr><td>2.10</td><td>AV1 Accelerator - tile-based decode</td><td>2.9</td><td>5d</td></tr>
+                    <tr><td>2.11</td><td>AV1 Accelerator - film grain</td><td>2.10</td><td>2d</td></tr>
+                    <tr><td>2.12</td><td>VP9 Accelerator - frame header conversion</td><td>2.1</td><td>3d</td></tr>
+                    <tr><td>2.13</td><td>VP9 Accelerator - complete integration</td><td>2.12</td><td>3d</td></tr>
+                    <tr><td>2.14</td><td>VideoFrame/DMA-BUF integration</td><td>2.1</td><td>4d</td></tr>
+                    <tr><td>2.15</td><td>DecoderSelector integration</td><td>2.5, 2.8, 2.11, 2.13</td><td>2d</td></tr>
+                    <tr><td>2.16</td><td>Unit tests for all accelerators</td><td>All</td><td>5d</td></tr>
+                    <tr><td>2.17</td><td>Conformance testing with test vectors</td><td>2.16</td><td>5d</td></tr>
+                </tbody>
+            </table>
+            <p><strong>Total Phase 2 Effort: ~57 days (H.264/H.265/AV1/VP9 can be parallelized)</strong></p>
+        </section>
+        
+        <!-- Phase 3 -->
+        <section id="phase3">
+            <h2 class="phase3"><span class="phase-badge p3">Phase 3</span> Protected Content (Protected Daemon)</h2>
+            
+            <div class="card phase3">
+                <h3>Objectives</h3>
+                <p>Implement protected content playback using a protected daemon process that:</p>
+                <ul>
+                    <li>Handles Content Decryption Module (CDM) operations</li>
+                    <li>Decrypts content to protected Vulkan buffers</li>
+                    <li>Submits protected buffers to Vulkan Video decoder</li>
+                </ul>
+            </div>
+            
+            <h3>Architecture</h3>
+            <div class="architecture-diagram" style="text-align: center;">
+                <object type="image/svg+xml" data="diagrams/phase3_architecture.svg" style="max-width: 100%; height: auto;">
+                    Phase 3 Protected Content Architecture Diagram
+                </object>
+            </div>
+            
+            <h3>3.1 Protected Buffer Pool</h3>
+<pre><span class="keyword">class</span> <span class="type">ProtectedVulkanBufferPool</span> {
+<span class="keyword">public</span>:
+    <span class="keyword">struct</span> <span class="type">ProtectedBuffer</span> {
+        <span class="type">VkBuffer</span> buffer;
+        <span class="type">VkDeviceMemory</span> memory;  <span class="comment">// VK_MEMORY_PROPERTY_PROTECTED_BIT</span>
+        <span class="type">size_t</span> size;
+        <span class="type">bool</span> in_use;
+    };
+    
+    <span class="keyword">struct</span> <span class="type">ProtectedImage</span> {
+        <span class="type">VkImage</span> image;
+        <span class="type">VkImageView</span> image_view;
+        <span class="type">VkDeviceMemory</span> memory;  <span class="comment">// VK_MEMORY_PROPERTY_PROTECTED_BIT</span>
+        <span class="type">gfx</span>::<span class="type">Size</span> size;
+        <span class="type">bool</span> in_use;
+    };
+    
+    <span class="comment">// Allocate protected bitstream buffer</span>
+    <span class="type">ProtectedBuffer</span>* <span class="function">AllocateBitstreamBuffer</span>(<span class="type">size_t</span> size);
+    <span class="keyword">void</span> <span class="function">ReleaseBitstreamBuffer</span>(<span class="type">ProtectedBuffer</span>* buffer);
+    
+    <span class="comment">// Allocate protected output image</span>
+    <span class="type">ProtectedImage</span>* <span class="function">AllocateOutputImage</span>(<span class="keyword">const</span> <span class="type">gfx</span>::<span class="type">Size</span>&amp; size, <span class="type">VkFormat</span> format);
+    <span class="keyword">void</span> <span class="function">ReleaseOutputImage</span>(<span class="type">ProtectedImage</span>* image);
+};
+</pre>
+
+            <h3>3.2 Protected Session Creation</h3>
+<pre><span class="type">bool</span> <span class="type">ProtectedVulkanVideoDecoder</span>::<span class="function">CreateProtectedSession</span>() {
+    <span class="comment">// Create protected queue</span>
+    <span class="type">VkDeviceQueueInfo2</span> queue_info = {
+        .sType = <span class="number">VK_STRUCTURE_TYPE_DEVICE_QUEUE_INFO_2</span>,
+        .flags = <span class="number">VK_DEVICE_QUEUE_CREATE_PROTECTED_BIT</span>,
+        .queueFamilyIndex = protected_queue_family_,
+        .queueIndex = <span class="number">0</span>
+    };
+    <span class="function">vkGetDeviceQueue2</span>(device_, &amp;queue_info, &amp;protected_queue_);
+    
+    <span class="comment">// Create protected command pool</span>
+    <span class="type">VkCommandPoolCreateInfo</span> pool_info = {
+        .sType = <span class="number">VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO</span>,
+        .flags = <span class="number">VK_COMMAND_POOL_CREATE_PROTECTED_BIT</span> |
+                 <span class="number">VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT</span>,
+        .queueFamilyIndex = protected_queue_family_
+    };
+    <span class="function">vkCreateCommandPool</span>(device_, &amp;pool_info, <span class="keyword">nullptr</span>, &amp;protected_command_pool_);
+    
+    <span class="comment">// Create protected video session</span>
+    <span class="type">VkVideoSessionCreateInfoKHR</span> session_info = {
+        .sType = <span class="number">VK_STRUCTURE_TYPE_VIDEO_SESSION_CREATE_INFO_KHR</span>,
+        .flags = <span class="number">VK_VIDEO_SESSION_CREATE_PROTECTED_CONTENT_BIT_KHR</span>,
+        <span class="comment">// ... other session parameters</span>
+    };
+    
+    <span class="keyword">return</span> <span class="function">vkCreateVideoSessionKHR</span>(device_, &amp;session_info, <span class="keyword">nullptr</span>, &amp;session_)
+           == <span class="number">VK_SUCCESS</span>;
+}
+</pre>
+
+            <h3>Phase 3 Tasks</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Task</th>
+                        <th>Dependencies</th>
+                        <th>Effort</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>3.1</td><td>Protected process architecture design</td><td>Phase 2</td><td>3d</td></tr>
+                    <tr><td>3.2</td><td>ProtectedVulkanBufferPool implementation</td><td>3.1</td><td>5d</td></tr>
+                    <tr><td>3.3</td><td>Protected queue/command buffer setup</td><td>3.2</td><td>3d</td></tr>
+                    <tr><td>3.4</td><td>CDM adapter for Vulkan protected memory</td><td>3.3</td><td>5d</td></tr>
+                    <tr><td>3.5</td><td>Decrypt-to-protected-buffer pipeline</td><td>3.4</td><td>5d</td></tr>
+                    <tr><td>3.6</td><td>Protected video session creation</td><td>3.3</td><td>3d</td></tr>
+                    <tr><td>3.7</td><td>Protected decode submission</td><td>3.5, 3.6</td><td>4d</td></tr>
+                    <tr><td>3.8</td><td>Protected output frame handling</td><td>3.7</td><td>3d</td></tr>
+                    <tr><td>3.9</td><td>Protected overlay scanout integration</td><td>3.8</td><td>4d</td></tr>
+                    <tr><td>3.10</td><td>EME/CDM interface integration</td><td>3.9</td><td>3d</td></tr>
+                    <tr><td>3.11</td><td>Widevine L1 integration testing</td><td>3.10</td><td>5d</td></tr>
+                    <tr><td>3.12</td><td>PlayReady integration testing</td><td>3.10</td><td>3d</td></tr>
+                    <tr><td>3.13</td><td>Security audit and hardening</td><td>All</td><td>5d</td></tr>
+                </tbody>
+            </table>
+            <p><strong>Total Phase 3 Effort: ~51 days</strong></p>
+        </section>
+        
+        <!-- Phase 4 -->
+        <section id="phase4">
+            <h2 class="phase4"><span class="phase-badge p4">Phase 4</span> Native Decrypt-During-Decode (Future Vulkan Extension)</h2>
+            
+            <div class="card phase4">
+                <h3>Objectives</h3>
+                <p>Implement optimized protected content playback where decryption and decoding happen atomically in hardware, similar to VA-API's <code>VAEncryptionParameters</code>.</p>
+            </div>
+            
+            <h3>4.1 Proposed Extension: VK_KHR_video_decode_encryption</h3>
+<pre><span class="comment">// Proposed Vulkan extension structures</span>
+
+<span class="comment">// Extension name and version</span>
+<span class="keyword">#define</span> <span class="number">VK_KHR_VIDEO_DECODE_ENCRYPTION_EXTENSION_NAME</span> <span class="string">"VK_KHR_video_decode_encryption"</span>
+<span class="keyword">#define</span> <span class="number">VK_KHR_VIDEO_DECODE_ENCRYPTION_SPEC_VERSION</span> <span class="number">1</span>
+
+<span class="comment">// Encryption scheme types</span>
+<span class="keyword">typedef enum</span> <span class="type">VkVideoDecodeEncryptionSchemeKHR</span> {
+    <span class="number">VK_VIDEO_DECODE_ENCRYPTION_SCHEME_CENC_AES_CTR_KHR</span> = <span class="number">0</span>,
+    <span class="number">VK_VIDEO_DECODE_ENCRYPTION_SCHEME_CENC_AES_CBC_KHR</span> = <span class="number">1</span>,
+    <span class="number">VK_VIDEO_DECODE_ENCRYPTION_SCHEME_CBCS_KHR</span> = <span class="number">2</span>,
+} <span class="type">VkVideoDecodeEncryptionSchemeKHR</span>;
+
+<span class="comment">// Key slot handle (opaque, managed by TEE)</span>
+<span class="keyword">VK_DEFINE_NON_DISPATCHABLE_HANDLE</span>(<span class="type">VkCryptoKeySlotKHR</span>)
+
+<span class="comment">// Encryption parameters for decode operation</span>
+<span class="keyword">typedef struct</span> <span class="type">VkVideoDecodeEncryptionInfoKHR</span> {
+    <span class="type">VkStructureType</span>                      sType;
+    <span class="keyword">const void</span>*                          pNext;
+    <span class="type">VkVideoDecodeEncryptionSchemeKHR</span>     encryptionScheme;
+    <span class="type">VkCryptoKeySlotKHR</span>                   keySlot;
+    <span class="type">uint32_t</span>                             ivSize;
+    <span class="keyword">const</span> <span class="type">uint8_t</span>*                       pIv;
+    <span class="type">uint32_t</span>                             subsampleCount;
+    <span class="keyword">const</span> <span class="type">VkVideoDecodeSubsampleKHR</span>*     pSubsamples;
+} <span class="type">VkVideoDecodeEncryptionInfoKHR</span>;
+
+<span class="comment">// Subsample definition</span>
+<span class="keyword">typedef struct</span> <span class="type">VkVideoDecodeSubsampleKHR</span> {
+    <span class="type">uint32_t</span>    clearByteCount;
+    <span class="type">uint32_t</span>    encryptedByteCount;
+} <span class="type">VkVideoDecodeSubsampleKHR</span>;
+</pre>
+
+            <h3>4.2 Usage in Chromium</h3>
+<pre><span class="type">bool</span> <span class="type">VulkanEncryptedVideoDecoder</span>::<span class="function">SubmitEncryptedDecode</span>(
+    <span class="keyword">const</span> <span class="type">EncryptedDecodeRequest</span>&amp; request,
+    <span class="type">int</span> output_slot_index) 
+{
+    <span class="comment">// Build subsample array</span>
+    std::vector&lt;<span class="type">VkVideoDecodeSubsampleKHR</span>&gt; subsamples;
+    <span class="keyword">for</span> (<span class="keyword">const auto</span>&amp; ss : request.decrypt_config.<span class="function">subsamples</span>()) {
+        subsamples.<span class="function">push_back</span>({
+            .clearByteCount = ss.clear_bytes,
+            .encryptedByteCount = ss.cypher_bytes
+        });
+    }
+    
+    <span class="comment">// Encryption info - chains to decode info</span>
+    <span class="type">VkVideoDecodeEncryptionInfoKHR</span> encryption_info = {
+        .sType = <span class="number">VK_STRUCTURE_TYPE_VIDEO_DECODE_ENCRYPTION_INFO_KHR</span>,
+        .pNext = <span class="keyword">nullptr</span>,
+        .encryptionScheme = <span class="number">VK_VIDEO_DECODE_ENCRYPTION_SCHEME_CENC_AES_CTR_KHR</span>,
+        .keySlot = request.key_slot,
+        .ivSize = request.decrypt_config.<span class="function">iv</span>().<span class="function">size</span>(),
+        .pIv = request.decrypt_config.<span class="function">iv</span>().<span class="function">data</span>(),
+        .subsampleCount = subsamples.<span class="function">size</span>(),
+        .pSubsamples = subsamples.<span class="function">data</span>()
+    };
+    
+    <span class="comment">// Standard decode info with encryption chained</span>
+    <span class="type">VkVideoDecodeInfoKHR</span> decode_info = {
+        .sType = <span class="number">VK_STRUCTURE_TYPE_VIDEO_DECODE_INFO_KHR</span>,
+        .pNext = &amp;encryption_info,  <span class="comment">// Chain encryption</span>
+        <span class="comment">// ... standard decode parameters</span>
+    };
+    
+    <span class="comment">// Submit - hardware does decrypt + decode atomically</span>
+    <span class="function">vkCmdDecodeVideoKHR</span>(command_buffer, &amp;decode_info);
+    
+    <span class="keyword">return true</span>;
+}
+</pre>
+
+            <h3>4.3 Benefits of Native Decrypt-During-Decode</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Phase 3 (Separate Decrypt)</th>
+                        <th>Phase 4 (Native)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Memory Bandwidth</td><td>2x (decrypt + decode)</td><td>1x (single pass)</td></tr>
+                    <tr><td>Latency</td><td>Higher (2 operations)</td><td>Lower (atomic)</td></tr>
+                    <tr><td>Key Exposure</td><td>Key in protected buffer</td><td>Key never leaves TEE</td></tr>
+                    <tr><td>Buffer Management</td><td>Protected bitstream buffers</td><td>Only protected output</td></tr>
+                    <tr><td>Hardware Requirements</td><td>Protected memory</td><td>Decrypt+decode engine</td></tr>
+                    <tr><td>Security Level</td><td>High</td><td>Higher</td></tr>
+                    <tr><td>Power Efficiency</td><td>Lower</td><td>Higher</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Phase 4 Tasks</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Task</th>
+                        <th>Dependencies</th>
+                        <th>Effort</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>4.1</td><td>Extension proposal and Khronos discussion</td><td>Phase 3</td><td>10d</td></tr>
+                    <tr><td>4.2</td><td>Driver vendor engagement</td><td>4.1</td><td>5d</td></tr>
+                    <tr><td>4.3</td><td>Extension implementation (Chromium side)</td><td>4.2</td><td>5d</td></tr>
+                    <tr><td>4.4</td><td>VulkanCryptoKeyManager implementation</td><td>4.3</td><td>4d</td></tr>
+                    <tr><td>4.5</td><td>CDM key slot integration</td><td>4.4</td><td>5d</td></tr>
+                    <tr><td>4.6</td><td>Encrypted decode submission</td><td>4.5</td><td>4d</td></tr>
+                    <tr><td>4.7</td><td>Driver testing (NVIDIA, AMD, Intel)</td><td>4.6</td><td>10d</td></tr>
+                    <tr><td>4.8</td><td>Conformance testing</td><td>4.7</td><td>5d</td></tr>
+                    <tr><td>4.9</td><td>Performance benchmarking</td><td>4.8</td><td>3d</td></tr>
+                </tbody>
+            </table>
+            <p><strong>Total Phase 4 Effort: ~51 days (dependent on Khronos/vendor timelines)</strong></p>
+        </section>
+        
+        <!-- Timeline -->
+        <section id="timeline">
+            <h2>Overall Timeline and Dependencies</h2>
+            
+            <div class="timeline" style="text-align: center; background: transparent; padding: 0;">
+                <object type="image/svg+xml" data="diagrams/development_timeline.svg" style="max-width: 100%; height: auto;">
+                    Development Timeline Diagram
+                </object>
+            </div>
+            
+            <h3>Key Milestones</h3>
+            <div class="milestone-list">
+                <div class="milestone">
+                    <div class="milestone-month">M1</div>
+                    <div class="milestone-content">
+                        <h4>Month 3</h4>
+                        <p>Phase 1 complete - standalone Vulkan Video library</p>
+                    </div>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-month">M2</div>
+                    <div class="milestone-content">
+                        <h4>Month 5</h4>
+                        <p>H.264 decode working in Chromium</p>
+                    </div>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-month">M3</div>
+                    <div class="milestone-content">
+                        <h4>Month 6</h4>
+                        <p>All codecs (H.264/H.265/AV1/VP9) working</p>
+                    </div>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-month">M4</div>
+                    <div class="milestone-content">
+                        <h4>Month 8</h4>
+                        <p>Protected content (Phase 3) working</p>
+                    </div>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-month">M5</div>
+                    <div class="milestone-content">
+                        <h4>Month 12</h4>
+                        <p>Native decrypt-decode (Phase 4) available</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Risks -->
+        <section id="risks">
+            <h2>Risk Assessment</h2>
+            
+            <table class="risk-table">
+                <thead>
+                    <tr>
+                        <th>Risk</th>
+                        <th>Probability</th>
+                        <th>Impact</th>
+                        <th>Mitigation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="medium"><td>Driver bugs in Vulkan Video</td><td>Medium</td><td>Medium</td><td>Close collaboration with IHVs, extensive testing</td></tr>
+                    <tr class="medium"><td>CDM integration complexity</td><td>Medium</td><td>High</td><td>Early engagement with Widevine team</td></tr>
+                    <tr class="low"><td>Protected memory not available</td><td>Low</td><td>High</td><td>Feature detection, fallback to VA-API</td></tr>
+                    <tr class="low"><td>Performance worse than VA-API</td><td>Low</td><td>Medium</td><td>Profiling, optimization passes</td></tr>
+                    <tr class="medium"><td>Khronos rejects encryption extension</td><td>Medium</td><td>High</td><td>Continue with Phase 3 approach</td></tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <!-- Test Plan Summary -->
+        <section id="testing">
+            <h2>Test Plan Summary</h2>
+            
+            <div class="card phase1">
+                <h3>Phase 1 Tests</h3>
+                <ul>
+                    <li>Unit tests for each component</li>
+                    <li>Integration tests with conformance test vectors</li>
+                    <li>Memory leak and error handling tests</li>
+                </ul>
+            </div>
+            
+            <div class="card phase2">
+                <h3>Phase 2 Tests</h3>
+                <ul>
+                    <li>Chromium video_decode_accelerator_tests</li>
+                    <li>Conformance test vectors for each codec</li>
+                    <li>Stress tests (resolution changes, seek, etc.)</li>
+                </ul>
+            </div>
+            
+            <div class="card phase3">
+                <h3>Phase 3 Tests</h3>
+                <ul>
+                    <li>Widevine L1 certification tests</li>
+                    <li>PlayReady certification tests</li>
+                    <li>Fuzz testing of encrypted content handling</li>
+                </ul>
+            </div>
+            
+            <div class="card phase4">
+                <h3>Phase 4 Tests</h3>
+                <ul>
+                    <li>Same as Phase 3 with new extension</li>
+                    <li>Performance comparison with Phase 3</li>
+                    <li>Security audit</li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- References -->
+        <section id="references">
+            <h2>References</h2>
+            <ul>
+                <li><a href="https://github.com/nvpro-samples/vk_video_samples">Vulkan Video Decode Tutorial (NVPRO)</a></li>
+                <li><a href="https://www.khronos.org/vulkan/">Khronos Vulkan</a></li>
+                <li><a href="https://chromium.googlesource.com/chromium/src/+/main/media/">Chromium Media Documentation</a></li>
+                <li><a href="https://intel.github.io/libva/">VA-API Specification</a></li>
+                <li><a href="https://www.widevine.com/">Widevine DRM</a></li>
+            </ul>
+        </section>
+    </main>
+    
+    <footer style="background: var(--bg-secondary); padding: 2rem; text-align: center; border-top: 1px solid var(--border-color);">
+        <p style="color: var(--text-muted);">Vulkan Video Decode Integration Development Plan</p>
+    </footer>
+</body>
+</html>
+
+

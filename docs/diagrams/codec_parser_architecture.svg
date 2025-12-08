@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 850">
+  <defs>
+    <linearGradient id="parserGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="decoderGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D97706;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="vulkanAccelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/>
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1100" height="850" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="550" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#1e293b">
+    Shared Codec Parser Architecture
+  </text>
+  <text x="550" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#64748b">
+    Codec parsing is shared across all hardware backends
+  </text>
+  
+  <!-- Bitstream Parsers Section -->
+  <rect x="40" y="80" width="1020" height="140" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="60" y="105" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1e40af">
+    Bitstream Parsers (media/parsers/) - SHARED
+  </text>
+  
+  <!-- Parser boxes -->
+  <rect x="60" y="120" width="130" height="80" rx="6" fill="url(#parserGrad)" filter="url(#shadow)"/>
+  <text x="125" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">H264Parser</text>
+  <text x="125" y="168" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#dbeafe">h264_parser.h</text>
+  <text x="125" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#dbeafe">NAL, SPS, PPS, Slice</text>
+  
+  <rect x="210" y="120" width="130" height="80" rx="6" fill="url(#parserGrad)" filter="url(#shadow)"/>
+  <text x="275" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">H265Parser</text>
+  <text x="275" y="168" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#dbeafe">h265_parser.h</text>
+  <text x="275" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#dbeafe">VPS, SPS, PPS</text>
+  
+  <rect x="360" y="120" width="130" height="80" rx="6" fill="url(#parserGrad)" filter="url(#shadow)"/>
+  <text x="425" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">VP9Parser</text>
+  <text x="425" y="168" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#dbeafe">vp9_parser.h</text>
+  <text x="425" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#dbeafe">Frame Headers</text>
+  
+  <rect x="510" y="120" width="130" height="80" rx="6" fill="url(#parserGrad)" filter="url(#shadow)"/>
+  <text x="575" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">VP8Parser</text>
+  <text x="575" y="168" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#dbeafe">vp8_parser.h</text>
+  <text x="575" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#dbeafe">Frame Headers</text>
+  
+  <rect x="660" y="120" width="130" height="80" rx="6" fill="url(#parserGrad)" filter="url(#shadow)"/>
+  <text x="725" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">AV1 Parser</text>
+  <text x="725" y="168" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#dbeafe">libgav1 / dav1d</text>
+  <text x="725" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#dbeafe">OBU Parsing</text>
+  
+  <rect x="810" y="120" width="130" height="80" rx="6" fill="url(#parserGrad)" filter="url(#shadow)"/>
+  <text x="875" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">H266Parser</text>
+  <text x="875" y="168" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#dbeafe">h266_parser.h</text>
+  <text x="875" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#dbeafe">VVC NAL Units</text>
+  
+  <!-- AcceleratedVideoDecoder Section -->
+  <rect x="40" y="240" width="1020" height="160" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+  <text x="60" y="265" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#065f46">
+    AcceleratedVideoDecoder (media/gpu/) - SHARED State Machines
+  </text>
+  
+  <!-- Decoder boxes -->
+  <rect x="60" y="285" width="180" height="95" rx="6" fill="url(#decoderGrad)" filter="url(#shadow)"/>
+  <text x="150" y="310" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">H264Decoder</text>
+  <text x="150" y="328" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">h264_decoder.h</text>
+  <text x="150" y="348" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">• DPB Management</text>
+  <text x="150" y="363" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">• Reference Lists</text>
+  
+  <rect x="260" y="285" width="180" height="95" rx="6" fill="url(#decoderGrad)" filter="url(#shadow)"/>
+  <text x="350" y="310" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">H265Decoder</text>
+  <text x="350" y="328" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">h265_decoder.h</text>
+  <text x="350" y="348" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">• DPB Management</text>
+  <text x="350" y="363" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">• Reference Lists</text>
+  
+  <rect x="460" y="285" width="180" height="95" rx="6" fill="url(#decoderGrad)" filter="url(#shadow)"/>
+  <text x="550" y="310" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">VP9Decoder</text>
+  <text x="550" y="328" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">vp9_decoder.h</text>
+  <text x="550" y="348" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">• Reference Frames</text>
+  <text x="550" y="363" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">• Segmentation</text>
+  
+  <rect x="660" y="285" width="180" height="95" rx="6" fill="url(#decoderGrad)" filter="url(#shadow)"/>
+  <text x="750" y="310" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">AV1Decoder</text>
+  <text x="750" y="328" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">av1_decoder.h</text>
+  <text x="750" y="348" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">• Reference Frames</text>
+  <text x="750" y="363" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">• Film Grain</text>
+  
+  <rect x="860" y="285" width="180" height="95" rx="6" fill="url(#decoderGrad)" filter="url(#shadow)"/>
+  <text x="950" y="310" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">VP8Decoder</text>
+  <text x="950" y="328" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">vp8_decoder.h</text>
+  <text x="950" y="348" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">• Golden Frame</text>
+  <text x="950" y="363" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">• AltRef Frame</text>
+  
+  <!-- Accelerator Interface Label -->
+  <text x="550" y="430" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#64748b">
+    ↓ Accelerator Interface (Pure Virtual) ↓
+  </text>
+  
+  <!-- Accelerator Interface Box -->
+  <rect x="200" y="445" width="700" height="90" rx="8" fill="#fff" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5"/>
+  <text x="550" y="475" text-anchor="middle" font-family="monospace" font-size="11" fill="#475569">
+    class H264Accelerator {
+  </text>
+  <text x="550" y="493" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">
+    virtual Status SubmitFrameMetadata(SPS, PPS, DPB, ref_lists, pic) = 0;
+  </text>
+  <text x="550" y="508" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">
+    virtual Status SubmitSlice(PPS, slice_hdr, ref_lists, data, size) = 0;
+  </text>
+  <text x="550" y="523" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">
+    virtual Status SubmitDecode(pic) = 0;  };
+  </text>
+  
+  <!-- Hardware Accelerator Implementations -->
+  <text x="550" y="565" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#64748b">
+    Hardware-Specific Accelerator Implementations
+  </text>
+  
+  <!-- VA-API Accelerators -->
+  <rect x="40" y="580" width="330" height="240" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="60" y="605" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#92400e">VA-API (media/gpu/vaapi/)</text>
+  
+  <rect x="60" y="620" width="140" height="50" rx="4" fill="url(#accelGrad)" filter="url(#shadow)"/>
+  <text x="130" y="642" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">H264VaapiDelegate</text>
+  <text x="130" y="658" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#fef3c7">VAPictureParameterBuffer</text>
+  
+  <rect x="210" y="620" width="140" height="50" rx="4" fill="url(#accelGrad)" filter="url(#shadow)"/>
+  <text x="280" y="642" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">H265VaapiDelegate</text>
+  <text x="280" y="658" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#fef3c7">VADecPictureParams</text>
+  
+  <rect x="60" y="680" width="140" height="50" rx="4" fill="url(#accelGrad)" filter="url(#shadow)"/>
+  <text x="130" y="702" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">VP9VaapiDelegate</text>
+  <text x="130" y="718" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#fef3c7">VADecPictureParamsVP9</text>
+  
+  <rect x="210" y="680" width="140" height="50" rx="4" fill="url(#accelGrad)" filter="url(#shadow)"/>
+  <text x="280" y="702" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">AV1VaapiDelegate</text>
+  <text x="280" y="718" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#fef3c7">VADecPictureParamsAV1</text>
+  
+  <rect x="60" y="740" width="290" height="60" rx="4" fill="#fff" stroke="#d97706" stroke-width="1"/>
+  <text x="205" y="762" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#92400e">VaapiWrapper</text>
+  <text x="205" y="780" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#b45309">vaBeginPicture → vaRenderPicture → vaEndPicture</text>
+  
+  <!-- Vulkan Video Accelerators (NEW) -->
+  <rect x="390" y="580" width="330" height="240" rx="10" fill="#ede9fe" stroke="#8b5cf6" stroke-width="3"/>
+  <text x="410" y="605" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#5b21b6">
+    ★ Vulkan Video (media/gpu/vulkan/) NEW
+  </text>
+  
+  <rect x="410" y="620" width="140" height="50" rx="4" fill="url(#vulkanAccelGrad)" filter="url(#shadow)"/>
+  <text x="480" y="642" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">H264VulkanDelegate</text>
+  <text x="480" y="658" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#ede9fe">VkVideoDecodeH264*</text>
+  
+  <rect x="560" y="620" width="140" height="50" rx="4" fill="url(#vulkanAccelGrad)" filter="url(#shadow)"/>
+  <text x="630" y="642" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">H265VulkanDelegate</text>
+  <text x="630" y="658" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#ede9fe">VkVideoDecodeH265*</text>
+  
+  <rect x="410" y="680" width="140" height="50" rx="4" fill="url(#vulkanAccelGrad)" filter="url(#shadow)"/>
+  <text x="480" y="702" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">VP9VulkanDelegate</text>
+  <text x="480" y="718" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#ede9fe">Future Extension</text>
+  
+  <rect x="560" y="680" width="140" height="50" rx="4" fill="url(#vulkanAccelGrad)" filter="url(#shadow)"/>
+  <text x="630" y="702" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">AV1VulkanDelegate</text>
+  <text x="630" y="718" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#ede9fe">VkVideoDecodeAV1*</text>
+  
+  <rect x="410" y="740" width="290" height="60" rx="4" fill="#fff" stroke="#7c3aed" stroke-width="2"/>
+  <text x="555" y="762" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#5b21b6">VulkanWrapper</text>
+  <text x="555" y="780" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#6d28d9">vkCmdBeginVideoCoding → vkCmdDecodeVideo → vkCmdEndVideoCoding</text>
+  
+  <!-- V4L2 Accelerators -->
+  <rect x="740" y="580" width="310" height="240" rx="10" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+  <text x="760" y="605" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#9d174d">V4L2 (media/gpu/v4l2/)</text>
+  
+  <rect x="760" y="620" width="130" height="50" rx="4" fill="#db2777" filter="url(#shadow)"/>
+  <text x="825" y="642" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">H264V4L2Delegate</text>
+  <text x="825" y="658" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#fce7f3">v4l2_ctrl_h264_*</text>
+  
+  <rect x="900" y="620" width="130" height="50" rx="4" fill="#db2777" filter="url(#shadow)"/>
+  <text x="965" y="642" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">H265V4L2Delegate</text>
+  <text x="965" y="658" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#fce7f3">v4l2_ctrl_hevc_*</text>
+  
+  <rect x="760" y="680" width="130" height="50" rx="4" fill="#db2777" filter="url(#shadow)"/>
+  <text x="825" y="702" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">VP9V4L2Delegate</text>
+  <text x="825" y="718" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#fce7f3">v4l2_ctrl_vp9_*</text>
+  
+  <rect x="900" y="680" width="130" height="50" rx="4" fill="#db2777" filter="url(#shadow)"/>
+  <text x="965" y="702" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#fff">AV1V4L2Delegate</text>
+  <text x="965" y="718" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#fce7f3">v4l2_ctrl_av1_*</text>
+  
+  <rect x="760" y="740" width="270" height="60" rx="4" fill="#fff" stroke="#db2777" stroke-width="1"/>
+  <text x="895" y="762" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#9d174d">V4L2StatelessDevice</text>
+  <text x="895" y="780" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#be185d">VIDIOC_QBUF → VIDIOC_STREAMON</text>
+  
+  <!-- Arrows from parsers to decoders -->
+  <line x1="125" y1="200" x2="150" y2="285" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="275" y1="200" x2="350" y2="285" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="425" y1="200" x2="550" y2="285" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="725" y1="200" x2="750" y2="285" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- Key Benefits Box -->
+  <rect x="40" y="830" width="1020" height="15" rx="4" fill="#10b981"/>
+  <text x="550" y="842" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">
+    KEY BENEFIT: Same parser code, same DPB logic, different HW commands → Vulkan integration only needs new Delegate classes!
+  </text>
+</svg>
+

@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chromium Presentation Layer Architecture</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+            --code-bg: #1e293b;
+            --code-text: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-right: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: var(--accent-blue);
+        }
+
+        /* Main Content */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            color: var(--accent-blue);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--accent-blue);
+        }
+
+        h3 {
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        h4 {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin: 1rem 0 0.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border: 1px solid var(--border-color);
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        tr:nth-child(even) {
+            background: var(--bg-secondary);
+        }
+
+        /* Code blocks */
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 1.25rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: var(--bg-tertiary);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        /* Syntax highlighting */
+        .keyword { color: #c792ea; }
+        .type { color: #82aaff; }
+        .string { color: #c3e88d; }
+        .comment { color: #676e95; font-style: italic; }
+        .number { color: #f78c6c; }
+
+        /* Lists */
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Diagrams */
+        .diagram-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .diagram-container img,
+        .diagram-container object {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .diagram-caption {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* ASCII diagrams */
+        .ascii-diagram {
+            background: var(--code-bg);
+            color: #a0aec0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            white-space: pre;
+            margin: 1rem 0;
+        }
+
+        /* Info boxes */
+        .info-box {
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid;
+        }
+
+        .info-box.blue {
+            background: rgba(59, 130, 246, 0.1);
+            border-left-color: var(--accent-blue);
+        }
+
+        .info-box.green {
+            background: rgba(16, 185, 129, 0.1);
+            border-left-color: var(--accent-green);
+        }
+
+        .info-box.orange {
+            background: rgba(249, 115, 22, 0.1);
+            border-left-color: var(--accent-orange);
+        }
+
+        .info-box.purple {
+            background: rgba(139, 92, 246, 0.1);
+            border-left-color: var(--accent-purple);
+        }
+
+        .info-box h4 {
+            margin-top: 0;
+            color: inherit;
+        }
+
+        /* Backend badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .badge-gl { background: #dbeafe; color: #1e40af; }
+        .badge-vulkan { background: #ede9fe; color: #5b21b6; }
+        .badge-metal { background: #fce7f3; color: #9d174d; }
+        .badge-d3d { background: #dcfce7; color: #166534; }
+        .badge-default { background: #e2e8f0; color: #475569; }
+
+        /* Footer */
+        footer {
+            background: var(--bg-tertiary);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Print styles */
+        @media print {
+            nav { display: none; }
+            .header { padding: 1rem; }
+            main { padding: 1rem; }
+            pre { white-space: pre-wrap; }
+            section { page-break-inside: avoid; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.5rem; }
+            main { padding: 1rem; }
+            .card-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Chromium Presentation Layer Architecture</h1>
+        <p>Rendering, Compositing, and Display Pipeline</p>
+    </header>
+
+    <nav>
+        <a href="#overview">Overview</a>
+        <a href="#backends">Graphics Backends</a>
+        <a href="#skia">Skia</a>
+        <a href="#viz">Display Compositor</a>
+        <a href="#pipeline">Rendering Pipeline</a>
+        <a href="#platforms">Platforms</a>
+        <a href="#video">Video Integration</a>
+        <a href="#overlays">Overlays</a>
+        <a href="#sync">Synchronization</a>
+        <a href="#vulkan-video">Vulkan Video</a>
+        <a href="#references">References</a>
+    </nav>
+
+    <main>
+        <!-- Overview Section -->
+        <section id="overview">
+            <h2>1. Overview</h2>
+            
+            <div class="diagram-container">
+                <object type="image/svg+xml" data="diagrams/presentation_layer_architecture.svg" width="100%">
+                    Presentation Layer Architecture Diagram
+                </object>
+                <p class="diagram-caption">Chromium Presentation Layer Architecture</p>
+            </div>
+
+            <p>Chromium's presentation layer is responsible for:</p>
+            <ul>
+                <li><strong>Rendering</strong>: Converting web content (DOM, CSS, Canvas, WebGL) into pixels</li>
+                <li><strong>Compositing</strong>: Combining multiple rendered layers into a final frame</li>
+                <li><strong>Display</strong>: Presenting the composited frame to the screen</li>
+            </ul>
+
+            <div class="info-box blue">
+                <h4>Design Principles</h4>
+                <ul>
+                    <li>Cross-platform (Windows, macOS, Linux, Android, ChromeOS)</li>
+                    <li>GPU-accelerated when possible</li>
+                    <li>Efficient with video content (zero-copy paths)</li>
+                    <li>Secure (works with protected content/DRM)</li>
+                </ul>
+            </div>
+
+            <h3>High-Level Architecture</h3>
+            <div class="diagram-container">
+                <object type="image/svg+xml" data="diagrams/high_level_architecture.svg" width="100%">
+                    High-Level Architecture Diagram
+                </object>
+                <p class="diagram-caption">Browser → GPU Process → Graphics Drivers Pipeline</p>
+            </div>
+        </section>
+
+        <!-- Graphics Backends Section -->
+        <section id="backends">
+            <h2>2. Graphics Backend Options</h2>
+            <p>Chromium supports multiple graphics backends, configurable at runtime:</p>
+
+            <h3>GrContextType Enumeration</h3>
+            <pre><code><span class="comment">// From gpu/config/gpu_preferences.h</span>
+<span class="keyword">enum class</span> <span class="type">GrContextType</span> : <span class="type">uint32_t</span> {
+  kNone,           <span class="comment">// No GPU acceleration</span>
+  kGL,             <span class="comment">// Ganesh with OpenGL/GLES</span>
+  kVulkan,         <span class="comment">// Ganesh with Vulkan</span>
+  kGraphiteDawn,   <span class="comment">// Graphite with Dawn (WebGPU backend)</span>
+  kGraphiteMetal,  <span class="comment">// Graphite with Metal (macOS/iOS)</span>
+};</code></pre>
+
+            <h3>GPU Mode</h3>
+            <pre><code><span class="comment">// From gpu/config/gpu_mode.h</span>
+<span class="keyword">enum class</span> <span class="type">GpuMode</span> {
+  UNKNOWN,
+  HARDWARE_GL,       <span class="comment">// Hardware acceleration using only GL</span>
+  HARDWARE_VULKAN,   <span class="comment">// Hardware acceleration using Vulkan and GL</span>
+  HARDWARE_GRAPHITE, <span class="comment">// Hardware acceleration using Graphite-Dawn</span>
+  SOFTWARE_GL,       <span class="comment">// Software WebGL (SwiftShader)</span>
+  DISPLAY_COMPOSITOR,<span class="comment">// GPU process for display compositor only</span>
+};</code></pre>
+
+            <h3>Skia Backend Types</h3>
+            <div class="card">
+                <p><strong>Recorded for telemetry:</strong></p>
+                <div style="margin-top: 1rem;">
+                    <span class="badge badge-gl">kGaneshGL</span>
+                    <span class="badge badge-vulkan">kGaneshVulkan</span>
+                    <span class="badge badge-vulkan">kGraphiteDawnVulkan</span>
+                    <span class="badge badge-d3d">kGraphiteDawnD3D11</span>
+                    <span class="badge badge-d3d">kGraphiteDawnD3D12</span>
+                    <span class="badge badge-metal">kGraphiteDawnMetal</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skia Section -->
+        <section id="skia">
+            <h2>3. Skia: The Core Rendering Engine</h2>
+            <p><a href="https://skia.org/">Skia</a> is Google's 2D graphics library used by Chrome, Android, Flutter, and many other projects.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h4>Ganesh (Current)</h4>
+                    <ul>
+                        <li>Mature, production-ready GPU backend</li>
+                        <li>Supports OpenGL, OpenGL ES, Vulkan, Metal, D3D</li>
+                        <li>Used in current Chrome releases</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>Graphite (Next-generation)</h4>
+                    <ul>
+                        <li>New GPU backend designed for modern APIs</li>
+                        <li>Better support for compute shaders</li>
+                        <li>Uses Dawn as abstraction layer</li>
+                        <li>Currently being rolled out</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Skia in Chrome Architecture</h3>
+            <div class="diagram-container">
+                <object type="image/svg+xml" data="diagrams/skia_chrome_architecture.svg" width="100%">
+                    Skia in Chrome Architecture Diagram
+                </object>
+                <p class="diagram-caption">SkiaRenderer → SkCanvas API → Ganesh/Graphite → GPU Backends</p>
+            </div>
+        </section>
+
+        <!-- Display Compositor Section -->
+        <section id="viz">
+            <h2>4. Display Compositor (Viz)</h2>
+            <p>The <strong>Viz</strong> (Visual) service is Chrome's display compositor, running in the GPU process.</p>
+
+            <h3>Key Components</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>File Location</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>Display</code></td>
+                        <td><code>components/viz/service/display/display.cc</code></td>
+                        <td>Manages the display pipeline</td>
+                    </tr>
+                    <tr>
+                        <td><code>SkiaRenderer</code></td>
+                        <td><code>components/viz/service/display/skia_renderer.cc</code></td>
+                        <td>Renders using Skia</td>
+                    </tr>
+                    <tr>
+                        <td><code>SkiaOutputSurface</code></td>
+                        <td><code>components/viz/service/display_embedder/skia_output_surface_impl.cc</code></td>
+                        <td>GPU output surface</td>
+                    </tr>
+                    <tr>
+                        <td><code>SurfaceAggregator</code></td>
+                        <td><code>components/viz/service/display/surface_aggregator.cc</code></td>
+                        <td>Aggregates compositor frames</td>
+                    </tr>
+                    <tr>
+                        <td><code>OverlayProcessor</code></td>
+                        <td><code>components/viz/service/display/overlay_processor_*.cc</code></td>
+                        <td>Hardware overlay support</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Display Initialization</h3>
+            <pre><code><span class="comment">// From components/viz/service/display/display.cc</span>
+<span class="keyword">void</span> <span class="type">Display</span>::InitializeRenderer() {
+  <span class="keyword">if</span> (skia_output_surface_) {
+    <span class="comment">// GPU-accelerated path using Skia</span>
+    <span class="keyword">auto</span> resource_provider = std::make_unique&lt;<span class="type">DisplayResourceProviderSkia</span>&gt;();
+    renderer_ = std::make_unique&lt;<span class="type">SkiaRenderer</span>&gt;(
+        &amp;settings_, debug_settings_, output_surface_.get(),
+        resource_provider.get(), overlay_processor_.get(),
+        skia_output_surface_);
+  } <span class="keyword">else if</span> (output_surface_-&gt;capabilities().skips_draw) {
+    <span class="comment">// Null renderer for headless/testing</span>
+    renderer_ = std::make_unique&lt;<span class="type">NullRenderer</span>&gt;(...);
+  } <span class="keyword">else</span> {
+    <span class="comment">// Software fallback</span>
+    renderer_ = std::make_unique&lt;<span class="type">SoftwareRenderer</span>&gt;(...);
+  }
+}</code></pre>
+        </section>
+
+        <!-- Rendering Pipeline Section -->
+        <section id="pipeline">
+            <h2>5. Rendering Pipeline</h2>
+
+            <h3>Frame Rendering Stages</h3>
+            <ol>
+                <li><strong>Aggregation</strong>: Combine surfaces from multiple sources (main content, iframes, video)</li>
+                <li><strong>Occlusion Culling</strong>: Remove hidden/occluded quads</li>
+                <li><strong>Draw</strong>: Render visible quads using SkiaRenderer</li>
+                <li><strong>Overlay Processing</strong>: Identify candidates for hardware overlays</li>
+                <li><strong>Swap</strong>: Present the frame to the display</li>
+            </ol>
+
+            <h3>Compositor Frame Flow</h3>
+            <div class="diagram-container">
+                <object type="image/svg+xml" data="diagrams/compositor_frame_flow.svg" width="100%">
+                    Compositor Frame Flow Diagram
+                </object>
+                <p class="diagram-caption">Renderer → Browser → Viz (GPU Process) → Display</p>
+            </div>
+        </section>
+
+        <!-- Platform-Specific Backends Section -->
+        <section id="platforms">
+            <h2>6. Platform-Specific Backends</h2>
+
+            <h3>Linux Desktop</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Default</th>
+                        <th>Vulkan Alternative</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>GL Implementation</td>
+                        <td>EGL/GLES (Mesa)</td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>Skia Backend</td>
+                        <td><span class="badge badge-gl">Ganesh GL</span></td>
+                        <td><span class="badge badge-vulkan">Ganesh Vulkan</span> (flag)</td>
+                    </tr>
+                    <tr>
+                        <td>Display Server</td>
+                        <td>X11 or Wayland</td>
+                        <td>Same</td>
+                    </tr>
+                    <tr>
+                        <td>Buffer Sharing</td>
+                        <td>DMA-BUF</td>
+                        <td>DMA-BUF</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-box green">
+                <h4>Enable Vulkan on Linux</h4>
+                <pre><code>chrome --enable-features=Vulkan --use-vulkan=native</code></pre>
+            </div>
+
+            <h3>ChromeOS</h3>
+            <table>
+                <thead>
+                    <tr><th>Component</th><th>Default</th><th>Notes</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>GL Implementation</td><td>EGL/GLES</td><td>Direct rendering</td></tr>
+                    <tr><td>Skia Backend</td><td><span class="badge badge-gl">Ganesh GL</span></td><td>Vulkan testing in progress</td></tr>
+                    <tr><td>Display</td><td>DRM/KMS</td><td>Direct scanout support</td></tr>
+                    <tr><td>Buffer Sharing</td><td>GBM + DMA-BUF</td><td>Zero-copy overlays</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Windows</h3>
+            <table>
+                <thead>
+                    <tr><th>Component</th><th>Default</th><th>Notes</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>GL Implementation</td><td>ANGLE (D3D11)</td><td>D3D to GL translation</td></tr>
+                    <tr><td>Skia Backend</td><td><span class="badge badge-gl">Ganesh GL</span></td><td>Via ANGLE</td></tr>
+                    <tr><td>Alternative</td><td><span class="badge badge-d3d">Graphite Dawn D3D12</span></td><td>Next-gen path</td></tr>
+                </tbody>
+            </table>
+
+            <h3>macOS</h3>
+            <table>
+                <thead>
+                    <tr><th>Component</th><th>Default</th><th>Notes</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Skia Backend</td><td><span class="badge badge-metal">Graphite Metal</span></td><td>Modern path</td></tr>
+                    <tr><td>Alternative</td><td><span class="badge badge-gl">Ganesh GL</span></td><td>Via ANGLE</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Android</h3>
+            <table>
+                <thead>
+                    <tr><th>Component</th><th>Default</th><th>Notes</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>GL Implementation</td><td>EGL/GLES</td><td>Native Android</td></tr>
+                    <tr><td>Skia Backend</td><td><span class="badge badge-gl">Ganesh GL</span></td><td>Default</td></tr>
+                    <tr><td>WebView Vulkan</td><td>Optional</td><td><code>--webview-draw-functor-uses-vulkan</code></td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Video Frame Integration Section -->
+        <section id="video">
+            <h2>7. Video Frame Integration</h2>
+
+            <h3>Video Frame to Display Path</h3>
+            <div class="diagram-container">
+                <object type="image/svg+xml" data="diagrams/video_frame_display_path.svg" width="100%">
+                    Video Frame to Display Path Diagram
+                </object>
+                <p class="diagram-caption">Video Decoder → SharedImage → Composited/Overlay Path</p>
+            </div>
+
+            <h3>SharedImage for Video Frames</h3>
+            <pre><code><span class="comment">// DMA-BUF backed SharedImage creation</span>
+<span class="comment">// From gpu/command_buffer/service/shared_image/</span>
+
+<span class="keyword">class</span> <span class="type">SharedImageBackingOzone</span> : <span class="keyword">public</span> <span class="type">SharedImageBacking</span> {
+  <span class="comment">// Backed by gfx::NativePixmapDmaBuf</span>
+  <span class="comment">// Can create:</span>
+  <span class="comment">// - GLTextureImageRepresentation (for GL compositing)</span>
+  <span class="comment">// - VulkanImageRepresentation (for Vulkan compositing)</span>
+  <span class="comment">// - OverlayImageRepresentation (for direct scanout)</span>
+};</code></pre>
+        </section>
+
+        <!-- Overlay System Section -->
+        <section id="overlays">
+            <h2>8. Overlay System</h2>
+            <p>Hardware overlays allow video frames to be displayed without GPU composition, saving power and reducing latency.</p>
+
+            <h3>Overlay Candidate Requirements</h3>
+            <div class="card">
+                <p>For a video frame to qualify as an overlay:</p>
+                <ol>
+                    <li><strong>Format</strong>: Must be supported by display hardware (NV12, P010, etc.)</li>
+                    <li><strong>Transform</strong>: Rotation/scaling must be hardware-supported</li>
+                    <li><strong>Blend</strong>: Usually opaque or simple alpha</li>
+                    <li><strong>Position</strong>: Within display bounds</li>
+                    <li><strong>Buffer</strong>: Must be scanout-capable (DMA-BUF with proper modifiers)</li>
+                </ol>
+            </div>
+
+            <h3>DRM/KMS Integration (Linux/ChromeOS)</h3>
+            <div class="diagram-container">
+                <object type="image/svg+xml" data="diagrams/drm_kms_integration.svg" width="100%">
+                    DRM/KMS Integration Diagram
+                </object>
+                <p class="diagram-caption">Display Controller Planes: Primary, Overlay, Cursor</p>
+            </div>
+        </section>
+
+        <!-- Synchronization Section -->
+        <section id="sync">
+            <h2>9. Synchronization</h2>
+
+            <h3>Buffer Synchronization Mechanisms</h3>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h4>Implicit Sync (DMA-BUF default)</h4>
+                    <pre><code><span class="comment">// Kernel handles sync automatically via dma_fence</span>
+<span class="comment">// - Producer signals fence when write complete</span>
+<span class="comment">// - Consumer waits on fence before read</span>
+<span class="comment">// Works across VA-API, OpenGL, Vulkan, display</span></code></pre>
+                </div>
+                <div class="card">
+                    <h4>Explicit Sync (Modern path)</h4>
+                    <pre><code><span class="comment">// VkSemaphore for Vulkan-to-Vulkan</span>
+<span class="comment">// sync_file (Linux) for cross-API</span>
+
+<span class="type">VkImportSemaphoreFdInfoKHR</span> import_info = {
+  .sType = VK_STRUCTURE_TYPE_IMPORT_SEMAPHORE_FD_INFO_KHR,
+  .semaphore = semaphore,
+  .handleType = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_SYNC_FD_BIT,
+  .fd = sync_fd,
+};</code></pre>
+                </div>
+            </div>
+
+            <h3>Frame Timing</h3>
+            <div class="diagram-container">
+                <object type="image/svg+xml" data="diagrams/frame_timing.svg" width="100%">
+                    Frame Timing Diagram
+                </object>
+                <p class="diagram-caption">Double-buffered rendering synchronized to VSync</p>
+            </div>
+        </section>
+
+        <!-- Vulkan Video Integration Section -->
+        <section id="vulkan-video">
+            <h2>10. Vulkan Video Integration Considerations</h2>
+
+            <h3>Current State: OpenGL Compositor</h3>
+            <div class="diagram-container">
+                <object type="image/svg+xml" data="diagrams/opengl_compositor_flow.svg" width="100%">
+                    OpenGL Compositor Flow Diagram
+                </object>
+                <p class="diagram-caption">Vulkan Video → DMA-BUF → EGLImage → GL Texture → Display</p>
+            </div>
+
+            <h3>Future State: Vulkan Compositor</h3>
+            <div class="diagram-container">
+                <object type="image/svg+xml" data="diagrams/vulkan_compositor_flow.svg" width="100%">
+                    Vulkan Compositor Flow Diagram
+                </object>
+                <p class="diagram-caption">Vulkan Video → DMA-BUF → VkImage → Skia → Display (native sync)</p>
+            </div>
+
+            <h3>Optimal Path: Direct Overlay</h3>
+            <div class="info-box purple">
+                <h4>Best Performance Path</h4>
+                <p>For lowest power and latency, video frames should use direct overlay scanout:</p>
+                <pre><code>Vulkan Video Decoder → VkImage → DMA-BUF → DRM Overlay Plane → Display</code></pre>
+                <p>This bypasses the GPU compositor entirely.</p>
+            </div>
+
+            <h3>Recommendations for Vulkan Video Integration</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h4>1. Use DMA-BUF Export</h4>
+                    <ul>
+                        <li>All decoded frames should be exportable as DMA-BUF</li>
+                        <li>Use <code>VK_EXT_external_memory_dma_buf</code> extension</li>
+                        <li>Ensure correct DRM format modifiers</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>2. Support Overlay Promotion</h4>
+                    <ul>
+                        <li>Allocate buffers with scanout capability</li>
+                        <li>Use hardware-friendly formats (NV12, P010)</li>
+                        <li>Respect display controller limitations</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>3. Handle Compositor Backend</h4>
+                    <ul>
+                        <li>Detect if compositor uses GL or Vulkan</li>
+                        <li>Optimize sync primitives accordingly</li>
+                        <li>Use <code>sync_file</code> for cross-API sync</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>4. Protected Content Path</h4>
+                    <ul>
+                        <li>Use <code>VK_EXT_protected_content</code> for DRM</li>
+                        <li>Ensure HDCP-capable display output</li>
+                        <li>Keep decrypted content in protected memory</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- References Section -->
+        <section id="references">
+            <h2>11. References</h2>
+
+            <h3>Chromium Source Locations</h3>
+            <table>
+                <thead>
+                    <tr><th>Component</th><th>Path</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>GPU Config</td><td><code>gpu/config/</code></td></tr>
+                    <tr><td>GPU Init</td><td><code>gpu/ipc/service/gpu_init.cc</code></td></tr>
+                    <tr><td>Viz Display</td><td><code>components/viz/service/display/</code></td></tr>
+                    <tr><td>Skia Renderer</td><td><code>components/viz/service/display/skia_renderer.cc</code></td></tr>
+                    <tr><td>Skia Output Surface</td><td><code>components/viz/service/display_embedder/skia_output_surface_impl.cc</code></td></tr>
+                    <tr><td>Overlay Processing</td><td><code>components/viz/service/display/overlay_processor_*.cc</code></td></tr>
+                    <tr><td>SharedImage</td><td><code>gpu/command_buffer/service/shared_image/</code></td></tr>
+                    <tr><td>Vulkan Init</td><td><code>gpu/vulkan/</code></td></tr>
+                </tbody>
+            </table>
+
+            <h3>External Documentation</h3>
+            <ul>
+                <li><a href="https://skia.org/docs/dev/design/gpu/">Skia GPU Architecture</a></li>
+                <li><a href="https://chromium.googlesource.com/chromium/src/+/main/docs/gpu/gpu_architecture.md">Chromium Graphics Overview</a></li>
+                <li><a href="https://chromium.googlesource.com/chromium/src/+/main/components/viz/README.md">Viz Service Overview</a></li>
+                <li><a href="https://www.kernel.org/doc/html/latest/driver-api/dma-buf.html">DMA-BUF Documentation</a></li>
+                <li><a href="https://www.kernel.org/doc/html/latest/gpu/drm-kms.html">DRM/KMS Overview</a></li>
+                <li><a href="https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_external_memory.html">Vulkan External Memory</a></li>
+            </ul>
+
+            <h3>Chrome Flags for Testing</h3>
+            <pre><code><span class="comment"># Enable Vulkan backend</span>
+--enable-features=Vulkan
+--use-vulkan=native
+
+<span class="comment"># Enable Graphite (next-gen Skia)</span>
+--enable-features=SkiaGraphite
+
+<span class="comment"># Debug overlays</span>
+--enable-features=UseOzonePlatform
+--show-overdraw-feedback
+
+<span class="comment"># Video overlay debugging</span>
+--enable-hardware-overlays=single-fullscreen,single-on-top,underlay</code></pre>
+        </section>
+    </main>
+
+    <footer>
+        <p>Chromium Presentation Layer Architecture Documentation</p>
+        <p>Version 1.0 | December 2024 | Based on Chromium source analysis</p>
+    </footer>
+</body>
+</html>
+

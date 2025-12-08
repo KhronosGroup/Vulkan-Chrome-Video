@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 350" font-family="Segoe UI, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="phase1Bar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0d6efd"/>
+      <stop offset="100%" style="stop-color:#0d6efd;stop-opacity:0.7"/>
+    </linearGradient>
+    <linearGradient id="phase2Bar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#198754"/>
+      <stop offset="100%" style="stop-color:#198754;stop-opacity:0.7"/>
+    </linearGradient>
+    <linearGradient id="phase3Bar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fd7e14"/>
+      <stop offset="100%" style="stop-color:#fd7e14;stop-opacity:0.7"/>
+    </linearGradient>
+    <linearGradient id="phase4Bar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6f42c1"/>
+      <stop offset="100%" style="stop-color:#6f42c1;stop-opacity:0.7"/>
+    </linearGradient>
+    <filter id="barShadow" x="-5%" y="-20%" width="110%" height="140%">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="900" height="350" fill="#ffffff"/>
+  
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="18" font-weight="600" fill="#212529">Development Timeline</text>
+  
+  <!-- Grid background -->
+  <rect x="140" y="60" width="720" height="220" fill="#f8f9fa" stroke="#dee2e6" rx="8"/>
+  
+  <!-- Month labels -->
+  <g font-size="10" fill="#6c757d">
+    <text x="155" y="55" text-anchor="middle">1</text>
+    <text x="215" y="55" text-anchor="middle">2</text>
+    <text x="275" y="55" text-anchor="middle">3</text>
+    <text x="335" y="55" text-anchor="middle">4</text>
+    <text x="395" y="55" text-anchor="middle">5</text>
+    <text x="455" y="55" text-anchor="middle">6</text>
+    <text x="515" y="55" text-anchor="middle">7</text>
+    <text x="575" y="55" text-anchor="middle">8</text>
+    <text x="635" y="55" text-anchor="middle">9</text>
+    <text x="695" y="55" text-anchor="middle">10</text>
+    <text x="755" y="55" text-anchor="middle">11</text>
+    <text x="815" y="55" text-anchor="middle">12</text>
+  </g>
+  <text x="500" y="45" text-anchor="middle" font-size="11" font-weight="500" fill="#495057">Month</text>
+  
+  <!-- Vertical grid lines -->
+  <g stroke="#dee2e6" stroke-width="1" stroke-dasharray="3,3">
+    <line x1="200" y1="65" x2="200" y2="275"/>
+    <line x1="260" y1="65" x2="260" y2="275"/>
+    <line x1="320" y1="65" x2="320" y2="275"/>
+    <line x1="380" y1="65" x2="380" y2="275"/>
+    <line x1="440" y1="65" x2="440" y2="275"/>
+    <line x1="500" y1="65" x2="500" y2="275"/>
+    <line x1="560" y1="65" x2="560" y2="275"/>
+    <line x1="620" y1="65" x2="620" y2="275"/>
+    <line x1="680" y1="65" x2="680" y2="275"/>
+    <line x1="740" y1="65" x2="740" y2="275"/>
+    <line x1="800" y1="65" x2="800" y2="275"/>
+  </g>
+  
+  <!-- Phase labels -->
+  <g font-size="11" font-weight="600">
+    <text x="70" y="100" fill="#0d6efd">Phase 1</text>
+    <text x="70" y="115" fill="#6c757d" font-size="9" font-weight="400">(Driver)</text>
+    
+    <text x="70" y="160" fill="#198754">Phase 2</text>
+    <text x="70" y="175" fill="#6c757d" font-size="9" font-weight="400">(Parsers)</text>
+    
+    <text x="70" y="210" fill="#fd7e14">Phase 3</text>
+    <text x="70" y="225" fill="#6c757d" font-size="9" font-weight="400">(Protected)</text>
+    
+    <text x="70" y="260" fill="#6f42c1">Phase 4</text>
+    <text x="70" y="275" fill="#6c757d" font-size="9" font-weight="400">(Native)</text>
+  </g>
+  
+  <!-- Phase 1 bar: Months 1-3 -->
+  <rect x="155" y="85" width="180" height="35" rx="6" fill="url(#phase1Bar)" filter="url(#barShadow)"/>
+  <text x="245" y="107" text-anchor="middle" font-size="10" font-weight="500" fill="#ffffff">Vulkan Video Library</text>
+  
+  <!-- Phase 2 bar: Months 2-6 -->
+  <rect x="215" y="145" width="240" height="35" rx="6" fill="url(#phase2Bar)" filter="url(#barShadow)"/>
+  <g font-size="8" fill="#ffffff">
+    <text x="260" y="160" font-weight="500">H.264</text>
+    <text x="300" y="160" font-weight="500">H.265</text>
+    <text x="340" y="160" font-weight="500">AV1</text>
+    <text x="380" y="160" font-weight="500">VP9</text>
+  </g>
+  <text x="335" y="173" text-anchor="middle" font-size="9" fill="#ffffff">Chrome Integration</text>
+  
+  <!-- Phase 3 bar: Months 5-8 -->
+  <rect x="395" y="195" width="240" height="35" rx="6" fill="url(#phase3Bar)" filter="url(#barShadow)"/>
+  <text x="515" y="217" text-anchor="middle" font-size="10" font-weight="500" fill="#ffffff">Protected Content</text>
+  
+  <!-- Phase 4 bar: Months 7-12 -->
+  <rect x="515" y="245" width="345" height="35" rx="6" fill="url(#phase4Bar)" filter="url(#barShadow)"/>
+  <g font-size="8" fill="#ffffff">
+    <text x="575" y="267">Khronos</text>
+    <text x="680" y="267">Driver</text>
+    <text x="780" y="267">Test</text>
+  </g>
+  
+  <!-- Milestones -->
+  <g>
+    <!-- M1 -->
+    <circle cx="335" cy="100" r="8" fill="#0d6efd" stroke="#ffffff" stroke-width="2"/>
+    <text x="335" y="130" text-anchor="middle" font-size="9" font-weight="600" fill="#0d6efd">M1</text>
+    
+    <!-- M2 -->
+    <circle cx="395" cy="163" r="8" fill="#198754" stroke="#ffffff" stroke-width="2"/>
+    <text x="395" y="193" text-anchor="middle" font-size="9" font-weight="600" fill="#198754">M2</text>
+    
+    <!-- M3 -->
+    <circle cx="455" cy="163" r="8" fill="#198754" stroke="#ffffff" stroke-width="2"/>
+    <text x="455" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#198754">M3</text>
+    
+    <!-- M4 -->
+    <circle cx="575" cy="213" r="8" fill="#fd7e14" stroke="#ffffff" stroke-width="2"/>
+    <text x="575" y="243" text-anchor="middle" font-size="9" font-weight="600" fill="#fd7e14">M4</text>
+    
+    <!-- M5 -->
+    <circle cx="855" cy="263" r="8" fill="#6f42c1" stroke="#ffffff" stroke-width="2"/>
+    <text x="855" y="293" text-anchor="middle" font-size="9" font-weight="600" fill="#6f42c1">M5</text>
+  </g>
+  
+  <!-- Legend -->
+  <g transform="translate(150, 305)">
+    <text x="0" y="0" font-size="10" font-weight="600" fill="#495057">Milestones:</text>
+    <circle cx="80" cy="-4" r="5" fill="#0d6efd"/>
+    <text x="90" y="0" font-size="9" fill="#495057">M1: Standalone library</text>
+    <circle cx="220" cy="-4" r="5" fill="#198754"/>
+    <text x="230" y="0" font-size="9" fill="#495057">M2: H.264 working</text>
+    <circle cx="340" cy="-4" r="5" fill="#198754"/>
+    <text x="350" y="0" font-size="9" fill="#495057">M3: All codecs</text>
+    <circle cx="440" cy="-4" r="5" fill="#fd7e14"/>
+    <text x="450" y="0" font-size="9" fill="#495057">M4: Protected content</text>
+    <circle cx="570" cy="-4" r="5" fill="#6f42c1"/>
+    <text x="580" y="0" font-size="9" fill="#495057">M5: Native decrypt</text>
+  </g>
+  
+  <!-- Total effort -->
+  <rect x="150" y="325" width="600" height="20" rx="4" fill="#e9ecef"/>
+  <text x="450" y="339" text-anchor="middle" font-size="10" font-weight="500" fill="#495057">Total Estimated Effort: ~209 days (parallelizable to ~12 months)</text>
+</svg>
+

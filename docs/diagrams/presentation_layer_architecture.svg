@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700">
+  <defs>
+    <linearGradient id="browserGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#60A5FA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="gpuGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A78BFA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="skiaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#34D399;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="driverGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FB923C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F97316;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="hwGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F87171;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EF4444;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1000" height="700" fill="#ffffff"/>
+  
+  <!-- Title -->
+  <text x="500" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#1e293b">Chromium Presentation Layer Architecture</text>
+  <text x="500" y="58" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#64748b">Rendering, Compositing, and Display Pipeline</text>
+  
+  <!-- Browser Process Section -->
+  <rect x="40" y="80" width="920" height="100" rx="10" fill="url(#browserGrad)" opacity="0.15"/>
+  <rect x="40" y="80" width="920" height="100" rx="10" fill="none" stroke="#3B82F6" stroke-width="2"/>
+  <text x="60" y="100" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e40af">BROWSER PROCESS</text>
+  
+  <!-- Browser Process boxes -->
+  <rect x="60" y="115" width="140" height="50" rx="6" fill="#fff" stroke="#3B82F6" stroke-width="2"/>
+  <text x="130" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1e40af">Blink Renderer</text>
+  <text x="130" y="153" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#3B82F6">DOM/CSS/Canvas</text>
+  
+  <rect x="230" y="115" width="140" height="50" rx="6" fill="#fff" stroke="#3B82F6" stroke-width="2"/>
+  <text x="300" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1e40af">cc (Compositor)</text>
+  <text x="300" y="153" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#3B82F6">Layer Tree</text>
+  
+  <rect x="400" y="115" width="160" height="50" rx="6" fill="#fff" stroke="#3B82F6" stroke-width="2"/>
+  <text x="480" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1e40af">CompositorFrame</text>
+  <text x="480" y="153" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#3B82F6">RenderPasses + Quads</text>
+  
+  <rect x="590" y="115" width="160" height="50" rx="6" fill="#fff" stroke="#3B82F6" stroke-width="2"/>
+  <text x="670" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1e40af">Video Decoder</text>
+  <text x="670" y="153" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#3B82F6">VideoFrame + Mailbox</text>
+  
+  <rect x="780" y="115" width="160" height="50" rx="6" fill="#fff" stroke="#3B82F6" stroke-width="2"/>
+  <text x="860" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1e40af">SharedImage</text>
+  <text x="860" y="153" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#3B82F6">GPU Resources</text>
+
+  <!-- Arrows in browser process -->
+  <line x1="200" y1="140" x2="225" y2="140" stroke="#3B82F6" stroke-width="2"/>
+  <polygon points="230,140 222,135 222,145" fill="#3B82F6"/>
+  <line x1="370" y1="140" x2="395" y2="140" stroke="#3B82F6" stroke-width="2"/>
+  <polygon points="400,140 392,135 392,145" fill="#3B82F6"/>
+  <line x1="750" y1="140" x2="775" y2="140" stroke="#3B82F6" stroke-width="2"/>
+  <polygon points="780,140 772,135 772,145" fill="#3B82F6"/>
+  
+  <!-- Mojo IPC -->
+  <rect x="200" y="195" width="600" height="30" rx="6" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,4"/>
+  <text x="500" y="215" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#475569">Mojo IPC Boundary</text>
+  
+  <!-- GPU Process Section -->
+  <rect x="40" y="240" width="920" height="180" rx="10" fill="url(#gpuGrad)" opacity="0.15"/>
+  <rect x="40" y="240" width="920" height="180" rx="10" fill="none" stroke="#8B5CF6" stroke-width="2"/>
+  <text x="60" y="260" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#5b21b6">GPU PROCESS - Viz Display Compositor</text>
+  
+  <!-- Viz boxes -->
+  <rect x="60" y="275" width="150" height="55" rx="6" fill="#fff" stroke="#8B5CF6" stroke-width="2"/>
+  <text x="135" y="298" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#5b21b6">Surface</text>
+  <text x="135" y="313" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#5b21b6">Aggregator</text>
+  <text x="135" y="328" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#8B5CF6">Merge frames</text>
+  
+  <rect x="240" y="275" width="150" height="55" rx="6" fill="#fff" stroke="#8B5CF6" stroke-width="2"/>
+  <text x="315" y="305" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#5b21b6">Display</text>
+  <text x="315" y="320" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#8B5CF6">Damage tracking</text>
+  
+  <rect x="420" y="275" width="150" height="55" rx="6" fill="#fff" stroke="#8B5CF6" stroke-width="2"/>
+  <text x="495" y="305" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#5b21b6">SkiaRenderer</text>
+  <text x="495" y="320" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#8B5CF6">Draw quads</text>
+  
+  <rect x="600" y="275" width="170" height="55" rx="6" fill="#fff" stroke="#8B5CF6" stroke-width="2"/>
+  <text x="685" y="305" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#5b21b6">SkiaOutputSurface</text>
+  <text x="685" y="320" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#8B5CF6">GPU submission</text>
+  
+  <rect x="800" y="275" width="140" height="55" rx="6" fill="#fff" stroke="#8B5CF6" stroke-width="2"/>
+  <text x="870" y="305" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#5b21b6">Overlay</text>
+  <text x="870" y="320" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#8B5CF6">Direct scanout</text>
+  
+  <!-- Arrows in GPU process -->
+  <line x1="210" y1="302" x2="235" y2="302" stroke="#8B5CF6" stroke-width="2"/>
+  <polygon points="240,302 232,297 232,307" fill="#8B5CF6"/>
+  <line x1="390" y1="302" x2="415" y2="302" stroke="#8B5CF6" stroke-width="2"/>
+  <polygon points="420,302 412,297 412,307" fill="#8B5CF6"/>
+  <line x1="570" y1="302" x2="595" y2="302" stroke="#8B5CF6" stroke-width="2"/>
+  <polygon points="600,302 592,297 592,307" fill="#8B5CF6"/>
+  
+  <!-- Skia Backend boxes -->
+  <text x="60" y="360" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#5b21b6">Skia GPU Backends:</text>
+  
+  <rect x="180" y="345" width="120" height="60" rx="6" fill="url(#skiaGrad)"/>
+  <text x="240" y="370" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">Ganesh GL</text>
+  <text x="240" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">Default (Linux)</text>
+  
+  <rect x="320" y="345" width="120" height="60" rx="6" fill="url(#skiaGrad)"/>
+  <text x="380" y="370" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">Ganesh Vulkan</text>
+  <text x="380" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">Flag enabled</text>
+  
+  <rect x="460" y="345" width="140" height="60" rx="6" fill="url(#skiaGrad)"/>
+  <text x="530" y="370" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">Graphite Dawn</text>
+  <text x="530" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">Next-gen</text>
+  
+  <rect x="620" y="345" width="130" height="60" rx="6" fill="url(#skiaGrad)"/>
+  <text x="685" y="370" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff">Graphite Metal</text>
+  <text x="685" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#d1fae5">macOS</text>
+  
+  <!-- Driver Layer -->
+  <rect x="40" y="435" width="920" height="80" rx="10" fill="url(#driverGrad)" opacity="0.15"/>
+  <rect x="40" y="435" width="920" height="80" rx="10" fill="none" stroke="#F97316" stroke-width="2"/>
+  <text x="60" y="455" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#c2410c">GRAPHICS DRIVERS</text>
+  
+  <rect x="80" y="465" width="130" height="40" rx="6" fill="#fff" stroke="#F97316" stroke-width="2"/>
+  <text x="145" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#c2410c">OpenGL / GLES</text>
+  
+  <rect x="230" y="465" width="130" height="40" rx="6" fill="#fff" stroke="#F97316" stroke-width="2"/>
+  <text x="295" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#c2410c">Vulkan</text>
+  
+  <rect x="380" y="465" width="130" height="40" rx="6" fill="#fff" stroke="#F97316" stroke-width="2"/>
+  <text x="445" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#c2410c">D3D11 / D3D12</text>
+  
+  <rect x="530" y="465" width="130" height="40" rx="6" fill="#fff" stroke="#F97316" stroke-width="2"/>
+  <text x="595" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#c2410c">Metal</text>
+  
+  <rect x="680" y="465" width="130" height="40" rx="6" fill="#fff" stroke="#F97316" stroke-width="2"/>
+  <text x="745" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#c2410c">DRM / KMS</text>
+  
+  <rect x="830" y="465" width="110" height="40" rx="6" fill="#fff" stroke="#F97316" stroke-width="2"/>
+  <text x="885" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#c2410c">DMA-BUF</text>
+  
+  <!-- Hardware Layer -->
+  <rect x="40" y="535" width="920" height="60" rx="10" fill="url(#hwGrad)" opacity="0.15"/>
+  <rect x="40" y="535" width="920" height="60" rx="10" fill="none" stroke="#EF4444" stroke-width="2"/>
+  <text x="60" y="555" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#991b1b">GPU HARDWARE</text>
+  
+  <rect x="80" y="560" width="860" height="25" rx="5" fill="#374151"/>
+  <text x="510" y="578" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">Display Controller • GPU Shader Units • Video Decode Engine • Memory Controller</text>
+  
+  <!-- Legend -->
+  <rect x="40" y="610" width="920" height="75" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="633" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e293b">Data Flow:</text>
+  
+  <!-- Legend items -->
+  <rect x="145" y="620" width="18" height="18" rx="3" fill="url(#browserGrad)"/>
+  <text x="170" y="633" font-family="Arial, sans-serif" font-size="10" fill="#475569">Browser Process</text>
+  
+  <rect x="290" y="620" width="18" height="18" rx="3" fill="url(#gpuGrad)"/>
+  <text x="315" y="633" font-family="Arial, sans-serif" font-size="10" fill="#475569">GPU Process (Viz)</text>
+  
+  <rect x="430" y="620" width="18" height="18" rx="3" fill="url(#skiaGrad)"/>
+  <text x="455" y="633" font-family="Arial, sans-serif" font-size="10" fill="#475569">Skia Backends</text>
+  
+  <rect x="560" y="620" width="18" height="18" rx="3" fill="url(#driverGrad)"/>
+  <text x="585" y="633" font-family="Arial, sans-serif" font-size="10" fill="#475569">Graphics Drivers</text>
+  
+  <rect x="700" y="620" width="18" height="18" rx="3" fill="url(#hwGrad)"/>
+  <text x="725" y="633" font-family="Arial, sans-serif" font-size="10" fill="#475569">Hardware</text>
+  
+  <text x="60" y="665" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Video frames flow: VideoDecoder → SharedImage → SkiaRenderer (composited) OR Overlay (direct scanout)</text>
+  <text x="60" y="680" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Buffer sharing: DMA-BUF enables zero-copy between video decoder, compositor, and display</text>
+</svg>
+

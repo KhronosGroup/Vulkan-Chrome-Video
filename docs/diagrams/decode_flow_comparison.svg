@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700">
+  <defs>
+    <linearGradient id="vaapiGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#60A5FA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="vulkanGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A78BFA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="2" stdDeviation="2" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#64748b"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#8b5cf6"/>
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="700" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="600" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#1e293b">
+    VA-API vs Vulkan Video: Decode Flow Comparison
+  </text>
+  
+  <!-- VA-API Column -->
+  <rect x="40" y="55" width="540" height="620" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="310" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1e40af">VA-API Decode Flow</text>
+  
+  <!-- VA-API Steps -->
+  <!-- Step 1 -->
+  <rect x="60" y="105" width="500" height="55" rx="6" fill="url(#vaapiGrad)" filter="url(#shadow)"/>
+  <text x="80" y="130" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">1. Create Context</text>
+  <text x="80" y="148" font-family="monospace" font-size="10" fill="#dbeafe">vaCreateContext(display, config_id, width, height, surfaces, &amp;context)</text>
+  
+  <!-- Step 2 -->
+  <rect x="60" y="175" width="500" height="55" rx="6" fill="url(#vaapiGrad)" filter="url(#shadow)"/>
+  <text x="80" y="200" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">2. Begin Picture</text>
+  <text x="80" y="218" font-family="monospace" font-size="10" fill="#dbeafe">vaBeginPicture(display, context, target_surface)</text>
+  
+  <!-- Step 3 -->
+  <rect x="60" y="245" width="500" height="75" rx="6" fill="url(#vaapiGrad)" filter="url(#shadow)"/>
+  <text x="80" y="270" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">3. Create Parameter Buffers (Driver manages parsing)</text>
+  <text x="80" y="288" font-family="monospace" font-size="10" fill="#dbeafe">vaCreateBuffer(..., VAPictureParameterBufferType, ...)</text>
+  <text x="80" y="305" font-family="monospace" font-size="10" fill="#dbeafe">vaCreateBuffer(..., VASliceParameterBufferType, ...)</text>
+  
+  <!-- Step 4 -->
+  <rect x="60" y="335" width="500" height="55" rx="6" fill="url(#vaapiGrad)" filter="url(#shadow)"/>
+  <text x="80" y="360" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">4. Submit Slice Data</text>
+  <text x="80" y="378" font-family="monospace" font-size="10" fill="#dbeafe">vaCreateBuffer(..., VASliceDataBufferType, bitstream, size)</text>
+  
+  <!-- Step 5 -->
+  <rect x="60" y="405" width="500" height="55" rx="6" fill="url(#vaapiGrad)" filter="url(#shadow)"/>
+  <text x="80" y="430" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">5. Render Picture</text>
+  <text x="80" y="448" font-family="monospace" font-size="10" fill="#dbeafe">vaRenderPicture(display, context, buffers, num_buffers)</text>
+  
+  <!-- Step 6 -->
+  <rect x="60" y="475" width="500" height="55" rx="6" fill="url(#vaapiGrad)" filter="url(#shadow)"/>
+  <text x="80" y="500" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">6. End Picture (Triggers decode - implicit sync)</text>
+  <text x="80" y="518" font-family="monospace" font-size="10" fill="#dbeafe">vaEndPicture(display, context)</text>
+  
+  <!-- Step 7 -->
+  <rect x="60" y="545" width="500" height="55" rx="6" fill="url(#vaapiGrad)" filter="url(#shadow)"/>
+  <text x="80" y="570" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">7. Sync (Optional) &amp; Export</text>
+  <text x="80" y="588" font-family="monospace" font-size="10" fill="#dbeafe">vaSyncSurface(); vaExportSurfaceHandle(..., &amp;dmabuf_fd)</text>
+  
+  <!-- Step 8 -->
+  <rect x="60" y="615" width="500" height="45" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="2" filter="url(#shadow)"/>
+  <text x="310" y="643" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#166534">✓ Decoded frame in DMA-BUF</text>
+  
+  <!-- Vulkan Video Column -->
+  <rect x="620" y="55" width="540" height="620" rx="10" fill="#ede9fe" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="890" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#5b21b6">Vulkan Video Decode Flow</text>
+  
+  <!-- Vulkan Steps -->
+  <!-- Step 1 -->
+  <rect x="640" y="105" width="500" height="55" rx="6" fill="url(#vulkanGrad)" filter="url(#shadow)"/>
+  <text x="660" y="130" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">1. Create Video Session + Bind Memory</text>
+  <text x="660" y="148" font-family="monospace" font-size="10" fill="#ede9fe">vkCreateVideoSessionKHR(); vkBindVideoSessionMemoryKHR()</text>
+  
+  <!-- Step 2 -->
+  <rect x="640" y="175" width="500" height="55" rx="6" fill="url(#vulkanGrad)" filter="url(#shadow)"/>
+  <text x="660" y="200" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">2. Create Session Parameters (App provides parsed SPS/PPS)</text>
+  <text x="660" y="218" font-family="monospace" font-size="10" fill="#ede9fe">vkCreateVideoSessionParametersKHR(StdVideoH264SPS, StdVideoH264PPS)</text>
+  
+  <!-- Step 3 -->
+  <rect x="640" y="245" width="500" height="55" rx="6" fill="url(#vulkanGrad)" filter="url(#shadow)"/>
+  <text x="660" y="270" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">3. Begin Video Coding Scope</text>
+  <text x="660" y="288" font-family="monospace" font-size="10" fill="#ede9fe">vkCmdBeginVideoCodingKHR(cmd_buffer, &amp;begin_info)</text>
+  
+  <!-- Step 4 -->
+  <rect x="640" y="315" width="500" height="95" rx="6" fill="url(#vulkanGrad)" filter="url(#shadow)"/>
+  <text x="660" y="340" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">4. Decode (App fills all decode parameters)</text>
+  <text x="660" y="358" font-family="monospace" font-size="10" fill="#ede9fe">VkVideoDecodeInfoKHR decode_info = {</text>
+  <text x="660" y="373" font-family="monospace" font-size="10" fill="#ede9fe">  .srcBuffer = bitstream, .dstPictureResource = output,</text>
+  <text x="660" y="388" font-family="monospace" font-size="10" fill="#ede9fe">  .pReferenceSlots = refs };</text>
+  <text x="660" y="403" font-family="monospace" font-size="10" fill="#ede9fe">vkCmdDecodeVideoKHR(cmd_buffer, &amp;decode_info);</text>
+  
+  <!-- Step 5 -->
+  <rect x="640" y="425" width="500" height="55" rx="6" fill="url(#vulkanGrad)" filter="url(#shadow)"/>
+  <text x="660" y="450" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">5. End Video Coding Scope</text>
+  <text x="660" y="468" font-family="monospace" font-size="10" fill="#ede9fe">vkCmdEndVideoCodingKHR(cmd_buffer, &amp;end_info)</text>
+  
+  <!-- Step 6 -->
+  <rect x="640" y="495" width="500" height="55" rx="6" fill="url(#vulkanGrad)" filter="url(#shadow)"/>
+  <text x="660" y="520" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">6. Submit Command Buffer (Explicit sync with fence)</text>
+  <text x="660" y="538" font-family="monospace" font-size="10" fill="#ede9fe">vkQueueSubmit(queue, &amp;submit_info, fence)</text>
+  
+  <!-- Step 7 -->
+  <rect x="640" y="565" width="500" height="35" rx="6" fill="url(#vulkanGrad)" filter="url(#shadow)"/>
+  <text x="660" y="588" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">7. Wait for fence (Explicit synchronization)</text>
+  
+  <!-- Step 8 -->
+  <rect x="640" y="615" width="500" height="45" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="2" filter="url(#shadow)"/>
+  <text x="890" y="643" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#166534">✓ Decoded frame in VkImage (exportable as DMA-BUF)</text>
+  
+  <!-- Comparison Notes -->
+  <rect x="40" y="680" width="1120" height="15" rx="4" fill="#fef3c7"/>
+  <text x="600" y="692" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#92400e">
+    KEY DIFFERENCE: VA-API driver parses SPS/PPS internally | Vulkan Video requires app to provide parsed structures (Chromium already has parsers!)
+  </text>
+  
+  <!-- Arrows VA-API -->
+  <line x1="310" y1="160" x2="310" y2="175" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="310" y1="230" x2="310" y2="245" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="310" y1="320" x2="310" y2="335" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="310" y1="390" x2="310" y2="405" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="310" y1="460" x2="310" y2="475" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="310" y1="530" x2="310" y2="545" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="310" y1="600" x2="310" y2="615" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  
+  <!-- Arrows Vulkan -->
+  <line x1="890" y1="160" x2="890" y2="175" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <line x1="890" y1="230" x2="890" y2="245" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <line x1="890" y1="300" x2="890" y2="315" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <line x1="890" y1="410" x2="890" y2="425" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <line x1="890" y1="480" x2="890" y2="495" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <line x1="890" y1="550" x2="890" y2="565" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <line x1="890" y1="600" x2="890" y2="615" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+</svg>
+
