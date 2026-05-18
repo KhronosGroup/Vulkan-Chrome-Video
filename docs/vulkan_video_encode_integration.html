@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulkan Video Encode Integration into Chromium — Complete Design Document</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --accent-blue: #2563eb;
+            --accent-purple: #7c3aed;
+            --accent-green: #16a34a;
+            --accent-orange: #d97706;
+            --accent-red: #dc2626;
+            --accent-pink: #db2777;
+            --border-color: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-fg: #e2e8f0;
+            --inline-code-bg: #f1f5f9;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            font-size: 15.5px;
+        }
+
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #ede9fe 0%, #c7d2fe 100%);
+            padding: 2rem 0;
+            border-bottom: 3px solid var(--accent-purple);
+        }
+        header h1 {
+            font-size: 1.95rem;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.4rem;
+            line-height: 1.2;
+        }
+        header .subtitle { color: var(--text-secondary); font-size: 1.05rem; }
+        header .meta { margin-top: 1rem; font-size: 0.88rem; color: var(--text-muted); }
+        header .meta span { margin-right: 1.5rem; }
+
+        nav {
+            background: #ffffff;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 99;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        nav a {
+            color: var(--text-secondary); text-decoration: none;
+            padding: 0.4rem 0.8rem; border-radius: 6px;
+            font-size: 0.85rem; transition: all 0.2s;
+        }
+        nav a:hover { background: var(--bg-tertiary); color: var(--accent-purple); }
+
+        main { padding: 2rem 0 4rem; }
+        section { margin-bottom: 3rem; }
+        section h2 {
+            color: var(--accent-purple);
+            border-bottom: 2px solid var(--accent-purple);
+            padding-bottom: 0.5rem; margin-bottom: 1rem;
+            font-size: 1.6rem;
+        }
+        section h3 { margin-top: 1.5rem; margin-bottom: 0.6rem; color: var(--text-primary); font-size: 1.2rem; }
+        section h4 { margin-top: 1rem; margin-bottom: 0.4rem; color: var(--text-secondary); font-size: 1.0rem; }
+
+        p { margin-bottom: 0.9rem; }
+        ul, ol { margin-bottom: 0.9rem; padding-left: 1.5rem; }
+        li { margin-bottom: 0.3rem; }
+
+        table {
+            width: 100%; border-collapse: collapse;
+            margin: 1rem 0; font-size: 0.9rem;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 0.7rem; text-align: left;
+            vertical-align: top;
+        }
+        th { background: var(--bg-tertiary); font-weight: 600; }
+        tr:nth-child(even) { background: var(--bg-secondary); }
+
+        code {
+            background: var(--inline-code-bg);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.88em;
+            color: var(--accent-purple);
+        }
+        pre {
+            background: var(--code-bg); color: var(--code-fg);
+            padding: 1rem; border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem; font-family: 'Consolas', 'Monaco', monospace;
+            line-height: 1.5;
+            margin: 1rem 0;
+        }
+        pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+
+        blockquote {
+            border-left: 4px solid var(--accent-orange);
+            background: #fff7ed;
+            padding: 0.7rem 1rem;
+            margin: 1rem 0;
+            color: var(--text-secondary);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .callout-new {
+            border-left: 4px solid var(--accent-green);
+            background: #f0fdf4;
+            padding: 0.7rem 1rem;
+            margin: 1rem 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .callout-risk {
+            border-left: 4px solid var(--accent-red);
+            background: #fef2f2;
+            padding: 0.7rem 1rem;
+            margin: 1rem 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .callout-info {
+            border-left: 4px solid var(--accent-blue);
+            background: #eff6ff;
+            padding: 0.7rem 1rem;
+            margin: 1rem 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .diagram {
+            margin: 1.5rem 0; padding: 1rem; background: white;
+            border: 1px solid var(--border-color); border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .diagram img, .diagram object { max-width: 100%; height: auto; }
+        .diagram-caption {
+            margin-top: 0.5rem; font-size: 0.85rem;
+            color: var(--text-muted); font-style: italic;
+        }
+
+        .tag {
+            display: inline-block; padding: 0.15rem 0.5rem;
+            border-radius: 4px; font-size: 0.75rem; font-weight: 600;
+            margin-right: 0.3rem; text-transform: uppercase;
+        }
+        .tag-new   { background: #dcfce7; color: #166534; }
+        .tag-p0    { background: #fee2e2; color: #991b1b; }
+        .tag-p1    { background: #fef3c7; color: #92400e; }
+        .tag-p2    { background: #dbeafe; color: #1e40af; }
+        .tag-p3    { background: #e0e7ff; color: #3730a3; }
+        .tag-risk  { background: #fce7f3; color: #9d174d; }
+
+        .toc {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .toc h3 { margin-top: 0; color: var(--accent-purple); }
+        .toc ol { padding-left: 1.3rem; }
+        .toc a { color: var(--accent-blue); text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 1.5rem 0; margin-top: 4rem;
+            color: var(--text-muted); font-size: 0.85rem; text-align: center;
+        }
+
+        .codecmp {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+            margin: 1rem 0;
+        }
+        .codecmp > div {
+            background: var(--bg-secondary);
+            border-radius: 6px; padding: 0.8rem;
+        }
+        .codecmp h5 { color: var(--accent-orange); margin-bottom: 0.4rem; font-size: 0.95rem; }
+        .codecmp pre { margin: 0.3rem 0 0; font-size: 0.78rem; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1>Vulkan Video Encode Integration into Chromium</h1>
+        <div class="subtitle">Complete Design Document &mdash; v1.1 (review-incorporated)</div>
+        <div class="meta">
+            <span><strong>Version</strong>: 1.1</span>
+            <span><strong>Date</strong>: May 19, 2026</span>
+            <span><strong>Status</strong>: Draft (proposal)</span>
+            <span><strong>Scope</strong>: H.264, H.265, AV1 encode via <code>VK_KHR_video_encode_*</code></span>
+        </div>
+        <div class="meta" style="margin-top:0.4rem; font-size:0.83rem; line-height:1.45;">
+            <strong>v1.1 incorporates 13 findings (F1&ndash;F13)</strong> from
+            <a href="VULKAN_VIDEO_ENCODE_DESIGN_REVIEW_FINDINGS.md" style="color:#1e40af;">VULKAN_VIDEO_ENCODE_DESIGN_REVIEW_FINDINGS.md</a>:
+            HEVC ported from D3D12 (VA-API HEVC encode does not exist); bitstream composition uses
+            <code>dstBufferOffset</code> + <code>precedingExternallyEncodedBytes</code>;
+            rate-control VUIDs centralised in <code>ValidateRateControl()</code>;
+            per-codec <code>constantQp</code> in external-RC mode;
+            shared-image input via the proposed <code>SharedImageManager::ProduceVulkanVideo</code> (new Chromium API) + scoped read access;
+            execution plan reordered to 6 phases with H.264 CQP as the first milestone;
+            protected encode is a non-goal.
+        </div>
+    </div>
+</header>
+
+<nav>
+    <div class="container">
+        <ul>
+            <li><a href="#sec-summary">1. Summary</a></li>
+            <li><a href="#sec-vaapi">2. Current VA-API</a></li>
+            <li><a href="#sec-requirements">3. Plug-in Requirements</a></li>
+            <li><a href="#sec-design">4. Vulkan Encode Design</a></li>
+            <li><a href="#sec-mapping">5. Mapping</a></li>
+            <li><a href="#sec-input">6. Input Path</a></li>
+            <li><a href="#sec-rate">7. Rate Control</a></li>
+            <li><a href="#sec-output">8. Output</a></li>
+            <li><a href="#sec-sync">9. Sync</a></li>
+            <li><a href="#sec-drm">10. DRM</a></li>
+            <li><a href="#sec-plan">11. Execution Plan</a></li>
+            <li><a href="#sec-tests">12. Tests</a></li>
+            <li><a href="#sec-risks">13. Risks</a></li>
+        </ul>
+    </div>
+</nav>
+
+<main>
+    <div class="container">
+
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ol>
+                <li><a href="#sec-glossary">Glossary</a></li>
+                <li><a href="#sec-summary">Executive Summary</a></li>
+                <li><a href="#sec-vaapi">Current HW-Accelerated Encode Architecture (VA-API)</a></li>
+                <li><a href="#sec-requirements">Plug-in and Interface Requirements</a></li>
+                <li><a href="#sec-design">Vulkan Video Encode API Design</a></li>
+                <li><a href="#sec-mapping">Mapping: VA-API → Vulkan Video Encode (per codec)</a></li>
+                <li><a href="#sec-input">Input Path: <code>VideoFrame</code> → <code>VkImage</code></a></li>
+                <li><a href="#sec-rate">Rate Control, GOP, Quality Level and QP Maps</a></li>
+                <li><a href="#sec-output">Bitstream Output, Queries and Feedback</a></li>
+                <li><a href="#sec-sync">Synchronization, DMA-BUF and Cross-Queue Handoffs</a></li>
+                <li><a href="#sec-drm">Protected (DRM) Content for Encode</a></li>
+                <li><a href="#sec-plan">Execution Plan</a></li>
+                <li><a href="#sec-tests">Test Plan</a></li>
+                <li><a href="#sec-risks">Open Questions, Risks and Speculations</a></li>
+                <li><a href="#sec-refs">References</a></li>
+            </ol>
+        </div>
+
+        <!-- ================= Glossary ================= -->
+        <section id="sec-glossary">
+            <h2>Glossary (acronyms used throughout)</h2>
+            <table>
+                <thead>
+                    <tr><th>Acronym</th><th>Stands for</th><th>What it is</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>VEA</strong></td><td><code>VideoEncodeAccelerator</code> (<code>media/video/video_encode_accelerator.h</code>)</td><td>Chromium's C++ interface for HW video encoders. Mojo-stable; every backend (VA-API, D3D12, MFT, the new Vulkan one) implements it.</td></tr>
+                    <tr><td><strong>VDA</strong></td><td><code>VideoDecodeAccelerator</code></td><td>The decode peer of VEA.</td></tr>
+                    <tr><td><strong>VEA Delegate</strong></td><td><code>VideoEncoderDelegate</code> (per-backend, per-codec)</td><td>Backend-specific glue between the generic VEA surface and the codec-specific driver calls (e.g. <code>H264VaapiVideoEncoderDelegate</code>, the new <code>H264VulkanVideoEncoderDelegate</code>).</td></tr>
+                    <tr><td><strong>VA-API</strong></td><td>Video Acceleration API (<code>libva</code>)</td><td>Linux/ChromeOS HW codec stack; Chromium's incumbent encode backend on those platforms.</td></tr>
+                    <tr><td><strong>D3D12 VEA</strong></td><td><code>D3D12VideoEncodeAccelerator</code></td><td>Chromium's Windows D3D12-based VEA backend (the canonical second reference for HEVC and SharedImage flow in this design).</td></tr>
+                    <tr><td><strong>MFT</strong> / <strong>MFVEA</strong></td><td>Media Foundation Transform / <code>MediaFoundationVideoEncodeAccelerator</code></td><td>Chromium's legacy Windows VEA backend.</td></tr>
+                    <tr><td><strong>DPB</strong></td><td>Decoded / Reconstructed Picture Buffer</td><td>The encoder's pool of reconstructed reference frames. Each codec has its own slot-management rules.</td></tr>
+                    <tr><td><strong>GOP</strong></td><td>Group of Pictures</td><td>Repeating I/P/B-frame pattern (<code>IPBBP&hellip;</code>); drives reference-frame management.</td></tr>
+                    <tr><td><strong>IDR</strong></td><td>Instantaneous Decoder Refresh</td><td>A keyframe at which all references are discarded; decoder can join the stream.</td></tr>
+                    <tr><td><strong>CQP</strong></td><td>Constant Quantization Parameter</td><td>Rate-control mode where every frame uses the same QP.</td></tr>
+                    <tr><td><strong>CBR / VBR</strong></td><td>Constant / Variable Bit Rate</td><td>Standard rate-control modes the driver tracks.</td></tr>
+                    <tr><td><strong>SVC</strong></td><td>Scalable Video Coding</td><td>Multi-layer encode where layers can be dropped (T = temporal, S = spatial).</td></tr>
+                    <tr><td><strong>SPS / PPS / VPS</strong></td><td>Sequence / Picture / Video Parameter Set</td><td>Codec metadata blobs that must precede payload bytes in Annex-B streams.</td></tr>
+                    <tr><td><strong>AUD</strong></td><td>Access Unit Delimiter</td><td>Per-frame separator NALU; Chromium-side compositor wants these.</td></tr>
+                    <tr><td><strong>Std-Video</strong></td><td>The <code>StdVideo*</code> family in <code>vulkan_video_codec_*_std_decode.h</code> / <code>_std_encode.h</code></td><td>Vulkan's normative codec-syntax structs (<code>StdVideoH264SequenceParameterSet</code>, etc.) that map 1:1 to spec fields.</td></tr>
+                    <tr><td><strong>SDP</strong></td><td>Session Description Protocol</td><td>What WebRTC uses to negotiate codecs across peers.</td></tr>
+                    <tr><td><strong>WPT</strong></td><td>Web Platform Tests</td><td>The W3C cross-browser test suite WebCodecs / WebRTC plug into.</td></tr>
+                    <tr><td><strong>OOP-VEA</strong></td><td>Out-of-process VEA</td><td>Chromium pattern where the VEA runs in a sandboxed utility process behind a Mojo interface. Already shipping for VA-API on Linux/ChromeOS.</td></tr>
+                    <tr><td><strong>G-NEW-N</strong></td><td>Gap-resolving New extension #N</td><td>Upstream contribution to Vulkan-Video-Samples that closes a gap from the sufficiency table. Catalogued in <code>VULKAN_VIDEO_LIBRARY_INTEGRATION_ANALYSIS.md</code> §3.</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ================= 1. Executive Summary ================= -->
+        <section id="sec-summary">
+            <h2>1. Executive Summary</h2>
+
+            <h3>1.1 Project Goal</h3>
+            <p>Add <code>VulkanVideoEncodeAccelerator</code> as a peer of <code>VaapiVideoEncodeAccelerator</code>, <code>V4L2VideoEncodeAccelerator</code>, <code>D3D12VideoEncodeAccelerator</code> and <code>MediaFoundationVideoEncodeAccelerator</code> so Chromium can use <code>VK_KHR_video_encode_queue</code> for:</p>
+            <ul>
+                <li>Cross-platform HW encode (Linux, Android, Windows, Stadia-like cloud) behind a single backend.</li>
+                <li>Vendor-agnostic encode that ships in the same Vulkan ICD used by the rasterizer/compositor — no separate VA-API / MFT drivers needed.</li>
+                <li>Direct integration with Chromium's Vulkan compositor (<code>SkiaRenderer</code>) — input frames stay as <code>VkImage</code> end-to-end.</li>
+                <li>A unified backend for <strong>decode + encode</strong> (transcoding, WebRTC loopback, screen capture).</li>
+            </ul>
+
+            <h3>1.2 Interface boundary &mdash; Chromium-side surface is codec-neutral</h3>
+            <div class="callout-info">
+                <strong>Where does codec-specific code live?</strong> This is the question that drives the integration shape. There are three reasonable layers and only the middle one moves between options:
+                <table style="margin-top:0.5rem">
+                    <thead><tr><th>Layer</th><th>Codec-aware?</th><th>Who writes it?</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>A.</strong> Chromium VEA / WebRTC / WebCodecs (Mojo-stable)</td><td>No &mdash; generic <code>VideoEncodeAccelerator</code></td><td>Chromium (already exists)</td></tr>
+                        <tr><td><strong>B.</strong> Codec driver loop: parameter sets, DPB slots, slice headers, <code>vkCmdEncodeVideoKHR</code> with <code>VkVideoEncodeH264PictureInfoKHR</code> / <code>StdVideoEncodeH264*</code></td><td><strong>Yes &mdash; heavily</strong></td><td>Either Chromium (from-scratch plan) or the upstream library (recommended Model D)</td></tr>
+                        <tr><td><strong>C.</strong> Vulkan driver / <code>VK_KHR_video_encode_h264</code></td><td>Yes (this is the codec spec)</td><td>NVIDIA / AMD / Intel ICD</td></tr>
+                    </tbody>
+                </table>
+                <p style="margin-top:0.6rem">
+                    The <strong>recommended Model D / Model A</strong> moves Layer B <em>inside</em> the upstream Vulkan-Video-Samples library. The Chromium-side surface that talks to the library is:
+                </p>
+<pre><code>// Per-session (set once at Initialize):
+VkVideoEncoderConfig {
+    codec  = VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_KHR;   // ← codec set here, once
+    encodeWidth/Height, inputFormat, bitDepth,
+    rateControlMode, GOP, color/VUI params,
+    externalDevice, externalInstance, ...
+};
+
+// Per-frame (codec-neutral):
+SubmitExternalFrame(VkVideoEncodeInputFrame {
+    VkImage image, ...,
+    VkBool32 forceIDR, int32_t qpOverride,
+    wait/signal semaphores,
+});
+GetEncodedFrame(VkVideoEncodeResult {
+    const uint8_t* pBitstreamData, uint32_t bitstreamSize,
+    uint32_t pictureType (0=I, 1=P, 2=B), VkBool32 isIDR,
+});</code></pre>
+                <p>
+                    No <code>VkVideoEncodeH264PictureInfoKHR</code>, no <code>StdVideoEncodeH264SliceHeader</code>, no per-codec union ever appears on the Chromium &harr; library surface. That is exactly the codec-neutral "frame-in / bitstream-out" model.
+                </p>
+                <p>
+                    Sections &sect;1.2 through &sect;5 below were written for the original <strong>from-scratch plan</strong> (where Chromium would have written Layer B itself, with per-codec <code>H264VulkanVideoEncoderDelegate</code> / <code>H265&hellip;</code> / <code>AV1&hellip;</code> classes). They are preserved as a reference for how the codec driver loop works internally &mdash; useful for review, for fallback Model B (vendor codec layer), and for understanding what the library does on our behalf. <strong>For the recommended Model D / Model A path, all of &sect;1.2 &sect;4 &sect;5 collapses into "configure <code>VkVideoEncoderConfig.codec</code>; the library does the rest."</strong> See <code>VULKAN_VIDEO_LIBRARY_INTEGRATION_ANALYSIS.md</code> for the recommended path.
+                </p>
+            </div>
+
+            <h3>1.2.2 Reading guide &mdash; which sections apply to which model?</h3>
+            <p>The remainder of this document was written for the <strong>from-scratch plan</strong> (Chromium writes Layer B itself). For the <strong>recommended Model D / Model A</strong> path, Layer B lives inside the upstream library and the Chromium-side code is much thinner. Use this table to navigate:</p>
+
+            <table>
+                <thead><tr><th>Section</th><th>Layer</th><th>From-scratch plan / Model B fallback</th><th>Model D / A (recommended)</th></tr></thead>
+                <tbody>
+                    <tr><td>§1.1 Project Goal</td><td>A</td><td>Read normally</td><td>Read normally</td></tr>
+                    <tr><td>§1.2 Interface boundary (codec-neutral surface)</td><td>A</td><td>Read normally</td><td>Read normally</td></tr>
+                    <tr><td>§1.3 Conversion Code Estimate (~9 k LoC of <code>H264SPS → StdVideoH264SequenceParameterSet</code>, etc.)</td><td><strong>B</strong></td><td>Read &mdash; this is what you'd write</td><td><strong>Skip &mdash; the library handles it.</strong> Chromium-side LoC is ~6,200, not ~21 k.</td></tr>
+                    <tr><td>§2 Current VA-API architecture (reference)</td><td>A + B</td><td>Read for context</td><td>Read for context</td></tr>
+                    <tr><td>§3 Plug-in / VEA requirements</td><td>A</td><td>Read normally</td><td>Read normally</td></tr>
+                    <tr><td>§4.1 Vulkan class hierarchy with per-codec <code>H264VulkanVideoEncoderDelegate</code> / <code>H265&hellip;</code> / <code>AV1&hellip;</code></td><td><strong>B</strong></td><td>Read &mdash; this is what you'd write</td><td><strong>Replace with</strong>: a single <code>VulkanVideoEncodeAccelerator</code> shim that calls <code>VulkanVideoEncoderExt</code>. See <code>VULKAN_VIDEO_LIBRARY_INTEGRATION_ANALYSIS.md</code> §7.</td></tr>
+                    <tr><td>§4.2&ndash;§4.6 wrappers + per-frame submission + DPB slot allocation + codec-specific delegate</td><td><strong>B</strong></td><td>Read &mdash; this is what you'd write</td><td><strong>Skip &mdash; the library does this.</strong> Useful as a reference for what's running inside <code>vk_video_encoder/libs/VkVideoEncoder/</code>.</td></tr>
+                    <tr><td>§5 Mapping VA-API → Vulkan per codec</td><td><strong>B</strong></td><td>Read &mdash; this is the mapping table you implement</td><td><strong>Skip &mdash; done inside the library.</strong></td></tr>
+                    <tr><td>§6 Input path (<code>VideoFrame → VkImage</code>)</td><td>A + B</td><td>Read normally</td><td>Read normally &mdash; the proposed <code>SharedImageManager::ProduceVulkanVideo()</code> flow is Chromium-side regardless, but this API does not exist in ToT yet.</td></tr>
+                    <tr><td>§7 Rate Control, GOP, QP Maps</td><td>A + B</td><td>Read normally &mdash; codec-specific <code>constantQp</code> is what you set in slice info</td><td>Read for context. Chromium sets the <strong>mode</strong> in <code>VkVideoEncoderConfig</code>; the library handles the codec-specific fields.</td></tr>
+                    <tr><td>§7.7 Manual reference buffer control</td><td><strong>B</strong></td><td>Read normally &mdash; slot mapping is per-codec</td><td><strong>Skip &mdash; G-NEW-7</strong> exposes the WebRTC index model; library translates to slots internally.</td></tr>
+                    <tr><td>§8 Bitstream output, queries, <code>dstBufferOffset</code></td><td>A + B</td><td>Read &mdash; this is what you'd write</td><td>The library does the query plumbing; Chromium owns the prepended-header policy for SPS/PPS/AUD Chromium inserts.</td></tr>
+                    <tr><td>§9 Sync / DMA-BUF / timeline semaphores</td><td>A</td><td>Read normally</td><td>Read normally</td></tr>
+                    <tr><td>§10 Protected encode (non-goal)</td><td>n/a</td><td>Skip</td><td>Skip</td></tr>
+                    <tr><td>§11 Execution plan &mdash; 6 phases for from-scratch</td><td>meta</td><td>Read &mdash; this is the from-scratch plan</td><td><strong>Supersession</strong>: the library-recommended plan is in <code>VULKAN_VIDEO_LIBRARY_INTEGRATION_ANALYSIS.md</code> §7, ~10.5&ndash;12 weeks instead of ~19&ndash;21.</td></tr>
+                    <tr><td>§12 Test plan summary</td><td>A</td><td>Read normally</td><td>Read normally</td></tr>
+                    <tr><td>§13 Risks</td><td>meta</td><td>Read normally</td><td>Some risks absorbed by the library (R3 device sharing, R4 stdio); see library analysis §5.</td></tr>
+                </tbody>
+            </table>
+
+            <p>So if you only care about the recommended path: read §1.1&ndash;§1.2, §2 for context, §3, §6, §9, §10, §12, §13 in this document &mdash; and read the library integration analysis (<code>VULKAN_VIDEO_LIBRARY_INTEGRATION_ANALYSIS.md</code>) end-to-end for everything else. The Chromium-side code is codec-neutral throughout.</p>
+
+            <h3>1.2.1 Key Insight (from-scratch plan): GOP / DPB / Rate Control are NOT Shared</h3>
+            <div class="callout-info">
+                <strong>Applies to</strong>: from-scratch plan and Model B fallback. The whole "DPB / GOP / rate control is per-backend" framing below describes work the library has already done internally for Model D / A &mdash; Chromium just sets the parameters in <code>VkVideoEncoderConfig</code> once.
+            </div>
+            <p>Decoding in Chromium reuses parsers (<code>H264Parser</code>, <code>H265Parser</code>, ...) across backends. <strong>Encoding is the opposite</strong>:</p>
+            <table>
+                <thead><tr><th>Component</th><th>Decode (existing)</th><th>Encode (this design)</th></tr></thead>
+                <tbody>
+                    <tr><td>Bitstream <strong>parsing</strong></td><td>Shared in <code>media/parsers/</code></td><td><strong>N/A</strong> — encoder <em>emits</em></td></tr>
+                    <tr><td><strong>DPB / reference frame</strong> logic</td><td>Shared in <code>H264Decoder</code>, <code>H265Decoder</code> ...</td><td><strong>Per-backend</strong></td></tr>
+                    <tr><td><strong>GOP / rate control</strong></td><td>Decoder consumes</td><td><strong>Per-backend</strong> (re-implemented)</td></tr>
+                    <tr><td>Bitstream <strong>builder</strong></td><td><code>H264SliceHeader → parser</code></td><td>Shared in <code>media/filters/h26x_annex_b_bitstream_builder.h</code></td></tr>
+                    <tr><td>HW driver call</td><td><code>vkCmdDecodeVideoKHR</code></td><td><code>vkCmdEncodeVideoKHR</code></td></tr>
+                </tbody>
+            </table>
+
+            <p>What Chromium already gives us for encode:</p>
+            <ul>
+                <li><code>media/video/video_encode_accelerator.h</code> &mdash; the stable IPC-facing <strong><code>VideoEncodeAccelerator</code> (VEA) interface</strong>: the C++ contract every HW encoder backend (<code>VaapiVideoEncodeAccelerator</code>, <code>D3D12VideoEncodeAccelerator</code>, <code>MediaFoundationVideoEncodeAccelerator</code>, the proposed <code>VulkanVideoEncodeAccelerator</code>) implements. It is Mojo-stable, so the renderer process talks to whichever backend the GPU process selected without knowing which one it is.</li>
+                <li><code>media/gpu/h264_dpb.{h,cc}</code>, <code>media/gpu/h264_ratectrl_rtc.{h,cc}</code> — DPB and SW rate controller (reusable).</li>
+                <li><code>media/gpu/h264_builder.{h,cc}</code>, <code>media/filters/h26x_annex_b_bitstream_builder.h</code> — Annex-B header builders (reusable).</li>
+                <li><code>media/gpu/svc_layers.{h,cc}</code> — SVC scalability layer math.</li>
+            </ul>
+
+            <p>What we must write:</p>
+            <ul>
+                <li><span class="tag tag-new">NEW</span><code>VulkanVideoEncodeAccelerator</code></li>
+                <li><span class="tag tag-new">NEW</span><code>VulkanVideoEncoderWrapper</code></li>
+                <li><span class="tag tag-new">NEW</span><code>VulkanVideoEncoderDelegate</code> + per-codec subclasses (H.264, H.265, AV1)</li>
+                <li><span class="tag tag-new">NEW</span>Conversion: <code>H264SPS/PPS/SliceHeader</code> → <code>StdVideo*</code> structures</li>
+                <li><span class="tag tag-new">NEW</span>DPB slot manager bound to <code>VkVideoReferenceSlotInfoKHR[]</code></li>
+                <li><span class="tag tag-new">NEW</span>Bitstream readback via <code>VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR</code></li>
+            </ul>
+
+            <h3>1.3 Conversion Code Estimate</h3>
+            <div class="callout-info">
+                <strong>Applies to</strong>: from-scratch plan and Model B fallback. The estimate below (~thousands of LoC of <code>H264SPS → StdVideoH264SequenceParameterSet</code> mapping, slice-header conversion, etc.) is <strong>Layer B work the upstream Vulkan-Video-Samples library has already done</strong>. For Model D / Model A, the Chromium-side LoC is ~6,200 (per the library integration analysis), not ~21 k.
+            </div>
+            <table>
+                <thead><tr><th>Codec</th><th>Chromium structs</th><th>Vulkan <code>StdVideo*</code> structs</th><th>~LOC</th></tr></thead>
+                <tbody>
+                    <tr><td>H.264</td><td><code>H264SPS</code>, <code>H264PPS</code>, <code>H264SliceHeader</code>, <code>H264Picture</code></td><td><code>StdVideoH264SequenceParameterSet</code>, <code>StdVideoH264PictureParameterSet</code>, <code>StdVideoEncodeH264SliceHeader</code>, <code>StdVideoEncodeH264ReferenceInfo</code></td><td>~700</td></tr>
+                    <tr><td>H.265</td><td><code>H265VPS</code>, <code>H265SPS</code>, <code>H265PPS</code>, <code>H265SliceHeader</code></td><td><code>StdVideoH265VideoParameterSet</code>, <code>StdVideoH265SequenceParameterSet</code>, <code>StdVideoH265PictureParameterSet</code>, <code>StdVideoEncodeH265SliceSegmentHeader</code></td><td>~900</td></tr>
+                    <tr><td>AV1</td><td><code>Av1FrameHeader</code>, <code>Av1SequenceHeader</code></td><td><code>StdVideoAV1SequenceHeader</code>, <code>StdVideoEncodeAV1PictureInfo</code></td><td>~700</td></tr>
+                    <tr><td colspan="3"><strong>Total</strong></td><td><strong>~2,300</strong></td></tr>
+                </tbody>
+            </table>
+
+            <h3>1.4 Scope and Priorities</h3>
+            <table>
+                <thead><tr><th>Component</th><th>Status</th><th>Priority</th></tr></thead>
+                <tbody>
+                    <tr><td>Vulkan Video Encode (H.264 CQP) &mdash; <em>earliest milestone</em></td><td>New</td><td><span class="tag tag-p0">P0</span></td></tr>
+                    <tr><td>Vulkan Video Encode (H.264 CBR/VBR)</td><td>New</td><td><span class="tag tag-p0">P0</span></td></tr>
+                    <tr><td>Vulkan Video Encode (HEVC main / main10) &mdash; ported from <strong>D3D12</strong>, not VA-API</td><td>New</td><td><span class="tag tag-p0">P0</span></td></tr>
+                    <tr><td>Vulkan Video Encode (AV1)</td><td>New</td><td><span class="tag tag-p1">P1</span></td></tr>
+                    <tr><td>SVC temporal layers (T=2, T=3)</td><td>New</td><td><span class="tag tag-p1">P1</span></td></tr>
+                    <tr><td>SVC spatial layers (S=2, S=3) for AV1</td><td>New</td><td><span class="tag tag-p2">P2</span></td></tr>
+                    <tr><td>Quantization Maps (<code>VK_KHR_video_encode_quantization_map</code>)</td><td>New</td><td><span class="tag tag-p2">P2</span></td></tr>
+                    <tr><td>Intra-refresh (<code>VK_KHR_video_encode_intra_refresh</code>)</td><td>New</td><td><span class="tag tag-p2">P2</span></td></tr>
+                    <tr><td>Manual reference buffer control</td><td>New</td><td><span class="tag tag-p2">P2</span></td></tr>
+                    <tr><td>Protected encode (<code>VK_VIDEO_SESSION_CREATE_PROTECTED_CONTENT_BIT_KHR</code>)</td><td><strong>Non-goal</strong> (Review F12)</td><td>&mdash;</td></tr>
+                </tbody>
+            </table>
+            <div class="callout-risk">
+                <strong>Removed in v1.1:</strong> Protected encode &mdash; no Chrome/CDM consumer exists. See &sect;10.
+                <br><strong>Added:</strong> H.264 CQP is now the earliest milestone, ahead of CBR/VBR. See &sect;15.
+            </div>
+        </section>
+
+        <!-- ================= 2. Current VA-API ================= -->
+        <section id="sec-vaapi">
+            <h2>2. Current HW-Accelerated Encode Architecture (VA-API)</h2>
+
+            <h3>2.1 Layered View</h3>
+            <div class="diagram">
+                <object data="diagrams/encode_chromium_topology.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Chromium video-encode backend topology, with the proposed Vulkan path highlighted.</div>
+            </div>
+
+            <p><code>GpuVideoEncodeAcceleratorFactory::CreateVEA()</code> is the single entry-point — it walks <code>GetVEAFactoryFunctions()</code> and probes each VEA in priority order. <strong>This is where we plug <code>VulkanVideoEncodeAccelerator</code> in.</strong></p>
+
+            <h3>2.2 VA-API Per-Frame Submission Sequence</h3>
+            <div class="diagram">
+                <object data="diagrams/encode_vaapi_sequence.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Reference: <code>media/gpu/vaapi/h264_vaapi_video_encoder_delegate.cc::SubmitFrameParameters()</code> (lines 996–1188).</div>
+            </div>
+
+            <p>The H.264 delegate packs three primary VA buffer types and three "misc" buffers per frame:</p>
+            <pre><code>// 1. VAEncSequenceParameterBufferH264 (SPS-derived)
+// 2. VAEncPictureParameterBufferH264
+// 3. VAEncSliceParameterBufferH264
+// 4. VAEncMiscParameterBuffer × 3 (RC, FrameRate, HRD)
+// 5. VAEncPackedHeader{Parameter,Data} for SPS / PPS / Slice
+//
+// One-shot submission:
+vaapi_wrapper_->SubmitBuffers(va_buffers);
+vaapi_wrapper_->ExecuteAndDestroyPendingBuffers(encode_job.input_surface_id());</code></pre>
+
+            <h3>2.3 VA-API Limitations We Want to Eliminate</h3>
+            <table>
+                <thead><tr><th>Pain point</th><th>Vulkan Video remedy</th></tr></thead>
+                <tbody>
+                    <tr><td>Implicit sync, no <code>VkSemaphore</code> interop with compositor</td><td>Explicit <code>VkSemaphore</code>/<code>VkFence</code>, incl. timeline semaphores</td></tr>
+                    <tr><td>Driver-allocated <code>VASurfaceID</code> opaque to Skia/SkiaRenderer</td><td><code>VkImage</code> reusable by graphics queue, sampler conversion, blit</td></tr>
+                    <tr><td><code>vaMapBuffer()</code>-based bitstream readback on the same queue</td><td><code>VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR</code> + persistent-mapped <code>VkBuffer</code></td></tr>
+                    <tr><td>Vendor-specific entry points / fourcc</td><td>Unified <code>VkFormat</code> (e.g. <code>VK_FORMAT_G8_B8R8_2PLANE_420_UNORM</code>)</td></tr>
+                    <tr><td>No standardized SVC API across vendors</td><td><code>VkVideoEncodeRateControlInfoKHR::layerCount</code> + per-codec extensions</td></tr>
+                    <tr><td>Linux only</td><td>Cross-platform</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ================= 3. Requirements ================= -->
+        <section id="sec-requirements">
+            <h2>3. Plug-in and Interface Requirements</h2>
+
+            <h3>3.1 The Stable Top Boundary: <code>VideoEncodeAccelerator</code></h3>
+            <p><code>media/video/video_encode_accelerator.h</code> (lines 191–528):</p>
+            <pre><code>class MEDIA_EXPORT VideoEncodeAccelerator {
+ public:
+  virtual SupportedProfiles GetSupportedProfiles() = 0;
+
+  virtual EncoderStatus Initialize(const Config& config,
+                                   Client* client,
+                                   std::unique_ptr&lt;MediaLog&gt; media_log) = 0;
+
+  virtual void Encode(scoped_refptr&lt;VideoFrame&gt; frame, bool force_keyframe) = 0;
+  virtual void UseOutputBitstreamBuffer(BitstreamBuffer buffer) = 0;
+
+  virtual void RequestEncodingParametersChange(
+      const Bitrate&amp; bitrate, uint32_t framerate,
+      const std::optional&lt;gfx::Size&gt;&amp; size) = 0;
+  virtual void RequestEncodingParametersChange(
+      const VideoBitrateAllocation&amp;, uint32_t framerate,
+      const std::optional&lt;gfx::Size&gt;&amp; size);
+
+  virtual void Destroy() = 0;
+  virtual void Flush(FlushCallback);
+  ...
+};</code></pre>
+
+            <table>
+                <thead><tr><th>Requirement</th><th>Why</th></tr></thead>
+                <tbody>
+                    <tr><td><code>Initialize()</code> is <strong>synchronous</strong></td><td>Factory walks list and stops at first kOk</td></tr>
+                    <tr><td><code>GetSupportedProfiles()</code> callable <strong>before</strong> <code>Initialize()</code></td><td>Populates <code>gpu::GPUInfo</code> at GPU startup</td></tr>
+                    <tr><td>Accept <code>VideoFrame</code> with <code>STORAGE_SHMEM</code> or <code>STORAGE_GPU_MEMORY_BUFFER</code></td><td>Per <code>Config::storage_type</code></td></tr>
+                    <tr><td><code>UseOutputBitstreamBuffer()</code> provides shmem; encoder fills and notifies once</td><td>Bitstream transferred out-of-band via shmem, not Mojo</td></tr>
+                    <tr><td>Call <code>RequireBitstreamBuffers</code> on init and resolution changes</td><td>VEA Adapter uses this as re-config signal</td></tr>
+                    <tr><td><code>Flush()</code> must drain</td><td>WebRTC / MediaRecorder depend on it</td></tr>
+                </tbody>
+            </table>
+
+            <h3>3.2 The Bottom Boundary: Vulkan + Std-Video Headers</h3>
+            <ul>
+                <li><code>VK_KHR_video_queue</code>, <code>VK_KHR_video_encode_queue</code></li>
+                <li><code>VK_KHR_video_encode_h264</code>, <code>VK_KHR_video_encode_h265</code>, <code>VK_KHR_video_encode_av1</code></li>
+                <li><code>VK_KHR_video_maintenance1</code> — inline queries</li>
+                <li><code>VK_KHR_synchronization2</code> — required by encode queue</li>
+                <li><code>VK_KHR_external_memory_fd</code> + <code>VK_EXT_external_memory_dma_buf</code> — DMA-BUF import</li>
+                <li><code>VK_KHR_external_semaphore_fd</code> + <code>VK_KHR_timeline_semaphore</code></li>
+                <li>Optional: <code>VK_KHR_video_encode_quantization_map</code>, <code>VK_KHR_video_encode_intra_refresh</code></li>
+            </ul>
+
+            <h3>3.3 Factory Wiring</h3>
+            <pre><code>// media/gpu/gpu_video_encode_accelerator_factory.cc
+#if BUILDFLAG(ENABLE_VULKAN_VIDEO_ENCODE)
+  if (base::FeatureList::IsEnabled(kVulkanVideoEncode)) {
+    vea_factory_functions-&gt;push_back(base::BindRepeating(&amp;CreateVulkanVEA, ...));
+  }
+#endif</code></pre>
+
+            <div class="callout-info">
+                <strong>No Mojo changes required.</strong> The IPC interface (<code>media/mojo/mojom/video_encode_accelerator.mojom</code>) is backend-agnostic.
+            </div>
+        </section>
+
+        <!-- ================= 4. Vulkan Encode Design ================= -->
+        <section id="sec-design">
+            <h2>4. Vulkan Video Encode API Design</h2>
+            <div class="callout-info">
+                <strong>Applies to</strong>: from-scratch plan and Model B fallback. §4.1&ndash;§4.6 describe <strong>Layer B</strong> &mdash; the codec driver loop with per-codec <code>H264VulkanVideoEncoderDelegate</code> / <code>H265&hellip;</code> / <code>AV1&hellip;</code> classes, DPB slot management, per-frame <code>VkVideoEncodeH264PictureInfoKHR</code> / <code>StdVideoEncodeH264*</code> chaining, etc. For the recommended <strong>Model D / A</strong>, this whole section is inside the upstream Vulkan-Video-Samples library; the Chromium-side code is a single codec-neutral <code>VulkanVideoEncodeAccelerator</code> shim that calls <code>VulkanVideoEncoderExt::SubmitExternalFrame(VkVideoEncodeInputFrame)</code>. The Chromium-side surface is documented in §1.2 (the codec-neutral contract) and in <code>VULKAN_VIDEO_LIBRARY_INTEGRATION_ANALYSIS.md</code> §7 (recommended implementation).
+            </div>
+
+            <h3>4.1 Proposed Class Hierarchy</h3>
+            <div class="diagram">
+                <object data="diagrams/encode_vulkan_class_hierarchy.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Class hierarchy under <code>media/gpu/vulkan/</code> — mirrors the VA-API encoder layout for diff-friendly comparison.</div>
+            </div>
+
+            <h3>4.2 Per-Frame Submission Sequence</h3>
+            <div class="diagram">
+                <object data="diagrams/encode_vulkan_sequence.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Vulkan Video encode submission flow with timeline semaphores and inline queries (<code>VK_KHR_video_maintenance1</code>).</div>
+            </div>
+
+            <h3>4.3 Session and Session-Parameters Creation (once / on SPS-PPS change)</h3>
+            <pre><code>VkVideoEncodeH264ProfileInfoKHR h264_profile_info = {
+    .sType         = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_INFO_KHR,
+    .stdProfileIdc = STD_VIDEO_H264_PROFILE_IDC_HIGH,
+};
+VkVideoProfileInfoKHR profile_info = {
+    .sType                = VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR,
+    .pNext                = &amp;h264_profile_info,
+    .videoCodecOperation  = VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_KHR,
+    .chromaSubsampling    = VK_VIDEO_CHROMA_SUBSAMPLING_420_BIT_KHR,
+    .lumaBitDepth         = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
+    .chromaBitDepth       = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
+};
+
+VkVideoSessionCreateInfoKHR session_info = {
+    .sType                    = VK_STRUCTURE_TYPE_VIDEO_SESSION_CREATE_INFO_KHR,
+    .flags                    = VK_VIDEO_SESSION_CREATE_ALLOW_ENCODE_PARAMETER_OPTIMIZATIONS_BIT_KHR,
+    .pVideoProfile            = &amp;profile_info,
+    .pictureFormat            = VK_FORMAT_G8_B8R8_2PLANE_420_UNORM,
+    .maxCodedExtent           = {1920, 1088},
+    .referencePictureFormat   = VK_FORMAT_G8_B8R8_2PLANE_420_UNORM,
+    .maxDpbSlots              = 16,
+    .maxActiveReferencePictures = 1,
+    .pStdHeaderVersion        = &amp;h264_encode_std_extension,
+};
+vkCreateVideoSessionKHR(device_, &amp;session_info, nullptr, &amp;video_session_);
+
+// SPS + PPS — pre-built from Chromium's H264SPS / H264PPS
+VkVideoEncodeH264SessionParametersAddInfoKHR add_info = {
+    .stdSPSCount = 1, .pStdSPSs = &amp;std_sps,
+    .stdPPSCount = 1, .pStdPPSs = &amp;std_pps,
+};
+vkCreateVideoSessionParametersKHR(device_, &amp;params_info, nullptr, &amp;video_params_);</code></pre>
+
+            <h3>4.4 Per-Frame Encode Command Buffer</h3>
+            <pre><code>vkBeginCommandBuffer(cmd_buf, ...);
+vkCmdResetQueryPool(cmd_buf, encode_feedback_query_pool_, query_slot, 1);
+
+// Layout transitions
+TransitionImage(cmd_buf, input_image_, VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR);
+TransitionImage(cmd_buf, recon_image_, VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR);
+
+VkVideoBeginCodingInfoKHR begin = {
+    .sType                  = VK_STRUCTURE_TYPE_VIDEO_BEGIN_CODING_INFO_KHR,
+    .pNext                  = &amp;rc_info,                           // rate control state
+    .videoSession           = video_session_,
+    .videoSessionParameters = video_params_,
+    .referenceSlotCount     = ref_count + 1,
+    .pReferenceSlots        = reference_slots_,
+};
+vkCmdBeginVideoCodingKHR(cmd_buf, &amp;begin);
+
+// First frame: apply quality level + rate control via Control
+if (need_control_cmd) vkCmdControlVideoCodingKHR(cmd_buf, &amp;ctl);
+
+VkVideoEncodeH264PictureInfoKHR h264_pic_info = {
+    .sType               = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PICTURE_INFO_KHR,
+    .naluSliceEntryCount = 1,
+    .pNaluSliceEntries   = &amp;h264_nalu_slice,
+    .pStdPictureInfo     = &amp;std_pic_info,
+};
+
+VkVideoEncodeInfoKHR encode_info = {
+    .sType                = VK_STRUCTURE_TYPE_VIDEO_ENCODE_INFO_KHR,
+    .pNext                = &amp;h264_pic_info,
+    .dstBuffer            = bitstream_buffer_,
+    .dstBufferOffset      = 0,
+    .dstBufferRange       = bitstream_size_,
+    .srcPictureResource   = src_pic_resource_,
+    .pSetupReferenceSlot  = &amp;setup_ref_slot_,
+    .referenceSlotCount   = active_ref_count_,
+    .pReferenceSlots      = active_reference_slots_,
+};
+
+// VK_KHR_video_maintenance1 — inline query
+VkVideoInlineQueryInfoKHR inline_query = {
+    .sType = VK_STRUCTURE_TYPE_VIDEO_INLINE_QUERY_INFO_KHR,
+    .queryPool = encode_feedback_query_pool_,
+    .firstQuery = query_slot, .queryCount = 1,
+};
+ChainNext(encode_info, inline_query);
+
+vkCmdEncodeVideoKHR(cmd_buf, &amp;encode_info);
+vkCmdEndVideoCodingKHR(cmd_buf, &amp;end);
+vkEndCommandBuffer(cmd_buf);
+vkQueueSubmit2(encode_queue_, ...);   // signals timeline_sem = N</code></pre>
+        </section>
+
+        <!-- ================= 5. Mapping ================= -->
+        <section id="sec-mapping">
+            <h2>5. Mapping: VA-API → Vulkan Video Encode (per codec)</h2>
+            <div class="callout-info">
+                <strong>Applies to</strong>: from-scratch plan and Model B fallback. §5 enumerates the field-by-field <code>VAEncSequenceParameterBufferH264 → StdVideoH264SequenceParameterSet</code> translation (and equivalents for HEVC and AV1). <strong>For Model D / A this work is already done inside the library</strong> &mdash; the library's per-codec encoders (<code>VkVideoEncoderH264</code>, <code>H265</code>, <code>AV1</code> in <code>vk_video_encoder/libs/VkVideoEncoder/</code>) build the Std-Video structs from the codec-neutral <code>VkVideoEncoderConfig</code> set at session creation. Chromium does not write any of these mappings. The tables below remain useful as a <em>reference</em> for what the library does on our behalf and as the spec for Model B if we ever vendor the codec layer ourselves.
+            </div>
+
+            <h3>5.1 H.264</h3>
+            <table>
+                <thead><tr><th>VA-API field</th><th>Vulkan equivalent</th></tr></thead>
+                <tbody>
+                    <tr><td><code>VAProfileH264High</code></td><td><code>VkVideoEncodeH264ProfileInfoKHR{.stdProfileIdc=STD_VIDEO_H264_PROFILE_IDC_HIGH}</code></td></tr>
+                    <tr><td><code>VAEntrypointEncSlice</code></td><td><code>VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_KHR</code> queue family</td></tr>
+                    <tr><td><code>VAEncSequenceParameterBufferH264</code></td><td><code>StdVideoH264SequenceParameterSet</code> via <code>VkVideoEncodeH264SessionParametersAddInfoKHR</code></td></tr>
+                    <tr><td><code>VAEncPictureParameterBufferH264</code></td><td><code>StdVideoEncodeH264PictureInfo</code> in <code>VkVideoEncodeH264PictureInfoKHR.pStdPictureInfo</code></td></tr>
+                    <tr><td><code>VAEncSliceParameterBufferH264</code></td><td><code>StdVideoEncodeH264SliceHeader</code> in <code>VkVideoEncodeH264NaluSliceInfoKHR.pStdSliceHeader</code></td></tr>
+                    <tr><td><code>VAEncMiscParameterRateControl</code></td><td><code>VkVideoEncodeRateControlInfoKHR</code> + <code>VkVideoEncodeH264RateControlInfoKHR</code></td></tr>
+                    <tr><td><code>VAEncPackedHeaderSequence</code> (SPS NAL bytes)</td><td>Written manually <strong>before</strong> <code>vkCmdEncodeVideoKHR</code> (or fetched via <code>vkGetEncodedVideoSessionParametersKHR</code>)</td></tr>
+                    <tr><td><code>VAEncCodedBufferType</code></td><td><code>VkBuffer</code> with <code>VK_BUFFER_USAGE_VIDEO_ENCODE_DST_BIT_KHR</code></td></tr>
+                    <tr><td>Ref: <code>VAPictureH264.picture_id</code> (= <code>VASurfaceID</code>)</td><td><code>VkVideoPictureResourceInfoKHR.imageViewBinding</code></td></tr>
+                </tbody>
+            </table>
+
+            <h3>5.2 Slice Header Fields — one-to-one</h3>
+            <div class="codecmp">
+                <div>
+                    <h5>VA-API (source)</h5>
+<pre><code>slice_param.macroblock_address
+slice_param.slice_type
+slice_param.pic_parameter_set_id
+slice_param.num_ref_idx_l0_active_minus1
+slice_param.slice_qp_delta
+slice_param.cabac_init_idc
+slice_param.disable_deblocking_filter_idc
+slice_param.slice_alpha_c0_offset_div2
+slice_param.slice_beta_offset_div2
+slice_param.RefPicList0[i].picture_id</code></pre>
+                </div>
+                <div>
+                    <h5>StdVideoEncodeH264SliceHeader (dest)</h5>
+<pre><code>std_slice.first_mb_in_slice
+std_slice.slice_type
+std_slice.pic_parameter_set_id
+std_slice.num_ref_idx_l0_active_minus1
+std_slice.slice_qp_delta
+std_slice.cabac_init_idc
+std_slice.disable_deblocking_filter_idc
+std_slice.slice_alpha_c0_offset_div2
+std_slice.slice_beta_offset_div2
+reference_slots_[i].imageViewBinding</code></pre>
+                </div>
+            </div>
+
+            <h3>5.3 H.265 (HEVC) &mdash; <strong>from D3D12</strong>, not VA-API (Review F1)</h3>
+            <div class="callout-risk">
+                <strong>VA-API does not support HEVC encode in tree.</strong>
+                There is no <code>h265_vaapi_video_encoder_delegate.{h,cc}</code>; the VA-API VEA unit test documents this explicitly.
+                Our HEVC delegate ports its Chromium-side state machine from
+                <code>media/gpu/windows/d3d12_video_encode_h265_delegate.{h,cc}</code>,
+                and its Vulkan command flow from <code>VkVideoEncoderH265.cpp</code>.
+            </div>
+            <p>Same Std-video structure pattern as H.264. HEVC adds a <code>StdVideoH265VideoParameterSet</code> via <code>VkVideoEncodeH265SessionParametersAddInfoKHR</code> and prepends <code>VPS+SPS+PPS</code> bytes on IDR (we prefer the bytes returned by <code>vkGetEncodedVideoSessionParametersKHR()</code> when the driver advertises overrides).</p>
+            <h3>5.4 AV1</h3>
+            <p>Driver emits all OBUs (sequence header, frame header, tile group) &mdash; we never splice in "packed headers" and set <code>precedingExternallyEncodedBytes = 0</code> on every frame.</p>
+        </section>
+
+        <!-- ================= 6. Input ================= -->
+        <section id="sec-input">
+            <h2>6. Input Path: <code>VideoFrame</code> &rarr; <code>VkImage</code></h2>
+            <div class="callout-info">
+                <strong>Review F7:</strong> the negotiated input mode
+                (<code>Config::StorageType::kShmem</code> vs <code>kGpuMemoryBuffer</code>) is <strong>not</strong> the same
+                as the frame-time <code>VideoFrame::storage_type()</code> (commonly
+                <code>STORAGE_MAPPABLE_SHARED_IMAGE</code> in current GPU-backed paths). The diagram below labels columns
+                by negotiated mode and names the platform realisations underneath.
+            </div>
+            <div class="diagram">
+                <object data="diagrams/encode_input_path.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">A. shmem (stage + copy). B. <code>kGpuMemoryBuffer</code> via the proposed
+                  <code>SharedImageManager::ProduceVulkanVideo()</code> &rarr; new <code>VulkanVideoImageRepresentation</code>
+                  &rarr; scoped read access. C. Platform fallbacks (DMA-BUF / Win NT handle / AHardwareBuffer) when the
+                  shared-image path declines. Same pattern as <code>D3D12VideoEncodeAccelerator</code>'s existing
+                  <code>SharedImageManager::ProduceVideo()</code> flow.</div>
+            </div>
+            <div class="callout-new">
+                <strong>Review F6:</strong> we do not reach into the shared image directly. We go through
+                <code>CommandBufferHelper::GetSharedImageManager()</code> &rarr; the proposed <code>ProduceVulkanVideo()</code> &rarr;
+                <code>BeginScopedReadAccess()</code>, modeled after the D3D12 path that already exists in ToT for D3D11 textures. This keeps
+                lifetime, synchronisation, and forward compatibility correct.
+            </div>
+        </section>
+
+        <!-- ================= 7. Rate control ================= -->
+        <section id="sec-rate">
+            <h2>7. Rate Control, GOP, Quality Level and QP Maps</h2>
+            <div class="diagram">
+                <object data="diagrams/encode_rate_control.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Three rate-control modes; each mode applied via <code>vkCmdControlVideoCodingKHR(VK_VIDEO_CODING_CONTROL_ENCODE_RATE_CONTROL_BIT_KHR)</code>.</div>
+            </div>
+
+            <h3>7.1 VUID rules &mdash; <code>ValidateRateControl()</code> (Review F4)</h3>
+            <div class="callout-info">
+                Vulkan attaches non-obvious validity rules to <code>VkVideoEncodeRateControlInfoKHR</code>.
+                We centralise them in <code>VulkanVideoEncoderWrapper::ValidateRateControl()</code>; per-codec delegates never set the fields directly.
+            </div>
+            <table>
+                <thead><tr><th>Mode</th><th><code>layerCount</code></th><th>Per-layer constraint</th></tr></thead>
+                <tbody>
+                    <tr><td><code>DEFAULT</code></td><td><strong>must be 0</strong></td><td>n/a (driver decides everything)</td></tr>
+                    <tr><td><code>DISABLED</code></td><td><strong>must be 0</strong></td><td>n/a (per-frame QP via codec-specific <code>constantQp</code>, see &sect;7.2)</td></tr>
+                    <tr><td><code>CBR</code></td><td>&ge; 1 (== temporal-layer count)</td><td>each: <code>averageBitrate == maxBitrate</code></td></tr>
+                    <tr><td><code>VBR</code></td><td>&ge; 1 (== temporal-layer count)</td><td>each: <code>averageBitrate &le; maxBitrate &le; caps.maxBitrate</code></td></tr>
+                </tbody>
+            </table>
+
+            <h3>7.2 Software Rate Controller + per-codec <code>constantQp</code> (Review F5)</h3>
+            <p>For external / CQP mode the QP needs to be communicated through <strong>two</strong> Vulkan fields, not just <code>slice_qp_delta</code>:</p>
+            <ol>
+                <li><code>rateControlMode = VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR</code> with <code>layerCount = 0</code>.</li>
+                <li>The per-slice / per-frame constant-QP field the driver actually reads in disabled-RC mode:
+                    <ul>
+                        <li>H.264: <code>VkVideoEncodeH264NaluSliceInfoKHR::constantQp</code></li>
+                        <li>H.265: <code>VkVideoEncodeH265NaluSliceSegmentInfoKHR::constantQp</code></li>
+                        <li>AV1: <code>VkVideoEncodeAV1PictureInfoKHR::constantQIndex</code></li>
+                    </ul>
+                </li>
+                <li><code>slice_qp_delta</code> on the matching <code>StdVideo*SliceHeader</code> so the emitted slice header decodes to the same QP.</li>
+                <li>Clamp to <code>[caps.minQp, caps.maxQp]</code> and the profile range.</li>
+            </ol>
+
+            <h3>7.3 Quality Level</h3>
+            <p><code>VK_KHR_video_encode_queue</code> revision 9 added <code>VkVideoEncodeQualityLevelInfoKHR</code>, an integer 0..(maxQualityLevel-1). We map Chromium's <code>ContentType</code>:</p>
+            <table>
+                <tbody>
+                    <tr><td><code>ContentType::kCamera</code> (low-latency RTC)</td><td><code>maxQualityLevel - 1</code> (fastest)</td></tr>
+                    <tr><td><code>ContentType::kDisplay</code> (screen content)</td><td><code>maxQualityLevel / 2</code> (balanced)</td></tr>
+                </tbody>
+            </table>
+
+            <h3>7.4 Quantization Maps and Intra-refresh</h3>
+            <p>Phase-6 extensions. <code>VK_KHR_video_encode_quantization_map</code> binds <code>EncodeOptions::quantizer</code>; <code>VK_KHR_video_encode_intra_refresh</code> maps WebRTC's <code>kRealtimeVideo</code> retransmit recovery.</p>
+
+            <h3>7.5 Manual reference buffer control (Review F9)</h3>
+            <p><strong>MVP declines:</strong> if <code>Config::manual_reference_buffer_control == true</code> we return <code>EncoderStatus::Codes::kEncoderUnsupportedConfig</code> and publish <code>VideoEncoderInfo::number_of_manual_reference_buffers = 0</code>. Phase-6 will map <code>EncodeOptions::reference_buffers[]</code> &rarr; <code>VkVideoEncodeInfoKHR::pReferenceSlots</code> and <code>update_buffer</code> &rarr; <code>pSetupReferenceSlot-&gt;slotIndex</code>.</p>
+        </section>
+
+        <!-- ================= 8. Output ================= -->
+        <section id="sec-output">
+            <h2>8. Bitstream Output, Queries and Feedback</h2>
+            <div class="diagram">
+                <object data="diagrams/encode_bitstream_readback.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Bitstream readback path with <code>VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR</code> and Annex-B composition.</div>
+            </div>
+
+            <h3>8.1 <code>dstBufferOffset</code> + <code>precedingExternallyEncodedBytes</code> (Review F2)</h3>
+            <div class="callout-risk">
+                <strong>What v1.0 got wrong:</strong> v1.0 said headers are prepended after readback. That is fine for the bytestream
+                but it lies to the driver's rate controller &mdash; the driver doesn't know about header bytes when choosing QP for the IDR.
+            </div>
+            <p>v1.1 reserves header space <strong>before</strong> the encode call and tells the driver:</p>
+<pre><code>const uint32_t header_size = pic-&gt;idr ? PrepareHeaderBytes() : 0;
+encode_info.dstBufferOffset                  = header_size;
+encode_info.dstBufferRange                   = bitstream_size_ - header_size;
+encode_info.precedingExternallyEncodedBytes  = header_size;
+// Final shmem:
+//   shmem[0 .. header_size)        = app-built / driver-fetched SPS/PPS/VPS/AUD
+//   shmem[header_size .. +N)       = slice bytes written by the driver</code></pre>
+            <p>For frames where the driver advertises <code>VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_HAS_OVERRIDES_BIT_KHR</code> or the session was created with <code>VK_VIDEO_SESSION_CREATE_ALLOW_ENCODE_PARAMETER_OPTIMIZATIONS_BIT_KHR</code>, we prefer the bytes returned by <code>vkGetEncodedVideoSessionParametersKHR()</code> over our own <code>H26xAnnexBBitstreamBuilder</code>. For AV1 the driver writes the entire stream, so <code>header_size = 0</code>.</p>
+
+            <h3>8.2 Inline query vs Begin/End query (Review F3)</h3>
+            <p>Both paths must remain in tree (some shipping drivers lack <code>VK_KHR_video_maintenance1</code>):</p>
+<pre><code>if (video_maintenance1_supported_) {
+    // Inline query - chain into VkVideoEncodeInfoKHR
+    VkVideoInlineQueryInfoKHR inline_query = { ... };
+    ChainNext(encode_info, inline_query);
+    vkCmdEncodeVideoKHR(cmd_buf, &amp;encode_info);
+} else {
+    // Begin/End-query fallback (matches Vulkan Samples)
+    vkCmdBeginQuery(cmd_buf, encode_feedback_query_pool_, query_slot, 0);
+    vkCmdEncodeVideoKHR(cmd_buf, &amp;encode_info);
+    vkCmdEndQuery(cmd_buf, encode_feedback_query_pool_, query_slot);
+}</code></pre>
+
+            <h3>8.3 Result statuses (and the careful re-encode rule)</h3>
+            <table>
+                <thead><tr><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                    <tr><td><code>COMPLETE_KHR</code></td><td>Read offset/size, copy to shmem, deliver</td></tr>
+                    <tr><td><code>NOT_READY_KHR</code></td><td>Wait again</td></tr>
+                    <tr><td><code>ERROR_KHR</code></td><td>Report <code>kEncoderFailedEncode</code></td></tr>
+                    <tr><td><code>INSUFFICIENT_BITSTREAM_BUFFER_RANGE_KHR</code></td><td><strong>Replay-safe only.</strong> If no later frame has been issued, grow the buffer and re-encode. If we already pipelined past this frame, fail this frame and force a keyframe on the next; grow the buffer ceiling for subsequent encodes.</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ================= 9. Sync ================= -->
+        <section id="sec-sync">
+            <h2>9. Synchronization, DMA-BUF and Cross-Queue Handoffs</h2>
+            <div class="diagram">
+                <object data="diagrams/encode_sync_timeline.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Three queues from the same <code>VkDevice</code>; coordinated via a single timeline semaphore. <code>sync2</code> is mandatory for encode.</div>
+            </div>
+            <ul>
+                <li><strong>Graphics queue</strong> — compositor, input pre-processing.</li>
+                <li><strong>Transfer queue</strong> — DMA-BUF imports, staging copies.</li>
+                <li><strong>Video encode queue</strong> — <code>vkCmdEncodeVideoKHR</code>.</li>
+            </ul>
+            <p>DMA-BUF sync FDs are imported via <code>VK_KHR_external_semaphore_fd</code> so we avoid relying on kernel implicit-sync (which can stall the entire pipeline).</p>
+        </section>
+
+        <!-- ================= 10. DRM ================= -->
+        <section id="sec-drm">
+            <h2>10. Protected (DRM) Content for Encode &mdash; <strong>Non-goal</strong> (Review F12)</h2>
+            <div class="callout-risk">
+                Protected encode is explicitly <strong>not in scope</strong> for this design's MVP and is <strong>not in the execution plan</strong>. The block below exists so future work can pick it up cleanly when a real consumer materialises.
+            </div>
+            <p>Why it's a non-goal: WebRTC, MediaRecorder, WebCodecs, screen capture, tab capture &mdash; all consume clear content and produce clear bitstream. Widevine's CDM API only exposes <em>decryption</em> keys. HDCP re-encryption for simulcast is not a feature Chrome currently asks for. Implementing protected encode requires a protected <code>VideoFrame</code> source, a Chrome/CDM contract for encryption keys, a protected destination <code>VkBuffer</code>, a protected-aware Mojo path, and a protected client &mdash; none of which exists today.</p>
+            <p>If a caller requests it, we return <code>EncoderStatus::Codes::kEncoderUnsupportedConfig</code>.</p>
+            <p><strong>Trigger to revisit:</strong> a Chrome product asks for it, CDM exposes encryption keys, and at least one Vulkan ICD advertises protected encode capabilities on a platform Chrome targets.</p>
+        </section>
+
+        <!-- ================= 11. Plan ================= -->
+        <section id="sec-plan">
+            <h2>11. Execution Plan &mdash; 6 phases, H.264 CQP first (Review F13)</h2>
+            <div class="callout-info">
+                <strong>Applies to</strong>: from-scratch plan. The six-phase ~19&ndash;21 week plan below assumes Chromium writes Layer B itself. <strong>For the recommended Model D / Model A, this plan is superseded</strong> by <code>VULKAN_VIDEO_LIBRARY_INTEGRATION_ANALYSIS.md</code> §7 (~10.5&ndash;12 weeks) because Layer B is already implemented in the upstream library. Chromium only writes the codec-neutral shim, the BYO-<code>VkDevice</code> plumbing, and the SharedImage representation. Read this section for the from-scratch / Model B effort baseline; read the library analysis for the actual recommended plan.
+            </div>
+            <div class="diagram">
+                <object data="diagrams/encode_execution_timeline.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">v1.1: reordered to 6 phases over ~18&ndash;21 engineer-weeks. The earliest runnable milestone is H.264 CQP on a <strong>private Vulkan device</strong> (Review F11) at the end of Phase 2.</div>
+            </div>
+
+            <h3>11.1 Phase Breakdown</h3>
+            <table>
+                <thead><tr><th>Phase</th><th>Duration</th><th>Deliverable</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>1. Foundation + private VkDevice</strong></td><td>3w</td><td>Wrapper, capability enumeration, factory wiring, <code>GetSupportedProfiles()</code>, <code>ValidateRateControl()</code>. <em>Private</em> media VkDevice (no compositor share yet).</td></tr>
+                    <tr><td><strong>2. H.264 CQP (first milestone)</strong></td><td>3w</td><td>H.264 delegate, <code>DISABLED</code> RC + per-slice <code>constantQp</code>, app-built SPS/PPS via <code>dstBufferOffset</code> + <code>precedingExternallyEncodedBytes</code>, shmem input only.</td></tr>
+                    <tr><td><strong>3. H.264 CBR/VBR + reconfigure</strong></td><td>2w</td><td>Driver RC, <code>RequestEncodingParametersChange()</code>, IDR-on-reconfigure.</td></tr>
+                    <tr><td><strong>4. Chrome GPU-backed input</strong></td><td>3w</td><td>Proposed <code>SharedImageManager::ProduceVulkanVideo</code> (new API), scoped read access, DMA-BUF / Win NT / AHB fallbacks. Optionally bring up dual-device path.</td></tr>
+                    <tr><td><strong>5. HEVC + AV1</strong></td><td>5w</td><td>HEVC main / main10 ported from <strong>D3D12 H.265 delegate</strong> (not VA-API). AV1 main 8/10-bit.</td></tr>
+                    <tr><td><strong>6. Advanced features and polish</strong></td><td>3w</td><td>Temporal SVC, QP map, intra-refresh, manual reference control, fallback logic, memory dump.</td></tr>
+                </tbody>
+            </table>
+
+            <div class="callout-risk">
+                <strong>Protected encode is REMOVED from the plan</strong> (Review F12). See &sect;10.
+            </div>
+
+            <h3>11.2 Proposed Directory Layout</h3>
+            <pre><code>media/gpu/vulkan/
+&#9500;&#9472; BUILD.gn
+&#9500;&#9472; DEPS
+&#9500;&#9472; OWNERS
+&#9500;&#9472; vulkan_video_device_context.{h,cc}        // Phase 1: private device
+&#9500;&#9472; vulkan_video_encoder_wrapper.{h,cc}       // Phase 1
+&#9500;&#9472; vulkan_video_encode_accelerator.{h,cc}    // Phase 1
+&#9500;&#9472; vulkan_video_encoder_delegate.{h,cc}      // Phase 2
+&#9500;&#9472; vulkan_video_encoder_dpb.{h,cc}           // Phase 2
+&#9500;&#9472; vulkan_video_image_pool.{h,cc}            // Phase 1
+&#9500;&#9472; vulkan_bitstream_buffer_pool.{h,cc}       // Phase 1
+&#9500;&#9472; h264_vulkan_video_encoder_delegate.{h,cc} // Phase 2
+&#9500;&#9472; h265_vulkan_video_encoder_delegate.{h,cc} // Phase 5
+&#9500;&#9472; av1_vulkan_video_encoder_delegate.{h,cc}  // Phase 5
+&#9492;&#9472; test/</code></pre>
+        </section>
+
+        <!-- ================= 12. Tests ================= -->
+        <section id="sec-tests">
+            <h2>12. Test Plan</h2>
+
+            <h3>12.1 Tests Reused / Added</h3>
+            <ul>
+                <li>Reuse <code>media/gpu/test/video_encode_accelerator_tests.{h,cc}</code>. ToT has no backend selector; add a <strong>new</strong> <code>--implementation=vulkan</code> flag as test-harness work.</li>
+                <li>New unit tests under <code>media/gpu/vulkan/*_unittest.cc</code>.</li>
+                <li>Cross-API: VA-API ↔ Vulkan PSNR/SSIM comparison; WebRTC interop with Firefox; round-trip Vulkan-encode → Vulkan-decode.</li>
+                <li>Validation layers: <code>VK_LOADER_LAYERS_ENABLE=*validation</code> in CQ.</li>
+            </ul>
+
+            <h3>12.2 Performance KPIs (1080p30 H.264)</h3>
+            <table>
+                <tbody>
+                    <tr><td>Frames per second (encode-only)</td><td>≥ 200 fps</td></tr>
+                    <tr><td>End-to-end latency (Encode → BitstreamBufferReady)</td><td>≤ 8 ms</td></tr>
+                    <tr><td>Memory residency</td><td>≤ 1.5× VA-API</td></tr>
+                    <tr><td>GPU utilization (encode queue)</td><td>≤ 30 %</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ================= 13. Risks ================= -->
+        <section id="sec-risks">
+            <h2>13. Open Questions, Risks and Speculations</h2>
+            <table>
+                <thead><tr><th>#</th><th>Item</th><th>Risk</th><th>Mitigation</th></tr></thead>
+                <tbody>
+                    <tr><td>Q1</td><td>Driver-emitted SPS/PPS may diverge from app-built bytes</td><td><span class="tag tag-risk">Med</span></td><td>Use <code>vkGetEncodedVideoSessionParametersKHR()</code></td></tr>
+                    <tr><td>Q2</td><td>CPB / HRD semantics vary across NVIDIA / AMD / Intel</td><td><span class="tag tag-risk">Med</span></td><td>Validate via JVT decoder in CI</td></tr>
+                    <tr><td>Q3</td><td>Quality-level scale unbounded per driver</td><td><span class="tag tag-p2">Low</span></td><td>Query <code>maxQualityLevels</code> and bucketize</td></tr>
+                    <tr><td>Q4</td><td><code>VK_FORMAT_G8_B8R8_2PLANE_420_UNORM</code> may not be supported as <code>VIDEO_ENCODE_SRC</code></td><td><span class="tag tag-p2">Low</span></td><td>Negotiate via <code>vkGetPhysicalDeviceVideoFormatPropertiesKHR()</code></td></tr>
+                    <tr><td>Q5</td><td>4K IDR may need bigger bitstream buffer than steady state</td><td><span class="tag tag-risk">High at 4K</span></td><td>Over-allocate IDR buffer × 4</td></tr>
+                    <tr><td>Q6</td><td>Long-term references (LTR) partial in Chromium</td><td><span class="tag tag-risk">Med</span></td><td>Disable LTR initially (parity with VA-API)</td></tr>
+                    <tr><td>Q7</td><td>Android camera needs AHB import, not DMA-BUF</td><td><span class="tag tag-p2">Low</span></td><td>Add Android path in Phase 5</td></tr>
+                    <tr><td>Q8</td><td>Some drivers lack <code>VK_KHR_video_maintenance1</code> (inline queries)</td><td><span class="tag tag-p2">Low</span></td><td>Fallback to begin/end query</td></tr>
+                    <tr><td>Q9</td><td>Host-visible-coherent bitstream slower on dGPU than device-local+staging</td><td><span class="tag tag-risk">Med</span></td><td>Microbenchmark in Phase 5</td></tr>
+                    <tr><td>Q10</td><td>Speculative future: <code>VK_KHR_video_encode_encryption</code> for full encrypted-encode</td><td><span class="tag tag-p2">Low</span></td><td>Design protected path to be drop-in</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ================= 14. References ================= -->
+        <section id="sec-refs">
+            <h2>14. References</h2>
+            <ul>
+                <li><a href="https://registry.khronos.org/vulkan/specs/latest/html/vkspec.html">Vulkan Specification (latest)</a></li>
+                <li><a href="https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_video_encode_queue.html">VK_KHR_video_encode_queue</a></li>
+                <li><a href="https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_video_encode_h264.html">VK_KHR_video_encode_h264</a></li>
+                <li><a href="https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_video_encode_h265.html">VK_KHR_video_encode_h265</a></li>
+                <li><a href="https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_video_encode_av1.html">VK_KHR_video_encode_av1</a></li>
+                <li><a href="https://github.com/nvpro-samples/vk_video_samples">Vulkan Video Samples (NVIDIA)</a></li>
+                <li><a href="https://github.com/intel/libva">libva (VA-API headers)</a></li>
+                <li>Chromium source: <code>/data/LinuxExtra/browsers/chrome/chromium/src/media/{video,gpu,filters,parsers}/</code></li>
+                <li><a href="VULKAN_VIDEO_INTEGRATION_DESIGN_DOCUMENT.md">Companion: Vulkan Video <strong>Decode</strong> Integration Design</a></li>
+                <li><a href="VULKAN_VIDEO_ENCODE_INTEGRATION_DESIGN_DOCUMENT.md">Full Markdown source of this document</a></li>
+            </ul>
+        </section>
+
+    </div>
+</main>
+
+<footer>
+    <div class="container">
+        Generated from <code>VULKAN_VIDEO_ENCODE_INTEGRATION_DESIGN_DOCUMENT.md</code>
+        — Chromium HEAD (May 2026) — Vulkan headers 1.3.296
+    </div>
+</footer>
+
+</body>
+</html>

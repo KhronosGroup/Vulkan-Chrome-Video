@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 720" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+    <marker id="arrowBack" viewBox="0 0 10 10" refX="10" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1976d2"/>
+    </marker>
+  </defs>
+
+  <text x="590" y="28" text-anchor="middle" font-size="20" font-weight="bold" fill="#263238">
+    VA-API Encode — Per-Frame Submission Sequence
+  </text>
+  <text x="590" y="50" text-anchor="middle" font-size="12" fill="#546e7a">
+    H264VaapiVideoEncoderDelegate::PrepareEncodeJob() → SubmitFrameParameters() → ExecuteAndDestroyPendingBuffers()
+  </text>
+
+  <!-- Lifelines -->
+  <g font-size="12" font-weight="bold" fill="#0d47a1" text-anchor="middle">
+    <rect x="40" y="70" width="180" height="36" rx="6" fill="#e3f2fd" stroke="#1976d2"/>
+    <text x="130" y="93">VaapiVideoEncodeAccelerator</text>
+
+    <rect x="260" y="70" width="180" height="36" rx="6" fill="#e3f2fd" stroke="#1976d2"/>
+    <text x="350" y="93">H264VaapiEncoderDelegate</text>
+
+    <rect x="480" y="70" width="180" height="36" rx="6" fill="#e3f2fd" stroke="#1976d2"/>
+    <text x="570" y="93">VaapiWrapper</text>
+
+    <rect x="700" y="70" width="180" height="36" rx="6" fill="#e3f2fd" stroke="#1976d2"/>
+    <text x="790" y="93">libva (libdrm/i965)</text>
+
+    <rect x="920" y="70" width="220" height="36" rx="6" fill="#e3f2fd" stroke="#1976d2"/>
+    <text x="1030" y="93">HW Encode Engine (Intel/AMD)</text>
+  </g>
+
+  <!-- Vertical lifelines -->
+  <line x1="130" y1="106" x2="130" y2="700" stroke="#90a4ae" stroke-dasharray="4,4"/>
+  <line x1="350" y1="106" x2="350" y2="700" stroke="#90a4ae" stroke-dasharray="4,4"/>
+  <line x1="570" y1="106" x2="570" y2="700" stroke="#90a4ae" stroke-dasharray="4,4"/>
+  <line x1="790" y1="106" x2="790" y2="700" stroke="#90a4ae" stroke-dasharray="4,4"/>
+  <line x1="1030" y1="106" x2="1030" y2="700" stroke="#90a4ae" stroke-dasharray="4,4"/>
+
+  <!-- Messages -->
+  <g font-size="11" fill="#37474f">
+    <!-- 1. Encode(frame) -->
+    <line x1="130" y1="135" x2="350" y2="135" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="240" y="128" text-anchor="middle">1. Encode(frame, force_keyframe)</text>
+
+    <!-- 2. PrepareEncodeJob -->
+    <line x1="350" y1="170" x2="350" y2="200" stroke="#37474f" stroke-width="1.5"/>
+    <rect x="345" y="167" width="10" height="40" fill="#bbdefb" stroke="#1976d2"/>
+    <text x="365" y="190" text-anchor="start">2. PrepareEncodeJob: fill H264SPS/PPS, pick QP</text>
+
+    <!-- 3. SubmitBuffers (SPS-derived params) -->
+    <line x1="350" y1="225" x2="570" y2="225" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="460" y="218" text-anchor="middle">3. SubmitBuffer(VAEncSequenceParameterBufferH264)</text>
+
+    <!-- 4. picture parameter -->
+    <line x1="350" y1="255" x2="570" y2="255" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="460" y="248" text-anchor="middle">4. SubmitBuffer(VAEncPictureParameterBufferH264)</text>
+
+    <!-- 5. slice parameter -->
+    <line x1="350" y1="285" x2="570" y2="285" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="460" y="278" text-anchor="middle">5. SubmitBuffer(VAEncSliceParameterBufferH264)</text>
+
+    <!-- 6. misc (RC/HRD/FrameRate) -->
+    <line x1="350" y1="315" x2="570" y2="315" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="460" y="308" text-anchor="middle">6. SubmitBuffer(VAEncMiscParameterBuffer ×3: RC, FrameRate, HRD)</text>
+
+    <!-- 7. packed SPS/PPS/slice headers -->
+    <line x1="350" y1="345" x2="570" y2="345" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="460" y="338" text-anchor="middle">7. SubmitBuffer(VAEncPackedHeader{Param,Data} for SPS/PPS/Slice — bytes from H26xAnnexBBitstreamBuilder)</text>
+
+    <!-- 8. ExecuteAndDestroyPendingBuffers -->
+    <line x1="350" y1="380" x2="570" y2="380" stroke="#37474f" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="460" y="373" text-anchor="middle" font-weight="bold">8. ExecuteAndDestroyPendingBuffers(input_va_surface_id)</text>
+
+    <!-- 9. vaBeginPicture -->
+    <line x1="570" y1="410" x2="790" y2="410" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="680" y="403" text-anchor="middle">9. vaBeginPicture(ctx, surface)</text>
+
+    <!-- 10. vaRenderPicture -->
+    <line x1="570" y1="438" x2="790" y2="438" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="680" y="431" text-anchor="middle">10. vaRenderPicture(ctx, buffers[8])</text>
+
+    <!-- 11. vaEndPicture -->
+    <line x1="570" y1="466" x2="790" y2="466" stroke="#37474f" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="680" y="459" text-anchor="middle" font-weight="bold">11. vaEndPicture (kicks HW)</text>
+
+    <!-- 12. ioctl submit -->
+    <line x1="790" y1="494" x2="1030" y2="494" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="910" y="487" text-anchor="middle">12. DRM ioctl(EXEC) — HW encode kicks off</text>
+
+    <!-- gap for encode work -->
+    <rect x="1025" y="514" width="10" height="80" fill="#ffe082" stroke="#f57c00"/>
+    <text x="1080" y="555" text-anchor="middle" fill="#bf360c" font-style="italic">[hw encode]</text>
+
+    <!-- 13. completion -->
+    <line x1="1030" y1="604" x2="790" y2="604" stroke="#1976d2" stroke-width="1.5" marker-end="url(#arrowBack)"/>
+    <text x="910" y="597" text-anchor="middle" fill="#1976d2">13. Interrupt — bitstream ready in VAEncCodedBuffer</text>
+
+    <!-- 14. vaSyncSurface -->
+    <line x1="130" y1="640" x2="570" y2="640" stroke="#1976d2" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="350" y="633" text-anchor="middle" fill="#1976d2">14. TryToReturnBitstreamBuffers: SyncSurface + MapBuffer + memcpy to shmem</text>
+
+    <!-- 15. BitstreamBufferReady -->
+    <line x1="570" y1="676" x2="130" y2="676" stroke="#1976d2" stroke-width="2" marker-end="url(#arrowBack)"/>
+    <text x="350" y="669" text-anchor="middle" fill="#1976d2" font-weight="bold">15. Client::BitstreamBufferReady(id, metadata{payload, key_frame, ts, qp})</text>
+  </g>
+
+  <text x="20" y="715" font-size="10" fill="#78909c">
+    Source: media/gpu/vaapi/h264_vaapi_video_encoder_delegate.cc :: SubmitFrameParameters() (lines 996–1188); vaapi_video_encode_accelerator.cc
+  </text>
+</svg>

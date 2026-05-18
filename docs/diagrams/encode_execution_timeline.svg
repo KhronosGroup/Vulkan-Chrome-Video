@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 560" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <text x="640" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#263238">
+    Execution Plan v1.1 - 6-Phase Gantt (~18-21 engineer-weeks)
+  </text>
+  <text x="640" y="50" text-anchor="middle" font-size="11" fill="#546e7a">
+    Reordered per Review F11+F13. First runnable milestone: H.264 CQP on private VkDevice at end of Phase 2.
+  </text>
+
+  <!-- Grid (21 weeks) -->
+  <g stroke="#cfd8dc" stroke-width="1">
+    <line x1="200" y1="80"  x2="200" y2="500"/>
+    <line x1="250" y1="80"  x2="250" y2="500"/>
+    <line x1="300" y1="80"  x2="300" y2="500"/>
+    <line x1="350" y1="80"  x2="350" y2="500"/>
+    <line x1="400" y1="80"  x2="400" y2="500"/>
+    <line x1="450" y1="80"  x2="450" y2="500"/>
+    <line x1="500" y1="80"  x2="500" y2="500"/>
+    <line x1="550" y1="80"  x2="550" y2="500"/>
+    <line x1="600" y1="80"  x2="600" y2="500"/>
+    <line x1="650" y1="80"  x2="650" y2="500"/>
+    <line x1="700" y1="80"  x2="700" y2="500"/>
+    <line x1="750" y1="80"  x2="750" y2="500"/>
+    <line x1="800" y1="80"  x2="800" y2="500"/>
+    <line x1="850" y1="80"  x2="850" y2="500"/>
+    <line x1="900" y1="80"  x2="900" y2="500"/>
+    <line x1="950" y1="80"  x2="950" y2="500"/>
+    <line x1="1000" y1="80" x2="1000" y2="500"/>
+    <line x1="1050" y1="80" x2="1050" y2="500"/>
+    <line x1="1100" y1="80" x2="1100" y2="500"/>
+    <line x1="1150" y1="80" x2="1150" y2="500"/>
+    <line x1="1200" y1="80" x2="1200" y2="500"/>
+    <line x1="1250" y1="80" x2="1250" y2="500"/>
+  </g>
+
+  <!-- Week ticks (W1..W21) -->
+  <g font-size="10" fill="#546e7a" text-anchor="middle">
+    <text x="225" y="75">W1</text>
+    <text x="275" y="75">W2</text>
+    <text x="325" y="75">W3</text>
+    <text x="375" y="75">W4</text>
+    <text x="425" y="75">W5</text>
+    <text x="475" y="75">W6</text>
+    <text x="525" y="75">W7</text>
+    <text x="575" y="75">W8</text>
+    <text x="625" y="75">W9</text>
+    <text x="675" y="75">W10</text>
+    <text x="725" y="75">W11</text>
+    <text x="775" y="75">W12</text>
+    <text x="825" y="75">W13</text>
+    <text x="875" y="75">W14</text>
+    <text x="925" y="75">W15</text>
+    <text x="975" y="75">W16</text>
+    <text x="1025" y="75">W17</text>
+    <text x="1075" y="75">W18</text>
+    <text x="1125" y="75">W19</text>
+    <text x="1175" y="75">W20</text>
+    <text x="1225" y="75">W21</text>
+  </g>
+
+  <!-- Phase rows (left labels) -->
+  <g font-size="12" font-weight="bold">
+    <rect x="20" y="92" width="180" height="50" rx="4" fill="#e3f2fd" stroke="#1976d2"/>
+    <text x="110" y="115" text-anchor="middle">Phase 1</text>
+    <text x="110" y="132" text-anchor="middle" font-size="10" font-weight="normal">Foundation + private VkDevice</text>
+
+    <rect x="20" y="162" width="180" height="50" rx="4" fill="#fff3e0" stroke="#e65100"/>
+    <text x="110" y="185" text-anchor="middle">Phase 2</text>
+    <text x="110" y="202" text-anchor="middle" font-size="10" font-weight="normal">H.264 CQP (first milestone)</text>
+
+    <rect x="20" y="232" width="180" height="50" rx="4" fill="#fffde7" stroke="#fbc02d"/>
+    <text x="110" y="255" text-anchor="middle">Phase 3</text>
+    <text x="110" y="272" text-anchor="middle" font-size="10" font-weight="normal">H.264 CBR/VBR + reconfigure</text>
+
+    <rect x="20" y="302" width="180" height="50" rx="4" fill="#e8f5e9" stroke="#2e7d32"/>
+    <text x="110" y="325" text-anchor="middle">Phase 4</text>
+    <text x="110" y="342" text-anchor="middle" font-size="10" font-weight="normal">Chrome GPU-backed input</text>
+
+    <rect x="20" y="372" width="180" height="50" rx="4" fill="#f3e5f5" stroke="#7b1fa2"/>
+    <text x="110" y="395" text-anchor="middle">Phase 5</text>
+    <text x="110" y="412" text-anchor="middle" font-size="10" font-weight="normal">HEVC (D3D12-ref) + AV1</text>
+
+    <rect x="20" y="442" width="180" height="50" rx="4" fill="#fce4ec" stroke="#c2185b"/>
+    <text x="110" y="465" text-anchor="middle">Phase 6</text>
+    <text x="110" y="482" text-anchor="middle" font-size="10" font-weight="normal">SVC/QP map/IR/manual refs</text>
+  </g>
+
+  <!-- Bars (each cell = 50 px = 1 week) -->
+  <!-- Phase 1: W1-W3 -->
+  <rect x="200" y="100" width="150" height="34" rx="4" fill="#1976d2"/>
+  <text x="275" y="122" text-anchor="middle" font-size="11" fill="white">private VkDevice + wrapper + caps + factory</text>
+
+  <!-- Phase 2: W4-W6 -->
+  <rect x="350" y="170" width="150" height="34" rx="4" fill="#e65100"/>
+  <text x="425" y="192" text-anchor="middle" font-size="11" fill="white">H.264 delegate + DISABLED RC + constantQp + headers</text>
+
+  <!-- Phase 3: W7-W8 -->
+  <rect x="500" y="240" width="100" height="34" rx="4" fill="#fbc02d"/>
+  <text x="550" y="262" text-anchor="middle" font-size="11" fill="white">CBR/VBR + RC change</text>
+
+  <!-- Phase 4: W9-W11 -->
+  <rect x="600" y="310" width="150" height="34" rx="4" fill="#2e7d32"/>
+  <text x="675" y="332" text-anchor="middle" font-size="11" fill="white">SharedImage::ProduceVulkanVideo + DMA-BUF/AHB/Win</text>
+
+  <!-- Phase 5: W12-W16 -->
+  <rect x="750" y="380" width="250" height="34" rx="4" fill="#7b1fa2"/>
+  <text x="875" y="402" text-anchor="middle" font-size="11" fill="white">HEVC main/main10 (D3D12 ref) + AV1 main 8/10-bit</text>
+
+  <!-- Phase 6: W17-W19 -->
+  <rect x="1000" y="450" width="150" height="34" rx="4" fill="#c2185b"/>
+  <text x="1075" y="472" text-anchor="middle" font-size="11" fill="white">Temporal SVC + QP map + intra-refresh + manual refs</text>
+
+  <!-- Critical path arrows -->
+  <line x1="350" y1="117" x2="350" y2="187" stroke="#bf360c" stroke-width="2" stroke-dasharray="4,4"/>
+  <line x1="500" y1="187" x2="500" y2="257" stroke="#bf360c" stroke-width="2" stroke-dasharray="4,4"/>
+  <line x1="600" y1="257" x2="600" y2="327" stroke="#bf360c" stroke-width="2" stroke-dasharray="4,4"/>
+  <line x1="750" y1="327" x2="750" y2="397" stroke="#bf360c" stroke-width="2" stroke-dasharray="4,4"/>
+  <line x1="1000" y1="397" x2="1000" y2="467" stroke="#bf360c" stroke-width="2" stroke-dasharray="4,4"/>
+
+  <text x="366" y="160" font-size="10" fill="#bf360c">handoff</text>
+  <text x="516" y="230" font-size="10" fill="#bf360c">handoff</text>
+  <text x="616" y="300" font-size="10" fill="#bf360c">handoff</text>
+  <text x="766" y="370" font-size="10" fill="#bf360c">handoff</text>
+  <text x="1016" y="440" font-size="10" fill="#bf360c">handoff</text>
+
+  <!-- Earliest-milestone marker -->
+  <line x1="500" y1="190" x2="500" y2="540" stroke="#1b5e20" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="500" y="540" text-anchor="middle" font-size="11" font-weight="bold" fill="#1b5e20">
+    First runnable: H.264 CQP @ end of Phase 2 (W6)
+  </text>
+
+  <!-- Legend -->
+  <line x1="20" y1="520" x2="80" y2="520" stroke="#bf360c" stroke-width="2" stroke-dasharray="4,4"/>
+  <text x="90" y="524" font-size="10" fill="#37474f">critical path (each phase blocks the next)</text>
+  <line x1="380" y1="520" x2="440" y2="520" stroke="#1b5e20" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="450" y="524" font-size="10" fill="#1b5e20">first-runnable milestone</text>
+
+  <text x="800" y="524" font-size="10" fill="#bf360c">
+    Protected encode: REMOVED from plan (Review F12); HEVC: D3D12 ref, not VA-API (Review F1).
+  </text>
+</svg>

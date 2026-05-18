@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="cqG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/><stop offset="100%" stop-color="#81c784"/>
+    </linearGradient>
+    <linearGradient id="fyG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe0b2"/><stop offset="100%" stop-color="#ffb74d"/>
+    </linearGradient>
+    <linearGradient id="ntG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8bbd0"/><stop offset="100%" stop-color="#f06292"/>
+    </linearGradient>
+    <marker id="ar" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="640" y="30" text-anchor="middle" font-size="22" font-weight="bold" fill="#263238">
+    CI/CQ Lane Topology for Vulkan Video
+  </text>
+
+  <!-- CQ row (per-CL) -->
+  <text x="40" y="80" font-size="14" font-weight="bold" fill="#1b5e20">Per-CL CQ (every commit)</text>
+  <text x="40" y="100" font-size="11" fill="#33691e">Budget: 12 min wall-clock; blocks the CL</text>
+
+  <rect x="40" y="115" width="220" height="80" rx="6" fill="url(#cqG)" stroke="#2e7d32"/>
+  <text x="150" y="138" text-anchor="middle" font-size="12" font-weight="bold">linux-vulkan-video-rel</text>
+  <text x="150" y="156" text-anchor="middle" font-size="10">NVIDIA RTX 3060</text>
+  <text x="150" y="170" text-anchor="middle" font-size="10">media_unittests +</text>
+  <text x="150" y="184" text-anchor="middle" font-size="10">VEA/VDA gtest + WPT subset</text>
+
+  <rect x="280" y="115" width="220" height="80" rx="6" fill="url(#cqG)" stroke="#2e7d32"/>
+  <text x="390" y="138" text-anchor="middle" font-size="12" font-weight="bold">linux-vulkan-video-anv-rel</text>
+  <text x="390" y="156" text-anchor="middle" font-size="10">Intel ARC A380 / ANV</text>
+  <text x="390" y="170" text-anchor="middle" font-size="10">media_unittests +</text>
+  <text x="390" y="184" text-anchor="middle" font-size="10">VEA/VDA gtest + WPT subset</text>
+
+  <rect x="520" y="115" width="220" height="80" rx="6" fill="url(#cqG)" stroke="#2e7d32"/>
+  <text x="630" y="138" text-anchor="middle" font-size="12" font-weight="bold">cros-vulkan-video-rel</text>
+  <text x="630" y="156" text-anchor="middle" font-size="10">ChromeOS volteer / brya</text>
+  <text x="630" y="170" text-anchor="middle" font-size="10">video.VulkanEncodeAccel.* (Tier 4)</text>
+  <text x="630" y="184" text-anchor="middle" font-size="10">on hardware</text>
+
+  <rect x="760" y="115" width="220" height="80" rx="6" fill="url(#cqG)" stroke="#2e7d32"/>
+  <text x="870" y="138" text-anchor="middle" font-size="12" font-weight="bold">linux-vulkan-video-asan</text>
+  <text x="870" y="156" text-anchor="middle" font-size="10">ASan + validation layers</text>
+  <text x="870" y="170" text-anchor="middle" font-size="10">SwiftShader CPU Vulkan</text>
+  <text x="870" y="184" text-anchor="middle" font-size="10">host-side correctness only</text>
+
+  <rect x="1000" y="115" width="240" height="80" rx="6" fill="url(#cqG)" stroke="#2e7d32"/>
+  <text x="1120" y="138" text-anchor="middle" font-size="12" font-weight="bold">linux-vulkan-video-tsan</text>
+  <text x="1120" y="156" text-anchor="middle" font-size="10">TSan</text>
+  <text x="1120" y="170" text-anchor="middle" font-size="10">SwiftShader; encoder threading</text>
+  <text x="1120" y="184" text-anchor="middle" font-size="10">+ timeline-semaphore stress</text>
+
+  <!-- FYI row -->
+  <text x="40" y="240" font-size="14" font-weight="bold" fill="#bf360c">FYI (every milestone roll)</text>
+  <text x="40" y="260" font-size="11" fill="#e65100">Budget: 45 min; non-blocking, informational</text>
+
+  <rect x="40" y="275" width="220" height="80" rx="6" fill="url(#fyG)" stroke="#e65100"/>
+  <text x="150" y="298" text-anchor="middle" font-size="12" font-weight="bold">linux-vulkan-video-fyi-rel</text>
+  <text x="150" y="316" text-anchor="middle" font-size="10">Full Tast (Tier 4)</text>
+  <text x="150" y="330" text-anchor="middle" font-size="10">multi-vendor</text>
+  <text x="150" y="344" text-anchor="middle" font-size="10">Intel + NVIDIA + AMD</text>
+
+  <rect x="280" y="275" width="220" height="80" rx="6" fill="url(#fyG)" stroke="#e65100"/>
+  <text x="390" y="298" text-anchor="middle" font-size="12" font-weight="bold">chromeos-vulkan-video-fyi</text>
+  <text x="390" y="316" text-anchor="middle" font-size="10">strongbad / brya / volteer</text>
+  <text x="390" y="330" text-anchor="middle" font-size="10">video.VulkanPlay.*</text>
+  <text x="390" y="344" text-anchor="middle" font-size="10">video.VulkanWebRTC.*</text>
+
+  <rect x="520" y="275" width="220" height="80" rx="6" fill="url(#fyG)" stroke="#e65100"/>
+  <text x="630" y="298" text-anchor="middle" font-size="12" font-weight="bold">android-vulkan-video-fyi</text>
+  <text x="630" y="316" text-anchor="middle" font-size="10">Adreno 750</text>
+  <text x="630" y="330" text-anchor="middle" font-size="10">AHB import path</text>
+  <text x="630" y="344" text-anchor="middle" font-size="10">+ camera capture loop</text>
+
+  <rect x="760" y="275" width="220" height="80" rx="6" fill="url(#fyG)" stroke="#e65100"/>
+  <text x="870" y="298" text-anchor="middle" font-size="12" font-weight="bold">windows-vulkan-video-fyi</text>
+  <text x="870" y="316" text-anchor="middle" font-size="10">NVIDIA RTX 4090</text>
+  <text x="870" y="330" text-anchor="middle" font-size="10">Win Vulkan loader</text>
+  <text x="870" y="344" text-anchor="middle" font-size="10">+ D3D12 fallback check</text>
+
+  <rect x="1000" y="275" width="240" height="80" rx="6" fill="url(#fyG)" stroke="#e65100"/>
+  <text x="1120" y="298" text-anchor="middle" font-size="12" font-weight="bold">webrtc-vulkan-perf-fyi</text>
+  <text x="1120" y="316" text-anchor="middle" font-size="10">Chrome perf telemetry</text>
+  <text x="1120" y="330" text-anchor="middle" font-size="10">tools/perf/benchmarks/webrtc.py</text>
+  <text x="1120" y="344" text-anchor="middle" font-size="10">to ChromePerf dashboard</text>
+
+  <!-- Nightly row -->
+  <text x="40" y="400" font-size="14" font-weight="bold" fill="#880e4f">Nightly (long-running)</text>
+  <text x="40" y="420" font-size="11" fill="#ad1457">Budget: 26 hours (soak alone is 24h)</text>
+
+  <rect x="40" y="435" width="280" height="100" rx="6" fill="url(#ntG)" stroke="#ad1457"/>
+  <text x="180" y="458" text-anchor="middle" font-size="12" font-weight="bold">nightly-vulkan-video-conformance</text>
+  <text x="180" y="478" text-anchor="middle" font-size="10">JVT H.264 (~100 streams)</text>
+  <text x="180" y="492" text-anchor="middle" font-size="10">JCT-VC HEVC (~400 streams)</text>
+  <text x="180" y="506" text-anchor="middle" font-size="10">Argon AV1 + fluster (~2000 streams)</text>
+  <text x="180" y="522" text-anchor="middle" font-size="10">Pass rate dashboard</text>
+
+  <rect x="340" y="435" width="280" height="100" rx="6" fill="url(#ntG)" stroke="#ad1457"/>
+  <text x="480" y="458" text-anchor="middle" font-size="12" font-weight="bold">nightly-vulkan-video-soak</text>
+  <text x="480" y="478" text-anchor="middle" font-size="10">24 hour WebRTC loop</text>
+  <text x="480" y="492" text-anchor="middle" font-size="10">heap profile delta</text>
+  <text x="480" y="506" text-anchor="middle" font-size="10">+ chrome://media-internals dump</text>
+  <text x="480" y="522" text-anchor="middle" font-size="10">leak ceiling = 1 MB/h</text>
+
+  <rect x="640" y="435" width="280" height="100" rx="6" fill="url(#ntG)" stroke="#ad1457"/>
+  <text x="780" y="458" text-anchor="middle" font-size="12" font-weight="bold">nightly-vk-gl-cts-video</text>
+  <text x="780" y="478" text-anchor="middle" font-size="10">dEQP-VK.video.encode.*</text>
+  <text x="780" y="492" text-anchor="middle" font-size="10">dEQP-VK.video.decode.*</text>
+  <text x="780" y="506" text-anchor="middle" font-size="10">per supported driver</text>
+  <text x="780" y="522" text-anchor="middle" font-size="10">drives feature-flag allowlist</text>
+
+  <rect x="940" y="435" width="280" height="100" rx="6" fill="url(#ntG)" stroke="#ad1457"/>
+  <text x="1080" y="458" text-anchor="middle" font-size="12" font-weight="bold">nightly-vulkan-fuzz</text>
+  <text x="1080" y="478" text-anchor="middle" font-size="10">ClusterFuzz + libfuzzer</text>
+  <text x="1080" y="492" text-anchor="middle" font-size="10">bitstream fuzzers</text>
+  <text x="1080" y="506" text-anchor="middle" font-size="10">+ config-fuzzer</text>
+  <text x="1080" y="522" text-anchor="middle" font-size="10">+ vulkan-loader fuzz</text>
+
+  <!-- Pre-submit (developer) -->
+  <text x="40" y="580" font-size="14" font-weight="bold" fill="#0d47a1">Pre-submit (developer machine)</text>
+  <text x="40" y="600" font-size="11" fill="#1565c0">Budget: minutes; opt-in</text>
+
+  <rect x="40" y="615" width="1200" height="70" rx="6" fill="#e3f2fd" stroke="#1565c0"/>
+  <text x="640" y="640" text-anchor="middle" font-size="12" font-weight="bold">out/Release/media_unittests --gtest_filter="*Vulkan*"</text>
+  <text x="640" y="658" text-anchor="middle" font-size="11">+ out/Release/video_encode_accelerator_tests --implementation=vulkan</text>
+  <text x="640" y="676" text-anchor="middle" font-size="11">+ WPT smoke via xvfb on a handful of webcodecs files</text>
+</svg>

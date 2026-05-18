@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="cpuG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff3e0"/>
+      <stop offset="100%" stop-color="#ffe0b2"/>
+    </linearGradient>
+    <linearGradient id="gpuG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="dmaG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e1bee7"/>
+      <stop offset="100%" stop-color="#ce93d8"/>
+    </linearGradient>
+    <linearGradient id="simG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff9c4"/>
+      <stop offset="100%" stop-color="#fff176"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="640" y="28" text-anchor="middle" font-size="20" font-weight="bold" fill="#263238">
+    Encode Input Path -- VideoFrame -&gt; VkImage (VIDEO_ENCODE_SRC_KHR) -- v1.1
+  </text>
+  <text x="640" y="50" text-anchor="middle" font-size="11" fill="#546e7a">
+    Negotiated input mode (Config::StorageType) differs from VideoFrame::storage_type() seen at frame time.
+  </text>
+
+  <!-- Column 1: SHMEM -->
+  <rect x="20" y="80" width="380" height="650" rx="8" fill="#fffde7" stroke="#fbc02d" stroke-width="2"/>
+  <text x="210" y="108" text-anchor="middle" font-size="15" font-weight="bold" fill="#f57f17">
+    A. Config::StorageType::kShmem
+  </text>
+  <text x="210" y="126" text-anchor="middle" font-size="11" fill="#6d4c41">
+    frame-&gt;IsMappable() (CPU YUV)
+  </text>
+
+  <rect x="40" y="150" width="340" height="80" rx="6" fill="url(#cpuG)" stroke="#e65100"/>
+  <text x="210" y="175" text-anchor="middle" font-size="12" font-weight="bold">VideoFrame (mappable)</text>
+  <text x="210" y="192" text-anchor="middle" font-size="10">format = I420 or NV12</text>
+  <text x="210" y="206" text-anchor="middle" font-size="10">VideoFrame::data(plane) = CPU memory</text>
+  <text x="210" y="220" text-anchor="middle" font-size="10">visible_size, coded_size</text>
+
+  <line x1="210" y1="230" x2="210" y2="260" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="225" y="250" font-size="10" fill="#37474f">memcpy</text>
+
+  <rect x="40" y="265" width="340" height="80" rx="6" fill="url(#gpuG)" stroke="#2e7d32"/>
+  <text x="210" y="288" text-anchor="middle" font-size="12" font-weight="bold">Linear VkImage (staging)</text>
+  <text x="210" y="304" text-anchor="middle" font-size="10">VK_IMAGE_TILING_LINEAR</text>
+  <text x="210" y="318" text-anchor="middle" font-size="10">USAGE_TRANSFER_SRC_BIT</text>
+  <text x="210" y="332" text-anchor="middle" font-size="10">Host-visible+coherent memory</text>
+
+  <line x1="210" y1="345" x2="210" y2="375" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="280" y="365" font-size="10" fill="#37474f">vkCmdCopyImage on transfer queue</text>
+
+  <rect x="40" y="380" width="340" height="100" rx="6" fill="url(#gpuG)" stroke="#2e7d32" stroke-width="2"/>
+  <text x="210" y="405" text-anchor="middle" font-size="12" font-weight="bold">Optimal VkImage</text>
+  <text x="210" y="422" text-anchor="middle" font-size="10" fill="#1b5e20">USAGE_VIDEO_ENCODE_SRC_BIT_KHR</text>
+  <text x="210" y="436" text-anchor="middle" font-size="10">VK_FORMAT_G8_B8R8_2PLANE_420_UNORM</text>
+  <text x="210" y="450" text-anchor="middle" font-size="10">VK_IMAGE_TILING_OPTIMAL</text>
+  <text x="210" y="464" text-anchor="middle" font-size="10">Device-local memory</text>
+
+  <line x1="210" y1="480" x2="210" y2="510" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="40" y="515" width="340" height="70" rx="6" fill="url(#gpuG)" stroke="#2e7d32" stroke-width="2"/>
+  <text x="210" y="540" text-anchor="middle" font-size="12" font-weight="bold">vkCmdEncodeVideoKHR</text>
+  <text x="210" y="558" text-anchor="middle" font-size="10">encode_info.srcPictureResource =</text>
+  <text x="210" y="572" text-anchor="middle" font-size="10">VkVideoPictureResourceInfoKHR(image_view)</text>
+
+  <text x="40" y="615" font-size="10" fill="#bf360c">Cost: 1 CPU-&gt;GPU memcpy.</text>
+  <text x="40" y="630" font-size="10" fill="#bf360c">Used by legacy WebRTC SW capture.</text>
+
+
+  <!-- Column 2: Config::kGpuMemoryBuffer GENERIC -->
+  <rect x="410" y="80" width="440" height="650" rx="8" fill="#f3e5f5" stroke="#8e24aa" stroke-width="2"/>
+  <text x="630" y="108" text-anchor="middle" font-size="15" font-weight="bold" fill="#4a148c">
+    B. Config::StorageType::kGpuMemoryBuffer
+  </text>
+  <text x="630" y="126" text-anchor="middle" font-size="11" fill="#6a1b9a">
+    typically VideoFrame::STORAGE_MAPPABLE_SHARED_IMAGE (Review F7)
+  </text>
+
+  <rect x="430" y="150" width="400" height="80" rx="6" fill="url(#dmaG)" stroke="#6a1b9a"/>
+  <text x="630" y="175" text-anchor="middle" font-size="12" font-weight="bold">VideoFrame with Mailbox</text>
+  <text x="630" y="192" text-anchor="middle" font-size="10">frame-&gt;shared_image()-&gt;mailbox()</text>
+  <text x="630" y="206" text-anchor="middle" font-size="10">backing held by gpu::SharedImageManager</text>
+  <text x="630" y="220" text-anchor="middle" font-size="10">Platform backing: DMA-BUF / Win NT handle / AHB</text>
+
+  <line x1="630" y1="230" x2="630" y2="260" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="680" y="250" font-size="10" fill="#37474f">CommandBufferHelper</text>
+
+  <rect x="430" y="265" width="400" height="130" rx="6" fill="url(#simG)" stroke="#f9a825" stroke-width="2"/>
+  <text x="630" y="290" text-anchor="middle" font-size="12" font-weight="bold">SharedImageManager::ProduceVulkanVideo</text>
+  <text x="440" y="310" font-size="10">helper-&gt;GetSharedImageManager()</text>
+  <text x="440" y="324" font-size="10">     -&gt;ProduceVulkanVideo(</text>
+  <text x="440" y="338" font-size="10">          mailbox,</text>
+  <text x="440" y="352" font-size="10">          helper-&gt;GetMemoryTypeTracker(),</text>
+  <text x="440" y="366" font-size="10">          vulkan_device_)</text>
+  <text x="440" y="384" font-size="10" font-weight="bold" fill="#bf360c">Returns: VulkanVideoImageRepresentation</text>
+
+  <line x1="630" y1="395" x2="630" y2="425" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="700" y="415" font-size="10" fill="#37474f">scoped read access</text>
+
+  <rect x="430" y="430" width="400" height="100" rx="6" fill="url(#gpuG)" stroke="#2e7d32"/>
+  <text x="630" y="453" text-anchor="middle" font-size="12" font-weight="bold">repr-&gt;BeginScopedReadAccess()</text>
+  <text x="440" y="473" font-size="10">access-&gt;image()             = VkImage</text>
+  <text x="440" y="487" font-size="10">access-&gt;acquire_semaphore() = wait sem</text>
+  <text x="440" y="501" font-size="10">access-&gt;release_semaphore() = signal sem</text>
+  <text x="440" y="519" font-size="10">+ queue family ownership xfer to encode</text>
+
+  <line x1="630" y1="530" x2="630" y2="560" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="430" y="565" width="400" height="80" rx="6" fill="url(#gpuG)" stroke="#2e7d32"/>
+  <text x="630" y="588" text-anchor="middle" font-size="12" font-weight="bold">Layout barrier</text>
+  <text x="630" y="605" text-anchor="middle" font-size="10">SHADER_READ_ONLY -&gt;</text>
+  <text x="630" y="619" text-anchor="middle" font-size="10" fill="#1b5e20">VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR</text>
+  <text x="630" y="633" text-anchor="middle" font-size="10">srcQueueFamily=graphics, dst=encode</text>
+
+  <line x1="630" y1="645" x2="630" y2="673" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="430" y="675" width="400" height="50" rx="6" fill="url(#gpuG)" stroke="#2e7d32" stroke-width="2"/>
+  <text x="630" y="700" text-anchor="middle" font-size="12" font-weight="bold">vkCmdEncodeVideoKHR (ZERO COPY)</text>
+  <text x="630" y="716" text-anchor="middle" font-size="10">Same pattern as D3D12 VEA::ProduceVideo</text>
+
+  <!-- Column 3: Platform fallbacks (DMA-BUF/Win/AHB) -->
+  <rect x="860" y="80" width="400" height="650" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="1060" y="108" text-anchor="middle" font-size="15" font-weight="bold" fill="#1b5e20">
+    C. Platform fallbacks
+  </text>
+  <text x="1060" y="126" text-anchor="middle" font-size="11" fill="#1b5e20">
+    when ProduceVulkanVideo declines (e.g. backing lacks VIDEO_ENCODE usage)
+  </text>
+
+  <rect x="880" y="150" width="360" height="140" rx="6" fill="url(#gpuG)" stroke="#2e7d32"/>
+  <text x="1060" y="175" text-anchor="middle" font-size="12" font-weight="bold">Linux DMA-BUF</text>
+  <text x="890" y="195" font-size="10">VkImportMemoryFdInfoKHR { handleType =</text>
+  <text x="890" y="209" font-size="10">  VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT,</text>
+  <text x="890" y="223" font-size="10">  fd = dmabuf_fd }</text>
+  <text x="890" y="241" font-size="10">VkImageDrmFormatModifierExplicitCreateInfoEXT</text>
+  <text x="890" y="255" font-size="10">  + modifier, pPlaneLayouts</text>
+  <text x="890" y="273" font-size="10" fill="#1b5e20">Used by V4L2 / VAAPI decoder output / camera.</text>
+
+  <rect x="880" y="305" width="360" height="120" rx="6" fill="url(#gpuG)" stroke="#2e7d32"/>
+  <text x="1060" y="330" text-anchor="middle" font-size="12" font-weight="bold">Windows shared NT handle</text>
+  <text x="890" y="350" font-size="10">VkImportMemoryWin32HandleInfoKHR {</text>
+  <text x="890" y="364" font-size="10">  handleType = VK_EXTERNAL_MEMORY_HANDLE_</text>
+  <text x="890" y="378" font-size="10">             TYPE_D3D11_TEXTURE_BIT,</text>
+  <text x="890" y="392" font-size="10">  handle = shared_nt_handle }</text>
+  <text x="890" y="410" font-size="10" fill="#1b5e20">D3D11/D3D12 -&gt; Vulkan handoff.</text>
+
+  <rect x="880" y="440" width="360" height="120" rx="6" fill="url(#gpuG)" stroke="#2e7d32"/>
+  <text x="1060" y="465" text-anchor="middle" font-size="12" font-weight="bold">Android AHardwareBuffer</text>
+  <text x="890" y="485" font-size="10">VK_ANDROID_external_memory_</text>
+  <text x="890" y="499" font-size="10">     android_hardware_buffer</text>
+  <text x="890" y="513" font-size="10">VkImportAndroidHardwareBufferInfoANDROID</text>
+  <text x="890" y="531" font-size="10">  { buffer = AHardwareBuffer* }</text>
+  <text x="890" y="549" font-size="10" fill="#1b5e20">Camera pipeline delivers AHB.</text>
+
+  <rect x="880" y="580" width="360" height="100" rx="6" fill="#fff3e0" stroke="#e65100"/>
+  <text x="1060" y="605" text-anchor="middle" font-size="12" font-weight="bold">Final fallback</text>
+  <text x="1060" y="625" text-anchor="middle" font-size="10">Copy/convert into encoder-owned VkImage</text>
+  <text x="1060" y="639" text-anchor="middle" font-size="10">(staging buffer + vkCmdCopyImage)</text>
+  <text x="1060" y="655" text-anchor="middle" font-size="10" fill="#bf360c">Only if shared-image backing not exposable</text>
+  <text x="1060" y="670" text-anchor="middle" font-size="10" fill="#bf360c">as VIDEO_ENCODE_SRC</text>
+</svg>

@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulkan Video Encode + Decode — Elaborate Test Plan</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --accent-blue: #2563eb;
+            --accent-purple: #7c3aed;
+            --accent-green: #16a34a;
+            --accent-orange: #d97706;
+            --accent-red: #dc2626;
+            --accent-pink: #db2777;
+            --border-color: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-fg: #e2e8f0;
+            --inline-code-bg: #f1f5f9;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-primary);
+               color: var(--text-primary); line-height: 1.7; font-size: 15.5px; }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+        header { background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+                 padding: 2rem 0; border-bottom: 3px solid var(--accent-orange); }
+        header h1 { font-size: 1.95rem;
+                    background: linear-gradient(90deg, var(--accent-orange), var(--accent-pink));
+                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                    background-clip: text; margin-bottom: 0.4rem; line-height: 1.2; }
+        header .subtitle { color: var(--text-secondary); font-size: 1.05rem; }
+        header .meta { margin-top: 1rem; font-size: 0.88rem; color: var(--text-muted); }
+        header .meta span { margin-right: 1.5rem; }
+        nav { background: #ffffff; padding: 0.5rem 0;
+              border-bottom: 1px solid var(--border-color);
+              position: sticky; top: 0; z-index: 99;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        nav a { color: var(--text-secondary); text-decoration: none;
+                padding: 0.4rem 0.8rem; border-radius: 6px;
+                font-size: 0.85rem; transition: all 0.2s; }
+        nav a:hover { background: var(--bg-tertiary); color: var(--accent-orange); }
+        main { padding: 2rem 0 4rem; }
+        section { margin-bottom: 3rem; }
+        section h2 { color: var(--accent-orange);
+                     border-bottom: 2px solid var(--accent-orange);
+                     padding-bottom: 0.5rem; margin-bottom: 1rem; font-size: 1.6rem; }
+        section h3 { margin-top: 1.5rem; margin-bottom: 0.6rem;
+                     color: var(--text-primary); font-size: 1.2rem; }
+        section h4 { margin-top: 1rem; margin-bottom: 0.4rem;
+                     color: var(--text-secondary); font-size: 1.0rem; }
+        p { margin-bottom: 0.9rem; }
+        ul, ol { margin-bottom: 0.9rem; padding-left: 1.5rem; }
+        li { margin-bottom: 0.3rem; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+        th, td { border: 1px solid var(--border-color);
+                 padding: 0.5rem 0.7rem; text-align: left; vertical-align: top; }
+        th { background: var(--bg-tertiary); font-weight: 600; }
+        tr:nth-child(even) { background: var(--bg-secondary); }
+        code { background: var(--inline-code-bg); padding: 0.1rem 0.4rem;
+               border-radius: 4px; font-family: 'Consolas', 'Monaco', monospace;
+               font-size: 0.88em; color: var(--accent-orange); }
+        pre { background: var(--code-bg); color: var(--code-fg);
+              padding: 1rem; border-radius: 6px; overflow-x: auto;
+              font-size: 0.85rem; font-family: 'Consolas', 'Monaco', monospace;
+              line-height: 1.5; margin: 1rem 0; }
+        pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+        blockquote { border-left: 4px solid var(--accent-orange);
+                     background: #fff7ed; padding: 0.7rem 1rem;
+                     margin: 1rem 0; color: var(--text-secondary);
+                     border-radius: 0 4px 4px 0; }
+        .callout-new   { border-left: 4px solid var(--accent-green);
+                         background: #f0fdf4; padding: 0.7rem 1rem; margin: 1rem 0;
+                         border-radius: 0 4px 4px 0; }
+        .callout-risk  { border-left: 4px solid var(--accent-red);
+                         background: #fef2f2; padding: 0.7rem 1rem; margin: 1rem 0;
+                         border-radius: 0 4px 4px 0; }
+        .callout-info  { border-left: 4px solid var(--accent-blue);
+                         background: #eff6ff; padding: 0.7rem 1rem; margin: 1rem 0;
+                         border-radius: 0 4px 4px 0; }
+        .diagram { margin: 1.5rem 0; padding: 1rem; background: white;
+                   border: 1px solid var(--border-color); border-radius: 8px;
+                   box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; }
+        .diagram img, .diagram object { max-width: 100%; height: auto; }
+        .diagram-caption { margin-top: 0.5rem; font-size: 0.85rem;
+                           color: var(--text-muted); font-style: italic; }
+        .tag { display: inline-block; padding: 0.15rem 0.5rem;
+               border-radius: 4px; font-size: 0.75rem; font-weight: 600;
+               margin-right: 0.3rem; text-transform: uppercase; }
+        .tag-new    { background: #dcfce7; color: #166534; }
+        .tag-reuse  { background: #dbeafe; color: #1e40af; }
+        .tag-gap    { background: #fce7f3; color: #9d174d; }
+        .tag-p0     { background: #fee2e2; color: #991b1b; }
+        .tag-p1     { background: #fef3c7; color: #92400e; }
+        .toc { background: var(--bg-secondary);
+               border: 1px solid var(--border-color);
+               border-radius: 8px; padding: 1rem 1.5rem; margin-bottom: 2rem; }
+        .toc h3 { margin-top: 0; color: var(--accent-orange); }
+        .toc ol { padding-left: 1.3rem; }
+        .toc a { color: var(--accent-blue); text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        footer { border-top: 1px solid var(--border-color);
+                 padding: 1.5rem 0; margin-top: 4rem;
+                 color: var(--text-muted); font-size: 0.85rem; text-align: center; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1>Vulkan Video Encode + Decode &mdash; Elaborate Test Plan</h1>
+        <div class="subtitle">How we verify <code>VulkanVideoEncodeAccelerator</code> and <code>VulkanVideoDecodeAccelerator</code></div>
+        <div class="meta">
+            <span><strong>Version</strong>: 1.0</span>
+            <span><strong>Date</strong>: May 19, 2026</span>
+            <span><strong>Status</strong>: Draft (proposal)</span>
+            <span><strong>~12,130 LOC</strong> new test code &middot; <strong>~8 engineer-weeks</strong></span>
+        </div>
+    </div>
+</header>
+
+<nav>
+    <div class="container">
+        <ul>
+            <li><a href="#sec-summary">1. Summary</a></li>
+            <li><a href="#sec-onion">2. Five-Tier Onion</a></li>
+            <li><a href="#sec-tier1">3. Tier 1 Unit</a></li>
+            <li><a href="#sec-tier2">4. Tier 2 VEA/VDA</a></li>
+            <li><a href="#sec-tier3">5. Tier 3 WPT</a></li>
+            <li><a href="#sec-tier4">6. Tier 4 Tast/WebRTC</a></li>
+            <li><a href="#sec-tier5">7. Tier 5 Conformance</a></li>
+            <li><a href="#sec-vvs">8. VVS &amp; CTS</a></li>
+            <li><a href="#sec-gaps">9. Gap Analysis</a></li>
+            <li><a href="#sec-new">10. New Tests</a></li>
+            <li><a href="#sec-matrix">11. Matrix</a></li>
+            <li><a href="#sec-data">12. Data</a></li>
+            <li><a href="#sec-ci">13. CI/CQ</a></li>
+            <li><a href="#sec-kpis">14. KPIs</a></li>
+            <li><a href="#sec-plan">15. Execution Plan</a></li>
+        </ul>
+    </div>
+</nav>
+
+<main>
+    <div class="container">
+
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ol>
+                <li><a href="#sec-summary">Executive Summary</a></li>
+                <li><a href="#sec-onion">Testing Philosophy &mdash; Five-Tier Onion</a></li>
+                <li><a href="#sec-tier1">Tier 1 &mdash; In-Process Unit Tests</a></li>
+                <li><a href="#sec-tier2">Tier 2 &mdash; <code>media/gpu</code> VEA / VDA gtest binaries</a></li>
+                <li><a href="#sec-tier3">Tier 3 &mdash; WebCodecs Web Platform Tests</a></li>
+                <li><a href="#sec-tier4">Tier 4 &mdash; Browser-level / WebRTC / Tast</a></li>
+                <li><a href="#sec-tier5">Tier 5 &mdash; External Conformance Suites</a></li>
+                <li><a href="#sec-vvs">Vulkan-Video-Samples &amp; VK-GL-CTS Cross-Validation</a></li>
+                <li><a href="#sec-gaps">Gap Analysis</a></li>
+                <li><a href="#sec-new">New Tests We MUST Create</a></li>
+                <li><a href="#sec-matrix">Test Matrix</a></li>
+                <li><a href="#sec-data">Test Data Sources &amp; Provisioning</a></li>
+                <li><a href="#sec-ci">CI / CQ Integration</a></li>
+                <li><a href="#sec-kpis">Performance KPIs and Pass/Fail Thresholds</a></li>
+                <li><a href="#sec-plan">Execution Plan</a></li>
+            </ol>
+        </div>
+
+        <!-- 1 -->
+        <section id="sec-summary">
+            <h2>1. Executive Summary</h2>
+            <h3>1.1 What we are verifying</h3>
+            <p>The hardware path: <code>Blink VideoEncoder / VideoDecoder</code> &rarr; Mojo &rarr; <code>Vulkan{Encode|Decode}Accelerator</code> &rarr; <code>vkCmdEncodeVideoKHR</code> / <code>vkCmdDecodeVideoKHR</code> &rarr; bitstream / decoded <code>VkImage</code>.</p>
+            <table>
+                <thead><tr><th>Property</th><th>Verification method</th></tr></thead>
+                <tbody>
+                    <tr><td>Bitstream conformance</td><td>Re-decode with FFmpeg / JM / HM / aom + JVT / HM / Argon conformance checks</td></tr>
+                    <tr><td>Visual quality</td><td>PSNR / SSIM / log-likelihood vs source YUV</td></tr>
+                    <tr><td>Decoded-frame correctness</td><td>MD5 of <code>VideoFrame</code> planes vs golden checksum (when deterministic)</td></tr>
+                    <tr><td>API conformance</td><td>gtest VEA/VDA harness + WebCodecs WPT</td></tr>
+                    <tr><td>Stability</td><td>ASan / TSan / MSan, validation layers, 24-h soak, fault injection</td></tr>
+                    <tr><td>Performance</td><td><code>*_perf_tests</code> + Tast perf wrappers</td></tr>
+                    <tr><td>Interop</td><td>WebRTC loopback, cross-decoder roundtrip</td></tr>
+                    <tr><td>Fallback</td><td>Synthetic fault injection in the factory</td></tr>
+                </tbody>
+            </table>
+
+            <h3>1.2 Reuse vs Build</h3>
+            <table>
+                <thead><tr><th>Existing infra (REUSE)</th><th>New work (BUILD)</th></tr></thead>
+                <tbody>
+                    <tr><td><code>media/gpu/test/video_encode_accelerator_tests.cc</code> (~17 cases)</td><td><strong>NEW</strong> <code>--implementation=vulkan</code> selector + Vulkan-only cases</td></tr>
+                    <tr><td><code>media/gpu/test/video_decode_accelerator_tests.cc</code> (~19 cases)</td><td>Vulkan-specific layout / sync2 tests</td></tr>
+                    <tr><td><code>BitstreamValidator</code> (decode-and-verify)</td><td><code>VulkanLoopbackValidator</code> + <code>CrossBackendValidator</code></td></tr>
+                    <tr><td><code>image_quality_metrics</code> (PSNR/SSIM via libyuv)</td><td>Reuse as-is</td></tr>
+                    <tr><td>WebCodecs WPT (~40 files)</td><td>New WPT for QP map, intra-refresh, manual refs, spatial SVC</td></tr>
+                    <tr><td>Tast <code>video.EncodeAccel.*</code>, etc.</td><td><code>video.VulkanEncodeAccel.*</code>, etc. (~6 wrappers)</td></tr>
+                    <tr><td>External: JVT / JCT-VC / Argon / Fluster / VK-GL-CTS / VVS</td><td>Driver scripts (<code>run_*_conformance.py</code>) + fluster plugin + VVS-compatible CLI</td></tr>
+                </tbody>
+            </table>
+
+            <h3>1.3 Coverage targets (P0 ship gate)</h3>
+            <table>
+                <tbody>
+                    <tr><td>Unit (delegate)</td><td>&ge; 90% line coverage</td></tr>
+                    <tr><td>Integration (VEA/VDA gtest)</td><td>All ~36 existing cases green for h264/hevc/av1</td></tr>
+                    <tr><td>WebCodecs WPT</td><td>100% of <code>webcodecs/video-encoder*</code> and <code>videoDecoder-*</code></td></tr>
+                    <tr><td>Conformance</td><td>JVT H.264 &ge; 95%, JCT-VC HEVC &ge; 90%, Argon AV1 &ge; 90%</td></tr>
+                    <tr><td>WebRTC loopback</td><td>Chrome&rarr;Chrome, Chrome&rarr;Firefox interop @ 1080p30</td></tr>
+                    <tr><td>Perf (vs VA-API)</td><td>&ge; 95% throughput, &le; 110% latency, &le; 150% memory</td></tr>
+                    <tr><td>Stress</td><td>24-h CQ soak, zero validation errors</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 2 onion -->
+        <section id="sec-onion">
+            <h2>2. Testing Philosophy &mdash; Five-Tier Onion</h2>
+            <div class="diagram">
+                <object data="diagrams/test_five_tier_onion.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Layered test strategy. A regression must reproduce at the lowest possible tier &mdash; that is the layer where a CL author can iterate fast.</div>
+            </div>
+        </section>
+
+        <!-- 3 unit -->
+        <section id="sec-tier1">
+            <h2>3. Tier 1 &mdash; In-Process Unit Tests</h2>
+            <p><strong>Granularity</strong>: a single C++ class, mocked Vulkan dispatch table.
+               <strong>Runtime</strong>: &lt; 50 ms per test, &lt; 30 s per binary.
+               <strong>Where</strong>: <code>media/gpu/vulkan/*_unittest.cc</code>, in <code>media_unittests</code>.</p>
+
+            <h3>3.1 14 new unit-test files</h3>
+            <pre><code>media/gpu/vulkan/
+&#9500;&#9472; vulkan_video_encoder_wrapper_unittest.cc       (~12 cases)
+&#9500;&#9472; vulkan_video_encode_accelerator_unittest.cc    (~15 cases)
+&#9500;&#9472; vulkan_video_encoder_delegate_unittest.cc      (~ 8 cases)
+&#9500;&#9472; vulkan_video_encoder_dpb_unittest.cc           (~10 cases)
+&#9500;&#9472; h264_vulkan_video_encoder_delegate_unittest.cc (~14 cases)
+&#9500;&#9472; h265_vulkan_video_encoder_delegate_unittest.cc (~14 cases)
+&#9500;&#9472; av1_vulkan_video_encoder_delegate_unittest.cc  (~12 cases)
+&#9500;&#9472; h264_vulkan_video_decoder_delegate_unittest.cc (~14 cases)
+&#9500;&#9472; h265_vulkan_video_decoder_delegate_unittest.cc (~14 cases)
+&#9500;&#9472; av1_vulkan_video_decoder_delegate_unittest.cc  (~12 cases)
+&#9500;&#9472; vp9_vulkan_video_decoder_delegate_unittest.cc  (~10 cases)
+&#9492;&#9472; vulkan_video_image_pool_unittest.cc            (~ 6 cases)</code></pre>
+
+            <h3>3.2 Concrete H.264 delegate test list</h3>
+            <pre><code>// Sanity
+TEST_F(H264VulkanEncoderDelegateTest, Initialize_BaselineProfile);
+TEST_F(H264VulkanEncoderDelegateTest, Initialize_HighProfile);
+TEST_F(H264VulkanEncoderDelegateTest, ChangeBitrateModeFails);
+
+// SPS / PPS / Slice conversion
+TEST_F(H264VulkanEncoderDelegateTest, H264SPS_To_StdVideoH264SPS_RoundTrip);
+TEST_F(H264VulkanEncoderDelegateTest, H264SliceHeader_To_StdVideoEncodeH264SliceHeader_RoundTrip);
+
+// Frame submission
+TEST_P(H264VulkanEncoderDelegateTest, PrepareEncodeJob_IDR_FillsAllFields);
+TEST_P(H264VulkanEncoderDelegateTest, PrepareEncodeJob_PFrame_RefListPopulated);
+TEST_P(H264VulkanEncoderDelegateTest, EncodeWithSWBitrateController);
+TEST_P(H264VulkanEncoderDelegateTest, UpdateRatesWithSWBitrateController);
+TEST_P(H264VulkanEncoderDelegateTest, EncodeTemporalLayerRequest);
+
+// Vulkan-specific
+TEST_F(H264VulkanEncoderDelegateTest, SessionParameters_RecreateOnSPSChange);
+TEST_F(H264VulkanEncoderDelegateTest, FeedbackQuery_InsufficientBuffer_GrowsAndRetries);
+TEST_F(H264VulkanEncoderDelegateTest, FeedbackQuery_Error_PropagatesToClient);
+TEST_F(H264VulkanEncoderDelegateTest, ImageLayout_Transitions_AreOrdered);
+TEST_F(H264VulkanEncoderDelegateTest, DPBSlot_Acquire_Release_Lifecycle);
+TEST_F(H264VulkanEncoderDelegateTest, DriverEmittedSPSPPS_PrependedToBitstream);</code></pre>
+
+            <div class="callout-new"><strong>Coverage policy:</strong> &ge; 90% line, &ge; 80% branch, measured via <code>llvm-cov</code> on <code>media_unittests --gtest_filter=*Vulkan*</code>.</div>
+        </section>
+
+        <!-- 4 tier2 -->
+        <section id="sec-tier2">
+            <h2>4. Tier 2 &mdash; <code>media/gpu</code> VEA/VDA gtest binaries</h2>
+
+            <h3>4.1 Existing encoder gtest cases (REUSE)</h3>
+            <p>Verified from <code>media/gpu/test/video_encode_accelerator_tests.cc</code> &mdash; 17 cases including <code>Initialize</code>, <code>FlushAtEndOfStream</code>, <code>ForceKeyFrame</code>, <code>BitrateCheck</code>, <code>FlushAtEndOfStream_NV12Dmabuf*</code>, <code>DeactivateAndActivateSpatialLayers</code>, etc.</p>
+            <p><strong>Plan</strong>: add <code>--implementation=(vulkan|vaapi|v4l2|d3d12|mf|ndk|vt)</code>. All existing cases must pass against Vulkan for H.264/HEVC/AV1.</p>
+
+            <h3>4.2 New Vulkan-only gtest cases</h3>
+            <pre><code>TEST_F(VideoEncoderTest, Vulkan_BitExactWithSelf_H264Baseline);
+TEST_F(VideoEncoderTest, Vulkan_CrossCompare_VAAPIDecodes_VulkanOutput);
+TEST_F(VideoEncoderTest, Vulkan_BitstreamConforms_H264_JVT_Decoder);
+TEST_F(VideoEncoderTest, Vulkan_QP_Map_ChangesQualityRegions);
+TEST_F(VideoEncoderTest, Vulkan_IntraRefresh_RecoversFromLoss);
+TEST_F(VideoEncoderTest, Vulkan_ProtectedSession_KeepsContentOnDevice);
+TEST_F(VideoEncoderTest, Vulkan_TimelineSemaphore_CrossQueueSync);
+TEST_F(VideoEncoderTest, Vulkan_SharedImage_ZeroCopy_NoStagingCopy);
+TEST_F(VideoEncoderTest, Vulkan_InsufficientBitstreamBuffer_GrowsAndRetries);
+TEST_F(VideoEncoderTest, Vulkan_Fallback_VAAPIWhenSessionCreateFails);</code></pre>
+
+            <h3>4.3 Three bitstream-validator pipelines</h3>
+            <div class="diagram">
+                <object data="diagrams/test_bitstream_validator_pipeline.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Existing <code>BitstreamValidator</code> + new <code>VulkanLoopbackValidator</code> + new <code>CrossBackendValidator</code> &mdash; together cover every encode/decode combination.</div>
+            </div>
+        </section>
+
+        <!-- 5 tier3 -->
+        <section id="sec-tier3">
+            <h2>5. Tier 3 &mdash; WebCodecs Web Platform Tests</h2>
+
+            <h3>5.1 Existing WPT files we re-pass (REUSE)</h3>
+            <p>40+ files in <code>third_party/blink/web_tests/external/wpt/webcodecs/</code> &mdash; including:</p>
+            <ul>
+                <li><code>video-encoder.https.any.js</code>, <code>video-encoder-config.https.any.js</code>, <code>video-encoder-flush.https.any.js</code></li>
+                <li><code>video-encoder-h264.https.any.js</code>, <code>video-encoder-h26x-annexb.https.any.js</code></li>
+                <li><code>video-encoder-rescaling.https.any.js</code>, <code>video-encoder-content-hint.https.any.js</code>, <code>video-encoder-orientation.https.any.js</code></li>
+                <li><code>video-decoder.https.any.js</code>, <code>videoDecoder-codec-specific.https.any.js</code>, <code>videoDecoder-h264-sei.https.any.js</code>, <code>videoDecoder-interlaced-h264.https.any.js</code></li>
+                <li><code>encoded-video-chunk.any.js</code>, <code>videoFrame-*</code></li>
+            </ul>
+
+            <h3>5.2 New WPT files (BUILD &mdash; upstream contributions)</h3>
+            <pre><code>third_party/blink/web_tests/external/wpt/webcodecs/  (NEW files)
+&#9500;&#9472; video-encoder-quantization-map.https.any.js
+&#9500;&#9472; video-encoder-intra-refresh.https.any.js
+&#9500;&#9472; video-encoder-manual-references.https.any.js
+&#9500;&#9472; video-encoder-spatial-svc.https.any.js
+&#9500;&#9472; video-encoder-zero-copy-from-canvas.https.any.js
+&#9492;&#9472; video-decoder-multi-instance.https.any.js</code></pre>
+            <p>Plus <code>third_party/blink/web_tests/wpt_internal/video-encoder-loss-recovery.html</code> for the loss-recovery scenario (which needs Chrome-only internal APIs).</p>
+
+            <h3>5.3 Run locally</h3>
+            <pre><code>testing/xvfb.py third_party/blink/tools/run_web_tests.py \
+    --target=Release --no-show-results \
+    --additional-driver-flag=--enable-features=VulkanVideoEncode \
+    external/wpt/webcodecs/video-encoder-*.https.any.js</code></pre>
+        </section>
+
+        <!-- 6 tier4 -->
+        <section id="sec-tier4">
+            <h2>6. Tier 4 &mdash; Browser-Level / WebRTC / Tast Tests</h2>
+
+            <h3>6.1 Existing Tast tests we re-pass (REUSE)</h3>
+            <p>From <code>tast-tests/cros/local/bundles/cros/video/</code>: <code>video.EncodeAccel.*</code> (wraps <code>video_encode_accelerator_tests</code>), <code>video.EncodeAccelPerf.*</code>, <code>video.ChromeStackDecoder.*</code>, <code>video.WebRTC*</code>, <code>video.Play.*</code>.</p>
+
+            <h3>6.2 New Tast wrappers (BUILD)</h3>
+            <pre><code>src/go.chromium.org/tast-tests/cros/local/bundles/cros/video/
+&#9500;&#9472; vulkan_encode_accel.go              (NEW)
+&#9500;&#9472; vulkan_encode_accel_perf.go         (NEW)
+&#9500;&#9472; vulkan_chrome_stack_decoder.go      (NEW)
+&#9500;&#9472; vulkan_chrome_stack_decoder_perf.go (NEW)
+&#9500;&#9472; vulkan_play.go                      (NEW)
+&#9492;&#9472; vulkan_webrtc.go                    (NEW)</code></pre>
+
+            <p>Plus new ChromeOS capabilities YAML entries:</p>
+            <pre><code>hw_enc_h264_vulkan
+hw_enc_hevc_vulkan
+hw_enc_av1_vulkan
+hw_dec_h264_vulkan
+hw_dec_hevc_vulkan
+hw_dec_av1_vulkan
+hw_dec_vp9_vulkan</code></pre>
+
+            <h3>6.3 WebRTC loopback variants (NEW)</h3>
+            <ul>
+                <li><code>video.WebRTC.vulkan_chrome_to_chrome_h264_1080p30</code></li>
+                <li><code>video.WebRTC.vulkan_chrome_to_chrome_av1_1080p30</code></li>
+                <li><code>video.WebRTC.vulkan_chrome_to_firefox_h264_720p30</code> &mdash; interop</li>
+            </ul>
+        </section>
+
+        <!-- 7 tier5 -->
+        <section id="sec-tier5">
+            <h2>7. Tier 5 &mdash; External Conformance Suites</h2>
+            <div class="diagram">
+                <object data="diagrams/test_conformance_suites.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">External conformance vector sources, our test-driver scripts in the middle, and the Chromium Vulkan VEA/VDA + reference decoders on the right.</div>
+            </div>
+
+            <table>
+                <thead><tr><th>Suite</th><th>Vectors</th><th>Reference decoder</th><th>P0 pass-rate</th></tr></thead>
+                <tbody>
+                    <tr><td>JVT H.264</td><td>~100+ bitstreams</td><td>JM (<code>ldecod</code>)</td><td>&ge; 95%</td></tr>
+                    <tr><td>JCT-VC HEVC</td><td>~400+ bitstreams</td><td>HM (<code>TAppDecoder</code>)</td><td>&ge; 90%</td></tr>
+                    <tr><td>Argon Streams AV1</td><td>~7 GB formally-verified</td><td><code>aomdec</code></td><td>&ge; 90%</td></tr>
+                    <tr><td>AOM AV1 test_vectors</td><td>~500 MB</td><td><code>aomdec</code></td><td>&ge; 95%</td></tr>
+                    <tr><td>WebM VP9</td><td>~1 GB</td><td><code>libvpx</code></td><td>&ge; 95%</td></tr>
+                    <tr><td>fluster (umbrella)</td><td>~2000 streams</td><td>various</td><td>&ge; 90%</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 8 vvs cts -->
+        <section id="sec-vvs">
+            <h2>8. Vulkan-Video-Samples &amp; VK-GL-CTS Cross-Validation</h2>
+            <h3>8.1 Vulkan-Video-Samples</h3>
+            <p>Already has <code>tests/vvs_test_runner.py</code> + <code>encode_samples.json</code> + <code>decode_samples.json</code> with MD5 verification. We expose a tiny CLI:</p>
+            <pre><code>out/chromium/Release/chromium_vulkan_video_cli   (NEW)</code></pre>
+            <p>...with the same signature as <code>vulkan-video-enc</code> / <code>vulkan-video-dec</code>, so the same Python runner can drive Chromium against the same samples. Direct comparator with the reference implementation.</p>
+
+            <h3>8.2 Khronos VK-GL-CTS &mdash; <code>dEQP-VK.video.*</code></h3>
+            <p>Run nightly against every supported driver. CTS pass-rate gates feature-flag allowlist:</p>
+            <pre><code>dEQP-VK.video.decode.h264.*
+dEQP-VK.video.decode.h265.*
+dEQP-VK.video.decode.av1.*
+dEQP-VK.video.encode.h264.*
+dEQP-VK.video.encode.h265.*
+dEQP-VK.video.encode.av1.*</code></pre>
+
+            <h3>8.3 Cross-vendor matrix</h3>
+            <div class="diagram">
+                <object data="diagrams/test_cross_backend_validation.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Producer x Consumer matrix: every encoder we have can feed every decoder we have, including the spec reference decoders and a different browser.</div>
+            </div>
+        </section>
+
+        <!-- 9 gaps -->
+        <section id="sec-gaps">
+            <h2>9. Gap Analysis</h2>
+            <div class="diagram">
+                <object data="diagrams/test_gap_analysis.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">17 catalogued gaps across the five tiers, with the new code we must write to close each one.</div>
+            </div>
+
+            <table>
+                <thead><tr><th>#</th><th>Gap</th><th>New artefact</th></tr></thead>
+                <tbody>
+                    <tr><td>G1</td><td>Mocked Vulkan loader for <code>media_unittests</code></td><td><code>media/gpu/vulkan/test/mock_vulkan_function_pointers.{h,cc}</code></td></tr>
+                    <tr><td>G2</td><td>Loopback validator (HW encode &rarr; HW decode)</td><td><code>vulkan_loopback_validator.{h,cc}</code></td></tr>
+                    <tr><td>G3</td><td>Cross-backend validator (Vulkan &harr; VA-API)</td><td><code>cross_backend_validator.{h,cc}</code></td></tr>
+                    <tr><td>G4</td><td>Mock VK feedback-query driver</td><td><code>fake_vk_video_session.{h,cc}</code></td></tr>
+                    <tr><td>G5</td><td>Tast capabilities for HW Vulkan video</td><td>YAML entries + tast wrappers</td></tr>
+                    <tr><td>G6</td><td>WPT for QP map, intra-refresh, manual refs</td><td>New WPT files (upstream)</td></tr>
+                    <tr><td>G7</td><td>JVT/JCT-VC/Argon test drivers</td><td><code>tools/scripts/run_*_conformance.py</code></td></tr>
+                    <tr><td>G8</td><td>Fluster Vulkan-decoder plugin</td><td><code>fluster_plugin_vulkan_video.py</code></td></tr>
+                    <tr><td>G9</td><td>VVS-compatible CLI</td><td><code>chromium_vulkan_video_cli</code></td></tr>
+                    <tr><td>G10</td><td>DRM/protected encode harness</td><td>Future P3</td></tr>
+                    <tr><td>G11</td><td>24-hour soak job for leaks</td><td>New <code>chromium.gpu.fyi</code> bot</td></tr>
+                    <tr><td>G12</td><td>Driver allowlist regression test</td><td><code>update_vulkan_video_allowlist.py</code></td></tr>
+                    <tr><td>G13</td><td>Vendor-specific shader-level QP map check</td><td><code>qp_map_visualizer_test</code></td></tr>
+                    <tr><td>G14</td><td>Validation-layer enforcement in CI</td><td><code>vk_validation_check.py</code></td></tr>
+                    <tr><td>G15</td><td>Frame-loss recovery measurement</td><td><code>wpt_internal/video-encoder-loss-recovery.html</code></td></tr>
+                    <tr><td>G16</td><td>Bitstream fuzzing for our encoder output</td><td><code>media/gpu/vulkan/fuzzers/</code></td></tr>
+                    <tr><td>G17</td><td>Cross-vendor reproducibility</td><td><code>tools/scripts/cross_vendor_diff.py</code></td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 10 new -->
+        <section id="sec-new">
+            <h2>10. New Tests &mdash; LOC budget</h2>
+            <table>
+                <thead><tr><th>Category</th><th>LOC</th></tr></thead>
+                <tbody>
+                    <tr><td>Unit (Tier 1)</td><td>~6,550</td></tr>
+                    <tr><td>Integration (Tier 2)</td><td>~1,450</td></tr>
+                    <tr><td>WPT (Tier 3)</td><td>~1,020</td></tr>
+                    <tr><td>Tast (Tier 4)</td><td>~780</td></tr>
+                    <tr><td>Conformance (Tier 5)</td><td>~1,180</td></tr>
+                    <tr><td>Tooling (fuzzers, CLI, demo, bots)</td><td>~1,150</td></tr>
+                    <tr><td><strong>Total new test / tooling code</strong></td><td><strong>~12,130</strong></td></tr>
+                </tbody>
+            </table>
+            <div class="callout-info">
+                Of this, ~600 LOC of WPT and the ~80 LOC fluster plugin are contributed upstream.
+            </div>
+        </section>
+
+        <!-- 11 matrix -->
+        <section id="sec-matrix">
+            <h2>11. Test Matrix</h2>
+
+            <h3>11.1 Codec &times; Profile &times; Resolution &times; Bit-Depth</h3>
+            <table>
+                <thead><tr><th>Codec</th><th>Profile</th><th>Resolutions</th><th>Bit-depth</th></tr></thead>
+                <tbody>
+                    <tr><td>H.264</td><td>Constrained Baseline</td><td>320x240..720p</td><td>8</td></tr>
+                    <tr><td>H.264</td><td>Main / High</td><td>720p, 1080p, 4K</td><td>8</td></tr>
+                    <tr><td>H.264</td><td>High10 (decode only)</td><td>1080p, 4K</td><td>10</td></tr>
+                    <tr><td>H.265</td><td>Main</td><td>720p, 1080p, 4K</td><td>8</td></tr>
+                    <tr><td>H.265</td><td>Main10</td><td>1080p, 4K</td><td>10</td></tr>
+                    <tr><td>AV1</td><td>Main</td><td>720p, 1080p, 4K</td><td>8, 10</td></tr>
+                    <tr><td>AV1</td><td>High / Pro (decode only)</td><td>up to 8K</td><td>10, 12</td></tr>
+                    <tr><td>VP9 (decode only)</td><td>0 / 2</td><td>up to 4K</td><td>8 / 10</td></tr>
+                </tbody>
+            </table>
+
+            <h3>11.2 Driver &times; OS &times; GPU (CI/CQ)</h3>
+            <table>
+                <thead><tr><th>OS</th><th>GPU</th><th>Driver</th><th>Lane</th></tr></thead>
+                <tbody>
+                    <tr><td>Linux</td><td>NVIDIA RTX 3060</td><td>nvidia 560</td><td>CQ</td></tr>
+                    <tr><td>Linux</td><td>Intel ARC A380</td><td>ANV (Mesa 24+)</td><td>CQ</td></tr>
+                    <tr><td>Linux</td><td>AMD RX 7600</td><td>RADV (Mesa 24+)</td><td>nightly</td></tr>
+                    <tr><td>Linux</td><td>NVIDIA RTX 4090</td><td>NVK (Mesa 24+)</td><td>nightly</td></tr>
+                    <tr><td>ChromeOS</td><td>Intel UHD</td><td>iHD/ANV</td><td>CQ</td></tr>
+                    <tr><td>Android</td><td>Qualcomm Adreno 750</td><td>Adreno Vk 1.3.273+</td><td>nightly</td></tr>
+                    <tr><td>Windows</td><td>NVIDIA RTX 3060</td><td>nvidia 560</td><td>nightly</td></tr>
+                    <tr><td>Linux</td><td>swiftshader (CPU)</td><td>swiftshader</td><td>smoke</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 12 data -->
+        <section id="sec-data">
+            <h2>12. Test Data Sources &amp; Provisioning</h2>
+            <h3>12.1 Input YUVs</h3>
+            <table>
+                <thead><tr><th>Source</th><th>Storage</th></tr></thead>
+                <tbody>
+                    <tr><td><code>media/test/data/bear_*</code></td><td>Chromium repo</td></tr>
+                    <tr><td>WPT vectors</td><td>Chromium repo</td></tr>
+                    <tr><td>Derf clips (foreman, akiyo, news, container, mobile)</td><td><code>gs://chromium-test-data/raw-yuv/</code></td></tr>
+                    <tr><td>4K HDR sequences</td><td><code>gs://chromium-test-data/4k-hdr/</code></td></tr>
+                    <tr><td>VVS samples</td><td><code>gs://vulkan-video-samples/yuv/</code></td></tr>
+                </tbody>
+            </table>
+
+            <h3>12.2 Bitstream test vectors</h3>
+            <table>
+                <tbody>
+                    <tr><td>JVT H.264 conformance</td><td><code>gs://chromium-test-data/conformance/h264/jvt/</code> (~1 GB)</td></tr>
+                    <tr><td>JCT-VC HEVC conformance</td><td><code>gs://chromium-test-data/conformance/h265/jctvc/</code> (~4 GB)</td></tr>
+                    <tr><td>Argon Streams AV1</td><td><code>gs://chromium-test-data/conformance/av1/argon/</code> (~7 GB)</td></tr>
+                </tbody>
+            </table>
+            <p>Provisioning: <code>tools/scripts/fetch_conformance.py --codec=all</code> downloads on first run, caches in <code>~/.chromium-vulkan-test-cache/</code>, verifies SHA256 + size.</p>
+        </section>
+
+        <!-- 13 ci -->
+        <section id="sec-ci">
+            <h2>13. CI / CQ Integration</h2>
+            <div class="diagram">
+                <object data="diagrams/test_ci_lanes.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Per-CL CQ, milestone FYI and nightly bot lanes for Vulkan Video.</div>
+            </div>
+
+            <h3>Failure routing</h3>
+            <table>
+                <thead><tr><th>Tier</th><th>Routed to</th><th>Cycle time</th></tr></thead>
+                <tbody>
+                    <tr><td>Unit (T1)</td><td>CL author (gerrit block)</td><td>minutes</td></tr>
+                    <tr><td>VEA/VDA gtest (T2)</td><td>CL author + sheriff</td><td>~30 min</td></tr>
+                    <tr><td>WPT (T3)</td><td>sheriff + WPT-bot</td><td>~1 h</td></tr>
+                    <tr><td>Tast (T4)</td><td>sheriff + ChromeOS sheriff</td><td>~3 h</td></tr>
+                    <tr><td>Conformance (T5)</td><td>media/gpu OWNERS &mdash; crbug, not blocking unless &ge; 5% regression</td><td>next-day</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 14 kpis -->
+        <section id="sec-kpis">
+            <h2>14. Performance KPIs &amp; Thresholds</h2>
+
+            <h3>14.1 Encode (1080p30 H.264, CBR 4 Mbps)</h3>
+            <table>
+                <thead><tr><th>Metric</th><th>Floor (P0)</th><th>Target</th><th>Stretch</th></tr></thead>
+                <tbody>
+                    <tr><td>Throughput (fps)</td><td>&ge; 90</td><td>&ge; 150</td><td>&ge; 200</td></tr>
+                    <tr><td>Latency p50</td><td>&le; 16 ms</td><td>&le; 10 ms</td><td>&le; 6 ms</td></tr>
+                    <tr><td>Latency p99</td><td>&le; 40 ms</td><td>&le; 22 ms</td><td>&le; 12 ms</td></tr>
+                    <tr><td>GPU encode-queue util</td><td>&le; 80%</td><td>&le; 40%</td><td>&le; 25%</td></tr>
+                    <tr><td>Memory residency vs VA-API</td><td>&le; 200%</td><td>&le; 150%</td><td>&le; 110%</td></tr>
+                    <tr><td>BD-rate vs VA-API (worse)</td><td>&le; +10%</td><td>&le; +3%</td><td>&le; 0%</td></tr>
+                    <tr><td>Validation errors / min</td><td>0</td><td>0</td><td>0</td></tr>
+                </tbody>
+            </table>
+
+            <h3>14.2 Decode (1080p30 H.264)</h3>
+            <table>
+                <thead><tr><th>Metric</th><th>Floor</th><th>Target</th></tr></thead>
+                <tbody>
+                    <tr><td>Throughput (fps)</td><td>&ge; 120</td><td>&ge; 240</td></tr>
+                    <tr><td>Latency p50</td><td>&le; 12 ms</td><td>&le; 6 ms</td></tr>
+                    <tr><td>Memory residency vs VA-API</td><td>&le; 200%</td><td>&le; 130%</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 15 plan -->
+        <section id="sec-plan">
+            <h2>15. Execution Plan</h2>
+            <div class="diagram">
+                <object data="diagrams/test_execution_timeline.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">5 test phases run in parallel with the 5 implementation phases. Total test-only effort: ~8 engineer-weeks.</div>
+            </div>
+
+            <table>
+                <thead><tr><th>Phase</th><th>Weeks</th><th>Deliverable</th></tr></thead>
+                <tbody>
+                    <tr><td>Test Phase A &mdash; Harness scaffolding</td><td>2</td><td>Mocks, fakes, skeleton bot configs</td></tr>
+                    <tr><td>Test Phase B &mdash; H.264 wave</td><td>2</td><td>All H.264 unit + integration cases</td></tr>
+                    <tr><td>Test Phase C &mdash; HEVC + AV1 wave</td><td>3</td><td>Mirrors + conformance fetcher + fluster plugin</td></tr>
+                    <tr><td>Test Phase D &mdash; Browser + WPT</td><td>2</td><td>WPT files, Tast wrappers, caps yaml, VVS CLI</td></tr>
+                    <tr><td>Test Phase E &mdash; Conformance + soak + fuzz</td><td>3</td><td>Driver scripts, nightly bots, soak, fuzzers</td></tr>
+                </tbody>
+            </table>
+
+            <h3>15.1 Pre-launch quality gate</h3>
+            <ul>
+                <li>7 consecutive days of green Tier 1&ndash;3 across all CQ lanes.</li>
+                <li>&ge; 95% JVT, &ge; 90% JCT-VC, &ge; 90% Argon pass rates on at least 2 vendors.</li>
+                <li>Perf regressions &le; 5% vs VA-API baseline on ChromePerf dashboard.</li>
+                <li>Zero new validation-layer regressions.</li>
+                <li>One full 24-h soak passing.</li>
+            </ul>
+        </section>
+
+    </div>
+</main>
+
+<footer>
+    <div class="container">
+        Generated from <code>VULKAN_VIDEO_TEST_PLAN.md</code>
+        &mdash; Chromium HEAD (May 2026) &mdash; Vulkan headers 1.3.296
+    </div>
+</footer>
+
+</body>
+</html>

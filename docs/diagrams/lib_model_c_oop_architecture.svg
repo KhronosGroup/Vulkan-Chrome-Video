@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 880" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="rendG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e1bee7"/><stop offset="100%" stop-color="#ce93d8"/>
+    </linearGradient>
+    <linearGradient id="browG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff3e0"/><stop offset="100%" stop-color="#ffcc80"/>
+    </linearGradient>
+    <linearGradient id="gpuG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/><stop offset="100%" stop-color="#64b5f6"/>
+    </linearGradient>
+    <linearGradient id="utilG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/><stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="libG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe082"/><stop offset="100%" stop-color="#ffb300"/>
+    </linearGradient>
+    <linearGradient id="sandboxG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffccbc"/><stop offset="100%" stop-color="#ff8a65"/>
+    </linearGradient>
+    <marker id="mojo" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#1565c0"/>
+    </marker>
+    <marker id="ipc" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#ad1457"/>
+    </marker>
+    <marker id="fd" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <text x="700" y="28" text-anchor="middle" font-size="22" font-weight="bold" fill="#263238">
+    Model C - Vulkan Video Encode OOP via the existing Chromium OOP-VEA scaffold
+  </text>
+  <text x="700" y="50" text-anchor="middle" font-size="12" fill="#37474f">
+    The OOP-VEA infrastructure already ships in Chromium for VA-API on Linux/ChromeOS.
+    Model C plugs Vulkan-Video-Samples in as a new backend behind the same Mojo interfaces and sandbox.
+  </text>
+
+  <!-- Renderer -->
+  <rect x="40" y="80" width="280" height="220" rx="8" fill="url(#rendG)" stroke="#6a1b9a" stroke-width="2"/>
+  <text x="180" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#4a148c">Renderer process</text>
+  <text x="180" y="122" text-anchor="middle" font-size="10" fill="#4a148c">one per site origin</text>
+  <text x="180" y="138" text-anchor="middle" font-size="10" fill="#4a148c">sandbox = kRenderer (tightest)</text>
+
+  <rect x="55" y="155" width="250" height="55" rx="6" fill="white" stroke="#6a1b9a"/>
+  <text x="180" y="175" text-anchor="middle" font-size="11" font-weight="bold">Blink / V8</text>
+  <text x="180" y="190" text-anchor="middle" font-size="10">WebCodecs   |   WebRTC   |   MediaRecorder</text>
+  <text x="180" y="204" text-anchor="middle" font-size="9" fill="#7b1fa2">creates pending_receiver&lt;VideoEncodeAccelerator&gt;</text>
+
+  <rect x="55" y="220" width="250" height="65" rx="6" fill="white" stroke="#6a1b9a"/>
+  <text x="180" y="240" text-anchor="middle" font-size="11" font-weight="bold">MojoVideoEncodeAccelerator</text>
+  <text x="180" y="254" text-anchor="middle" font-size="9">media/mojo/clients/mojo_video_encode_accelerator.cc</text>
+  <text x="180" y="270" text-anchor="middle" font-size="10">  - Initialize / Encode / Flush</text>
+  <text x="180" y="282" text-anchor="middle" font-size="10">  - payload: SharedImage mailbox token</text>
+
+  <!-- Browser -->
+  <rect x="360" y="80" width="280" height="220" rx="8" fill="url(#browG)" stroke="#e65100" stroke-width="2"/>
+  <text x="500" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#bf360c">Browser process</text>
+  <text x="500" y="122" text-anchor="middle" font-size="10" fill="#bf360c">unsandboxed (broker)</text>
+  <text x="500" y="138" text-anchor="middle" font-size="10" fill="#bf360c">launches and supervises children</text>
+
+  <rect x="375" y="155" width="250" height="70" rx="6" fill="white" stroke="#e65100"/>
+  <text x="500" y="175" text-anchor="middle" font-size="11" font-weight="bold">RenderProcessHostImpl</text>
+  <text x="500" y="190" text-anchor="middle" font-size="9">render_process_host_impl_receiver_bindings.cc:361-380</text>
+  <text x="500" y="206" text-anchor="middle" font-size="10">if (kUseOutOfProcessVideoEncoding):</text>
+  <text x="500" y="219" text-anchor="middle" font-size="10">  forward pending_receiver to utility</text>
+
+  <rect x="375" y="235" width="250" height="55" rx="6" fill="#fff8e1" stroke="#e65100" stroke-width="2"/>
+  <text x="500" y="252" text-anchor="middle" font-size="11" font-weight="bold" fill="#bf360c">ServiceProcessHost::Launch</text>
+  <text x="500" y="266" text-anchor="middle" font-size="9">content/browser/media/video_encode_</text>
+  <text x="500" y="278" text-anchor="middle" font-size="9">accelerator_provider_launcher.cc:13</text>
+
+  <!-- Sandbox banner -->
+  <rect x="660" y="155" width="50" height="135" rx="6" fill="url(#sandboxG)" stroke="#bf360c" stroke-width="2"/>
+  <text x="685" y="175" text-anchor="middle" font-size="9" font-weight="bold" fill="#bf360c" transform="rotate(-90 685 220)">sandbox=kHardwareVideoEncoding</text>
+
+  <!-- GPU process -->
+  <rect x="40" y="340" width="630" height="260" rx="8" fill="url(#gpuG)" stroke="#1565c0" stroke-width="2"/>
+  <text x="355" y="365" text-anchor="middle" font-size="14" font-weight="bold" fill="#0d47a1">GPU process</text>
+  <text x="355" y="382" text-anchor="middle" font-size="10" fill="#0d47a1">sandbox=kGpu (existing, wide; needs driver access)</text>
+
+  <rect x="60" y="395" width="280" height="80" rx="6" fill="white" stroke="#1565c0"/>
+  <text x="200" y="415" text-anchor="middle" font-size="11" font-weight="bold">Compositor / Skia / WebGPU</text>
+  <text x="200" y="431" text-anchor="middle" font-size="10">gpu::VulkanDeviceQueue   (the GPU process's VkDevice)</text>
+  <text x="200" y="447" text-anchor="middle" font-size="10" fill="#0d47a1">SharedImageManager owns mailboxes</text>
+  <text x="200" y="463" text-anchor="middle" font-size="10" fill="#0d47a1">CommandBufferStub per renderer</text>
+
+  <rect x="360" y="395" width="290" height="80" rx="6" fill="#e3f2fd" stroke="#0d47a1" stroke-width="2"/>
+  <text x="505" y="415" text-anchor="middle" font-size="11" font-weight="bold" fill="#0d47a1">SharedImage backing store</text>
+  <text x="505" y="431" text-anchor="middle" font-size="9">on receiving an EncodeCommandBufferId from the</text>
+  <text x="505" y="445" text-anchor="middle" font-size="9">utility process, resolves the mailbox and exports</text>
+  <text x="505" y="459" text-anchor="middle" font-size="9" font-weight="bold" fill="#1b5e20">DMA-BUF FD / shared NT handle / AHardwareBuffer</text>
+  <text x="505" y="473" text-anchor="middle" font-size="9" fill="#1b5e20">(kernel duplicates handle into utility's FD table)</text>
+
+  <rect x="60" y="490" width="590" height="100" rx="6" fill="#e3f2fd" stroke="#0d47a1"/>
+  <text x="355" y="510" text-anchor="middle" font-size="11" font-weight="bold">In Model D this is the encoder. In Model C it is NOT.</text>
+  <text x="75" y="528" font-size="10" fill="#0d47a1">  In Model C, the GPU process serves only two roles:</text>
+  <text x="75" y="544" font-size="10" fill="#0d47a1">    1. Holds the SharedImage backings the renderer produced (compositor/WebGL/canvas/tab capture).</text>
+  <text x="75" y="558" font-size="10" fill="#0d47a1">    2. Exports the DMA-BUF FD on demand when the utility process asks for a mailbox.</text>
+  <text x="75" y="574" font-size="10" fill="#bf360c">  The encoder (vkCmdEncodeVideoKHR) does NOT run here. It runs in the utility process.</text>
+
+  <!-- Utility process -->
+  <rect x="730" y="340" width="640" height="500" rx="8" fill="url(#utilG)" stroke="#1b5e20" stroke-width="2"/>
+  <text x="1050" y="365" text-anchor="middle" font-size="14" font-weight="bold" fill="#1b5e20">Utility process - "Video Encoder"</text>
+  <text x="1050" y="382" text-anchor="middle" font-size="10" fill="#1b5e20">one per renderer; sandbox=kHardwareVideoEncoding</text>
+  <text x="1050" y="398" text-anchor="middle" font-size="9" fill="#bf360c">currently reuses GPU sandbox per TODO(b/255554267); tightening is on the roadmap</text>
+
+  <rect x="750" y="410" width="600" height="60" rx="6" fill="white" stroke="#1b5e20"/>
+  <text x="1050" y="430" text-anchor="middle" font-size="11" font-weight="bold">MojoVideoEncodeAcceleratorProviderFactory</text>
+  <text x="1050" y="445" text-anchor="middle" font-size="9">media/mojo/services/mojo_video_encode_accelerator_provider_factory.cc</text>
+  <text x="1050" y="461" text-anchor="middle" font-size="10">Registered in content/utility/services.cc:437</text>
+
+  <rect x="750" y="480" width="600" height="60" rx="6" fill="white" stroke="#1b5e20"/>
+  <text x="1050" y="500" text-anchor="middle" font-size="11" font-weight="bold">MojoVideoEncodeAcceleratorService</text>
+  <text x="1050" y="515" text-anchor="middle" font-size="9">media/mojo/services/mojo_video_encode_accelerator_service.cc</text>
+  <text x="1050" y="531" text-anchor="middle" font-size="10">wraps the underlying media::VideoEncodeAccelerator</text>
+
+  <rect x="750" y="550" width="600" height="80" rx="6" fill="#dcedc8" stroke="#1b5e20" stroke-width="2"/>
+  <text x="1050" y="571" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b5e20">VulkanVideoEncodeAccelerator</text>
+  <text x="1050" y="586" text-anchor="middle" font-size="10">Same Chromium-side code as Model D (~2,350 LoC)</text>
+  <text x="1050" y="602" text-anchor="middle" font-size="10">Owns gpu::VulkanDeviceQueue (utility process's OWN VkDevice)</text>
+  <text x="1050" y="618" text-anchor="middle" font-size="9" fill="#bf360c">+ imports DMA-BUF FD into this VkDevice + caches per mailbox</text>
+
+  <rect x="750" y="640" width="600" height="120" rx="6" fill="url(#libG)" stroke="#bf360c" stroke-width="2"/>
+  <text x="1050" y="662" text-anchor="middle" font-size="12" font-weight="bold" fill="#bf360c">third_party/vulkan_video_samples/  (statically linked here)</text>
+  <text x="1050" y="678" text-anchor="middle" font-size="10" fill="#bf360c">Same sources as Model D. Different build target (utility binary).</text>
+  <text x="770" y="697" font-size="10">VulkanVideoEncoderExt with externalDevice = utility process's VkDevice</text>
+  <text x="770" y="712" font-size="10">SubmitExternalFrame(imported VkImage)</text>
+  <text x="770" y="727" font-size="10" fill="#1b5e20">  -&gt; Path A: zero-copy, vkCmdEncodeVideoKHR reads the imported DMA-BUF directly</text>
+  <text x="770" y="742" font-size="10" fill="#1b5e20">  -&gt; bitstream into pre-shared shmem region (UseOutputBitstreamBuffer)</text>
+  <text x="770" y="757" font-size="10" fill="#1b5e20">  -&gt; BitstreamBufferReady fired back to renderer over Mojo</text>
+
+  <rect x="750" y="770" width="600" height="55" rx="6" fill="#fff8e1" stroke="#f9a825"/>
+  <text x="1050" y="790" text-anchor="middle" font-size="10" font-weight="bold" fill="#bf360c">Talks to /dev/dri/* via the sandbox broker. NO compositor VkDevice.</text>
+  <text x="1050" y="806" text-anchor="middle" font-size="10" fill="#bf360c">NO present queue. NO GL context. Encoder-only Vulkan ICD path.</text>
+  <text x="1050" y="820" text-anchor="middle" font-size="9" fill="#bf360c">If this process crashes, only this encoder dies. GPU process and tab survive.</text>
+
+  <!-- Connections -->
+  <!-- renderer -> browser -->
+  <line x1="320" y1="247" x2="370" y2="247" stroke="#1565c0" stroke-width="2.5" marker-end="url(#mojo)"/>
+  <text x="345" y="240" text-anchor="middle" font-size="8" fill="#0d47a1">Mojo</text>
+
+  <!-- browser -> utility (launch) -->
+  <line x1="640" y1="262" x2="745" y2="430" stroke="#ad1457" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#ipc)"/>
+  <text x="700" y="350" font-size="9" fill="#ad1457" font-weight="bold">ServiceProcessHost::Launch</text>
+  <text x="700" y="362" font-size="9" fill="#ad1457">(fork + apply sandbox)</text>
+
+  <!-- renderer -> utility (Mojo encode) -->
+  <path d="M 320 270 Q 700 305 745 500" stroke="#1565c0" stroke-width="2.5" fill="none" marker-end="url(#mojo)"/>
+  <text x="540" y="320" font-size="10" fill="#0d47a1" font-weight="bold">Mojo: VideoEncodeAccelerator</text>
+  <text x="540" y="332" font-size="9" fill="#0d47a1">Initialize / Encode(mailbox, options)</text>
+
+  <!-- utility -> GPU (resolve mailbox) -->
+  <line x1="745" y1="580" x2="670" y2="435" stroke="#2e7d32" stroke-width="2.5" marker-end="url(#fd)"/>
+  <text x="730" y="510" font-size="10" font-weight="bold" fill="#1b5e20">EncodeCommandBufferId</text>
+  <text x="730" y="522" font-size="9" fill="#1b5e20">resolve mailbox -&gt; DMA-BUF FD</text>
+
+  <!-- GPU -> utility (return FD) -->
+  <line x1="650" y1="455" x2="745" y2="595" stroke="#2e7d32" stroke-width="2.5" marker-end="url(#fd)"/>
+  <text x="740" y="555" font-size="9" font-weight="bold" fill="#1b5e20">kernel dup FD</text>
+  <text x="740" y="567" font-size="9" fill="#1b5e20">into utility's FD table</text>
+
+  <!-- Process boundary line -->
+  <line x1="690" y1="80" x2="690" y2="850" stroke="#bf360c" stroke-width="2" stroke-dasharray="10,5" opacity="0.4"/>
+  <text x="690" y="75" text-anchor="middle" font-size="10" fill="#bf360c" font-weight="bold">process boundary</text>
+
+  <!-- Footer -->
+  <rect x="40" y="860" width="1330" height="0" fill="none"/>
+</svg>

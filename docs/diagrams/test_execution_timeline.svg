@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 600" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <text x="640" y="30" text-anchor="middle" font-size="22" font-weight="bold" fill="#263238">
+    Test Infrastructure Execution Timeline (parallel with implementation)
+  </text>
+
+  <!-- Grid -->
+  <g stroke="#cfd8dc" stroke-width="1">
+    <line x1="200" y1="80" x2="200" y2="540"/>
+    <line x1="252" y1="80" x2="252" y2="540"/>
+    <line x1="304" y1="80" x2="304" y2="540"/>
+    <line x1="356" y1="80" x2="356" y2="540"/>
+    <line x1="408" y1="80" x2="408" y2="540"/>
+    <line x1="460" y1="80" x2="460" y2="540"/>
+    <line x1="512" y1="80" x2="512" y2="540"/>
+    <line x1="564" y1="80" x2="564" y2="540"/>
+    <line x1="616" y1="80" x2="616" y2="540"/>
+    <line x1="668" y1="80" x2="668" y2="540"/>
+    <line x1="720" y1="80" x2="720" y2="540"/>
+    <line x1="772" y1="80" x2="772" y2="540"/>
+    <line x1="824" y1="80" x2="824" y2="540"/>
+    <line x1="876" y1="80" x2="876" y2="540"/>
+    <line x1="928" y1="80" x2="928" y2="540"/>
+    <line x1="980" y1="80" x2="980" y2="540"/>
+    <line x1="1032" y1="80" x2="1032" y2="540"/>
+    <line x1="1084" y1="80" x2="1084" y2="540"/>
+    <line x1="1136" y1="80" x2="1136" y2="540"/>
+    <line x1="1188" y1="80" x2="1188" y2="540"/>
+    <line x1="1240" y1="80" x2="1240" y2="540"/>
+  </g>
+
+  <!-- Week ticks -->
+  <g font-size="10" fill="#546e7a" text-anchor="middle">
+    <text x="226" y="75">W1</text>
+    <text x="278" y="75">W2</text>
+    <text x="330" y="75">W3</text>
+    <text x="382" y="75">W4</text>
+    <text x="434" y="75">W5</text>
+    <text x="486" y="75">W6</text>
+    <text x="538" y="75">W7</text>
+    <text x="590" y="75">W8</text>
+    <text x="642" y="75">W9</text>
+    <text x="694" y="75">W10</text>
+    <text x="746" y="75">W11</text>
+    <text x="798" y="75">W12</text>
+    <text x="850" y="75">W13</text>
+    <text x="902" y="75">W14</text>
+    <text x="954" y="75">W15</text>
+    <text x="1006" y="75">W16</text>
+    <text x="1058" y="75">W17</text>
+    <text x="1110" y="75">W18</text>
+    <text x="1162" y="75">W19</text>
+    <text x="1214" y="75">W20</text>
+  </g>
+
+  <!-- Implementation phases for reference -->
+  <rect x="40" y="92" width="160" height="34" rx="3" fill="#e3f2fd" stroke="#1976d2"/>
+  <text x="120" y="115" text-anchor="middle" font-size="12">Impl Phase 1 (Foundation)</text>
+  <rect x="200" y="92" width="156" height="34" rx="3" fill="#1976d2"/>
+  <text x="278" y="114" text-anchor="middle" font-size="11" fill="white">Wrapper + session + factory</text>
+
+  <rect x="40" y="132" width="160" height="34" rx="3" fill="#fff3e0" stroke="#e65100"/>
+  <text x="120" y="155" text-anchor="middle" font-size="12">Impl Phase 2 (H.264)</text>
+  <rect x="356" y="132" width="208" height="34" rx="3" fill="#e65100"/>
+  <text x="460" y="154" text-anchor="middle" font-size="11" fill="white">H.264 delegate + CBR/VBR/CQP + DPB</text>
+
+  <rect x="40" y="172" width="160" height="34" rx="3" fill="#f3e5f5" stroke="#7b1fa2"/>
+  <text x="120" y="195" text-anchor="middle" font-size="12">Impl Phase 3 (HEVC+AV1)</text>
+  <rect x="564" y="172" width="312" height="34" rx="3" fill="#7b1fa2"/>
+  <text x="720" y="194" text-anchor="middle" font-size="11" fill="white">HEVC main/main10 + AV1 main 8/10-bit</text>
+
+  <rect x="40" y="212" width="160" height="34" rx="3" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="120" y="235" text-anchor="middle" font-size="12">Impl Phase 4 (SVC, QP)</text>
+  <rect x="772" y="212" width="156" height="34" rx="3" fill="#2e7d32"/>
+  <text x="850" y="234" text-anchor="middle" font-size="11" fill="white">SVC, QP map, intra-refresh</text>
+
+  <rect x="40" y="252" width="160" height="34" rx="3" fill="#fce4ec" stroke="#c2185b"/>
+  <text x="120" y="275" text-anchor="middle" font-size="12">Impl Phase 5 (Polish)</text>
+  <rect x="928" y="252" width="208" height="34" rx="3" fill="#c2185b"/>
+  <text x="1032" y="274" text-anchor="middle" font-size="11" fill="white">Shared image, fallback, perf, protected</text>
+
+  <line x1="40" y1="300" x2="1240" y2="300" stroke="#37474f" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+  <!-- Test phases -->
+  <rect x="40" y="312" width="160" height="34" rx="3" fill="#fff8e1" stroke="#f57c00"/>
+  <text x="120" y="335" text-anchor="middle" font-size="12">Test Phase A</text>
+  <rect x="200" y="312" width="156" height="34" rx="3" fill="#f57c00"/>
+  <text x="278" y="334" text-anchor="middle" font-size="11" fill="white">Harness (mocks + fakes + skeleton)</text>
+
+  <rect x="40" y="352" width="160" height="34" rx="3" fill="#fff8e1" stroke="#f57c00"/>
+  <text x="120" y="375" text-anchor="middle" font-size="12">Test Phase B</text>
+  <rect x="356" y="352" width="208" height="34" rx="3" fill="#f57c00"/>
+  <text x="460" y="374" text-anchor="middle" font-size="11" fill="white">H.264 unit + integration</text>
+
+  <rect x="40" y="392" width="160" height="34" rx="3" fill="#fff8e1" stroke="#f57c00"/>
+  <text x="120" y="415" text-anchor="middle" font-size="12">Test Phase C</text>
+  <rect x="564" y="392" width="312" height="34" rx="3" fill="#f57c00"/>
+  <text x="720" y="414" text-anchor="middle" font-size="11" fill="white">HEVC + AV1 mirrors, fluster plugin draft</text>
+
+  <rect x="40" y="432" width="160" height="34" rx="3" fill="#fff8e1" stroke="#f57c00"/>
+  <text x="120" y="455" text-anchor="middle" font-size="12">Test Phase D</text>
+  <rect x="772" y="432" width="156" height="34" rx="3" fill="#f57c00"/>
+  <text x="850" y="454" text-anchor="middle" font-size="11" fill="white">WPT + Tast wrappers + caps yaml</text>
+
+  <rect x="40" y="472" width="160" height="34" rx="3" fill="#fff8e1" stroke="#f57c00"/>
+  <text x="120" y="495" text-anchor="middle" font-size="12">Test Phase E</text>
+  <rect x="928" y="472" width="312" height="34" rx="3" fill="#f57c00"/>
+  <text x="1084" y="494" text-anchor="middle" font-size="11" fill="white">Conformance + CI bots + soak + fuzzers + allowlist</text>
+
+  <text x="60" y="540" font-size="11" fill="#37474f">Total test-only effort: ~8 engineer-weeks  ;  finishes 2 weeks after impl wrap-up for soak/conformance scale-out</text>
+</svg>

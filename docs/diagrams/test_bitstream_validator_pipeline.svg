@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="src" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e1f5fe"/><stop offset="100%" stop-color="#81d4fa"/>
+    </linearGradient>
+    <linearGradient id="enc" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/><stop offset="100%" stop-color="#81c784"/>
+    </linearGradient>
+    <linearGradient id="dec" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/><stop offset="100%" stop-color="#64b5f6"/>
+    </linearGradient>
+    <linearGradient id="val" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe0b2"/><stop offset="100%" stop-color="#ffb74d"/>
+    </linearGradient>
+    <marker id="ar" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="600" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#263238">
+    Three Bitstream Validator Pipelines (existing + new)
+  </text>
+
+  <!-- Pipeline 1: existing BitstreamValidator (encode-with-vulkan, decode-with-sw) -->
+  <text x="600" y="64" text-anchor="middle" font-size="13" font-weight="bold" fill="#0d47a1">
+    Pipeline 1 - BitstreamValidator (EXISTING) : Vulkan encode -&gt; SW decode -&gt; PSNR / SSIM
+  </text>
+
+  <rect x="40" y="80" width="160" height="60" rx="6" fill="url(#src)" stroke="#0277bd"/>
+  <text x="120" y="106" text-anchor="middle" font-size="12" font-weight="bold">Source YUV</text>
+  <text x="120" y="124" text-anchor="middle" font-size="10">media/test/data</text>
+
+  <line x1="200" y1="110" x2="240" y2="110" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="240" y="80" width="200" height="60" rx="6" fill="url(#enc)" stroke="#2e7d32"/>
+  <text x="340" y="103" text-anchor="middle" font-size="12" font-weight="bold">Vulkan VEA</text>
+  <text x="340" y="120" text-anchor="middle" font-size="10">VulkanVideoEncodeAccelerator</text>
+  <text x="340" y="134" text-anchor="middle" font-size="10">+ delegate</text>
+
+  <line x1="440" y1="110" x2="480" y2="110" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="480" y="80" width="170" height="60" rx="6" fill="#cfd8dc" stroke="#37474f"/>
+  <text x="565" y="103" text-anchor="middle" font-size="12" font-weight="bold">Bitstream (shmem)</text>
+  <text x="565" y="120" text-anchor="middle" font-size="10">Annex-B / IVF / OBU</text>
+
+  <line x1="650" y1="110" x2="690" y2="110" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="690" y="80" width="200" height="60" rx="6" fill="url(#dec)" stroke="#1565c0"/>
+  <text x="790" y="103" text-anchor="middle" font-size="12" font-weight="bold">SW decoder</text>
+  <text x="790" y="120" text-anchor="middle" font-size="10">openh264 / libvpx / dav1d</text>
+  <text x="790" y="134" text-anchor="middle" font-size="10">(reference)</text>
+
+  <line x1="890" y1="110" x2="930" y2="110" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="930" y="80" width="220" height="60" rx="6" fill="url(#val)" stroke="#e65100"/>
+  <text x="1040" y="103" text-anchor="middle" font-size="12" font-weight="bold">image_quality_metrics</text>
+  <text x="1040" y="120" text-anchor="middle" font-size="10">PSNR / SSIM / log-likelihood</text>
+  <text x="1040" y="134" text-anchor="middle" font-size="10">vs source YUV</text>
+
+  <!-- Loop back source line -->
+  <line x1="120" y1="140" x2="120" y2="170" stroke="#90a4ae" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="120" y1="170" x2="1040" y2="170" stroke="#90a4ae" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="1040" y1="170" x2="1040" y2="140" stroke="#90a4ae" stroke-width="1.5" stroke-dasharray="3,3" marker-end="url(#ar)"/>
+  <text x="600" y="165" text-anchor="middle" font-size="10" fill="#546e7a">source YUV reference</text>
+
+  <!-- Pipeline 2: NEW VulkanLoopbackValidator (encode-with-vulkan, decode-with-vulkan) -->
+  <text x="600" y="220" text-anchor="middle" font-size="13" font-weight="bold" fill="#1b5e20">
+    Pipeline 2 - VulkanLoopbackValidator (NEW) : Vulkan encode -&gt; Vulkan decode -&gt; PSNR
+  </text>
+
+  <rect x="40" y="240" width="160" height="60" rx="6" fill="url(#src)" stroke="#0277bd"/>
+  <text x="120" y="266" text-anchor="middle" font-size="12" font-weight="bold">Source YUV</text>
+  <text x="120" y="284" text-anchor="middle" font-size="10">media/test/data</text>
+
+  <line x1="200" y1="270" x2="240" y2="270" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="240" y="240" width="200" height="60" rx="6" fill="url(#enc)" stroke="#2e7d32"/>
+  <text x="340" y="263" text-anchor="middle" font-size="12" font-weight="bold">Vulkan VEA</text>
+  <text x="340" y="280" text-anchor="middle" font-size="10">VulkanVideoEncodeAccelerator</text>
+
+  <line x1="440" y1="270" x2="480" y2="270" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="480" y="240" width="170" height="60" rx="6" fill="#cfd8dc" stroke="#37474f"/>
+  <text x="565" y="263" text-anchor="middle" font-size="12" font-weight="bold">Bitstream</text>
+
+  <line x1="650" y1="270" x2="690" y2="270" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="690" y="240" width="200" height="60" rx="6" fill="url(#dec)" stroke="#1565c0"/>
+  <text x="790" y="263" text-anchor="middle" font-size="12" font-weight="bold">Vulkan VDA</text>
+  <text x="790" y="280" text-anchor="middle" font-size="10">VulkanVideoDecodeAccelerator</text>
+
+  <line x1="890" y1="270" x2="930" y2="270" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="930" y="240" width="220" height="60" rx="6" fill="url(#val)" stroke="#e65100"/>
+  <text x="1040" y="263" text-anchor="middle" font-size="12" font-weight="bold">image_quality_metrics</text>
+  <text x="1040" y="280" text-anchor="middle" font-size="10">Pure-HW loopback</text>
+  <text x="1040" y="294" text-anchor="middle" font-size="10">catches sym/asym bugs</text>
+
+  <line x1="120" y1="300" x2="120" y2="330" stroke="#90a4ae" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="120" y1="330" x2="1040" y2="330" stroke="#90a4ae" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="1040" y1="330" x2="1040" y2="300" stroke="#90a4ae" stroke-width="1.5" stroke-dasharray="3,3" marker-end="url(#ar)"/>
+
+  <!-- Pipeline 3: NEW CrossBackendValidator -->
+  <text x="600" y="380" text-anchor="middle" font-size="13" font-weight="bold" fill="#bf360c">
+    Pipeline 3 - CrossBackendValidator (NEW) : Vulkan encode -&gt; VA-API decode (and reverse)
+  </text>
+
+  <rect x="40" y="400" width="160" height="60" rx="6" fill="url(#src)" stroke="#0277bd"/>
+  <text x="120" y="426" text-anchor="middle" font-size="12" font-weight="bold">Source YUV</text>
+  <text x="120" y="444" text-anchor="middle" font-size="10">media/test/data</text>
+
+  <line x1="200" y1="430" x2="240" y2="430" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="240" y="400" width="200" height="60" rx="6" fill="url(#enc)" stroke="#2e7d32"/>
+  <text x="340" y="423" text-anchor="middle" font-size="12" font-weight="bold">Vulkan VEA</text>
+
+  <line x1="440" y1="430" x2="480" y2="430" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="480" y="400" width="170" height="60" rx="6" fill="#cfd8dc" stroke="#37474f"/>
+  <text x="565" y="423" text-anchor="middle" font-size="12" font-weight="bold">Bitstream</text>
+
+  <line x1="650" y1="430" x2="690" y2="430" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="690" y="400" width="200" height="60" rx="6" fill="url(#dec)" stroke="#1565c0"/>
+  <text x="790" y="423" text-anchor="middle" font-size="12" font-weight="bold">VA-API VDA</text>
+  <text x="790" y="440" text-anchor="middle" font-size="10">VaapiVideoDecoder</text>
+
+  <line x1="890" y1="430" x2="930" y2="430" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="930" y="400" width="220" height="60" rx="6" fill="url(#val)" stroke="#e65100"/>
+  <text x="1040" y="423" text-anchor="middle" font-size="12" font-weight="bold">image_quality_metrics</text>
+  <text x="1040" y="440" text-anchor="middle" font-size="10">Wire-format compatibility</text>
+
+  <line x1="120" y1="460" x2="120" y2="490" stroke="#90a4ae" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="120" y1="490" x2="1040" y2="490" stroke="#90a4ae" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="1040" y1="490" x2="1040" y2="460" stroke="#90a4ae" stroke-width="1.5" stroke-dasharray="3,3" marker-end="url(#ar)"/>
+
+  <text x="600" y="555" text-anchor="middle" font-size="11" fill="#37474f">
+    Pass criteria: PSNR &gt;= 40 dB (CQP 26, 1080p30) ; SSIM &gt;= 0.95 ; deterministic MD5 per driver
+  </text>
+  <text x="600" y="575" text-anchor="middle" font-size="10" fill="#546e7a">
+    Wired into media/gpu/test/video_encoder/{bitstream_validator,vulkan_loopback_validator,cross_backend_validator}.{h,cc}
+  </text>
+</svg>

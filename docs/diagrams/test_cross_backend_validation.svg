@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="cv1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/><stop offset="100%" stop-color="#81c784"/>
+    </linearGradient>
+    <linearGradient id="cv2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe0b2"/><stop offset="100%" stop-color="#ffb74d"/>
+    </linearGradient>
+    <linearGradient id="cv3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8bbd0"/><stop offset="100%" stop-color="#f06292"/>
+    </linearGradient>
+    <linearGradient id="cv4" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/><stop offset="100%" stop-color="#64b5f6"/>
+    </linearGradient>
+    <marker id="ar" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="600" y="30" text-anchor="middle" font-size="22" font-weight="bold" fill="#263238">
+    Cross-Backend / Cross-Vendor Validation
+  </text>
+  <text x="600" y="52" text-anchor="middle" font-size="12" fill="#546e7a">
+    Same input YUV; many producer x consumer permutations; PSNR / MD5 reported for each
+  </text>
+
+  <!-- Producers column -->
+  <text x="200" y="100" text-anchor="middle" font-size="14" font-weight="bold" fill="#1b5e20">Producers</text>
+
+  <rect x="60" y="120" width="280" height="50" rx="6" fill="url(#cv1)" stroke="#2e7d32"/>
+  <text x="200" y="142" text-anchor="middle" font-size="12" font-weight="bold">Chromium Vulkan VEA (this design)</text>
+  <text x="200" y="158" text-anchor="middle" font-size="10">linux/nvidia, linux/anv, linux/radv, win, cros</text>
+
+  <rect x="60" y="180" width="280" height="50" rx="6" fill="url(#cv2)" stroke="#e65100"/>
+  <text x="200" y="202" text-anchor="middle" font-size="12" font-weight="bold">Chromium VA-API VEA (baseline)</text>
+  <text x="200" y="218" text-anchor="middle" font-size="10">linux intel/amd, cros</text>
+
+  <rect x="60" y="240" width="280" height="50" rx="6" fill="url(#cv4)" stroke="#1565c0"/>
+  <text x="200" y="262" text-anchor="middle" font-size="12" font-weight="bold">Chromium D3D12 VEA</text>
+  <text x="200" y="278" text-anchor="middle" font-size="10">windows</text>
+
+  <rect x="60" y="300" width="280" height="50" rx="6" fill="url(#cv4)" stroke="#1565c0"/>
+  <text x="200" y="322" text-anchor="middle" font-size="12" font-weight="bold">Vulkan-Video-Samples encoder</text>
+  <text x="200" y="338" text-anchor="middle" font-size="10">reference implementation</text>
+
+  <rect x="60" y="360" width="280" height="50" rx="6" fill="url(#cv4)" stroke="#1565c0"/>
+  <text x="200" y="382" text-anchor="middle" font-size="12" font-weight="bold">ffmpeg / x264 / x265 (SW encoders)</text>
+  <text x="200" y="398" text-anchor="middle" font-size="10">software reference</text>
+
+  <!-- Bitstream pivot -->
+  <rect x="450" y="220" width="300" height="120" rx="10" fill="#fffde7" stroke="#fbc02d" stroke-width="2"/>
+  <text x="600" y="250" text-anchor="middle" font-size="14" font-weight="bold" fill="#f57f17">Bitstream Bus</text>
+  <text x="600" y="270" text-anchor="middle" font-size="11" fill="#6d4c41">Annex-B / IVF / OBU</text>
+  <text x="600" y="288" text-anchor="middle" font-size="10" fill="#6d4c41">stored as artifact</text>
+  <text x="600" y="304" text-anchor="middle" font-size="10" fill="#6d4c41">with metadata sidecar</text>
+  <text x="600" y="322" text-anchor="middle" font-size="10" fill="#6d4c41">md5, size, qp_distribution</text>
+
+  <!-- Consumers column -->
+  <text x="1000" y="100" text-anchor="middle" font-size="14" font-weight="bold" fill="#0d47a1">Consumers</text>
+
+  <rect x="860" y="120" width="280" height="50" rx="6" fill="url(#cv1)" stroke="#2e7d32"/>
+  <text x="1000" y="142" text-anchor="middle" font-size="12" font-weight="bold">Chromium Vulkan VDA (this design)</text>
+  <text x="1000" y="158" text-anchor="middle" font-size="10">decode every cell of the matrix</text>
+
+  <rect x="860" y="180" width="280" height="50" rx="6" fill="url(#cv2)" stroke="#e65100"/>
+  <text x="1000" y="202" text-anchor="middle" font-size="12" font-weight="bold">Chromium VA-API VDA</text>
+  <text x="1000" y="218" text-anchor="middle" font-size="10">interop check</text>
+
+  <rect x="860" y="240" width="280" height="50" rx="6" fill="url(#cv4)" stroke="#1565c0"/>
+  <text x="1000" y="262" text-anchor="middle" font-size="12" font-weight="bold">openh264 / libvpx / dav1d</text>
+  <text x="1000" y="278" text-anchor="middle" font-size="10">software golden</text>
+
+  <rect x="860" y="300" width="280" height="50" rx="6" fill="url(#cv3)" stroke="#ad1457"/>
+  <text x="1000" y="322" text-anchor="middle" font-size="12" font-weight="bold">JM / HM / aomdec</text>
+  <text x="1000" y="338" text-anchor="middle" font-size="10">spec reference decoders</text>
+
+  <rect x="860" y="360" width="280" height="50" rx="6" fill="url(#cv3)" stroke="#ad1457"/>
+  <text x="1000" y="382" text-anchor="middle" font-size="12" font-weight="bold">Firefox / Safari decoders</text>
+  <text x="1000" y="398" text-anchor="middle" font-size="10">WebRTC interop</text>
+
+  <!-- Arrows from producers to bus -->
+  <line x1="340" y1="145" x2="450" y2="240" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="340" y1="205" x2="450" y2="260" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="340" y1="265" x2="450" y2="280" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="340" y1="325" x2="450" y2="300" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="340" y1="385" x2="450" y2="320" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Arrows from bus to consumers -->
+  <line x1="750" y1="240" x2="860" y2="145" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="750" y1="260" x2="860" y2="205" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="750" y1="280" x2="860" y2="265" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="750" y1="300" x2="860" y2="325" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="750" y1="320" x2="860" y2="385" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Validator output -->
+  <rect x="350" y="450" width="500" height="80" rx="8" fill="#fce4ec" stroke="#ad1457" stroke-width="2"/>
+  <text x="600" y="478" text-anchor="middle" font-size="13" font-weight="bold" fill="#880e4f">CrossBackendValidator</text>
+  <text x="600" y="496" text-anchor="middle" font-size="11" fill="#880e4f">PSNR / SSIM / MD5 matrix vs source YUV</text>
+  <text x="600" y="514" text-anchor="middle" font-size="11" fill="#880e4f">+ deterministic-output check, + interop-OK booleans</text>
+
+  <line x1="600" y1="340" x2="600" y2="450" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- KPIs -->
+  <text x="600" y="585" text-anchor="middle" font-size="13" font-weight="bold" fill="#263238">Pass criteria</text>
+  <text x="60" y="610" font-size="11" fill="#37474f">- BD-rate(Vulkan vs VA-API) within +3% at P0 ; +10% absolute floor</text>
+  <text x="60" y="628" font-size="11" fill="#37474f">- Vulkan-encoded bitstreams decode in every spec reference decoder (JM/HM/aom) with zero NAL errors</text>
+  <text x="60" y="646" font-size="11" fill="#37474f">- Firefox decodes Chrome Vulkan output, and vice versa, in WebRTC loopback</text>
+  <text x="60" y="664" font-size="11" fill="#37474f">- VVS samples encoded by Chromium produce same MD5 as nvpro-samples on the same driver</text>
+  <text x="60" y="682" font-size="11" fill="#37474f">- Per-driver determinism: same input -&gt; same MD5 across 10 runs</text>
+  <text x="60" y="700" font-size="11" fill="#37474f">- Cross-vendor: PSNR-distribution KL-divergence(NVIDIA, AMD, Intel) below threshold per codec</text>
+</svg>

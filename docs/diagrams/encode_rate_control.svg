@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="modeG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/>
+      <stop offset="100%" stop-color="#90caf9"/>
+    </linearGradient>
+    <linearGradient id="vulkanG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="vaG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe0b2"/>
+      <stop offset="100%" stop-color="#ffcc80"/>
+    </linearGradient>
+    <linearGradient id="vuidG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff9c4"/>
+      <stop offset="100%" stop-color="#fff176"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="600" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#263238">
+    Rate-Control State and Mode Mapping (VEA -&gt; Vulkan) -- v1.1 with VUID rules
+  </text>
+
+  <!-- Top: Chromium Bitrate -->
+  <rect x="300" y="55" width="500" height="80" rx="6" fill="url(#modeG)" stroke="#0d47a1" stroke-width="2"/>
+  <text x="550" y="79" text-anchor="middle" font-size="14" font-weight="bold">media::Bitrate</text>
+  <text x="550" y="98" text-anchor="middle" font-size="11">{ Mode: kConstant | kVariable | kExternal,</text>
+  <text x="550" y="113" text-anchor="middle" font-size="11">target_bps, peak_bps, framerate, content_type }</text>
+  <text x="550" y="129" text-anchor="middle" font-size="11" fill="#0d47a1">from VideoEncodeAccelerator::Config</text>
+
+  <!-- Three columns -->
+  <!-- CBR -->
+  <rect x="20" y="170" width="380" height="380" rx="6" fill="#ffffff" stroke="#0277bd" stroke-width="2"/>
+  <text x="210" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#01579b">kConstant -- CBR</text>
+
+  <rect x="40" y="215" width="340" height="60" rx="4" fill="url(#vaG)" stroke="#e65100"/>
+  <text x="210" y="237" text-anchor="middle" font-size="11" font-weight="bold">VA-API:</text>
+  <text x="210" y="253" text-anchor="middle" font-size="10">kEncodeConstantBitrate</text>
+  <text x="210" y="268" text-anchor="middle" font-size="10">VAEncMiscParameterTypeRateControl</text>
+
+  <rect x="40" y="295" width="340" height="245" rx="4" fill="url(#vulkanG)" stroke="#2e7d32"/>
+  <text x="210" y="317" text-anchor="middle" font-size="11" font-weight="bold">Vulkan Video:</text>
+  <text x="210" y="335" text-anchor="middle" font-size="10">VK_VIDEO_ENCODE_RATE_CONTROL_MODE_CBR_BIT_KHR</text>
+  <text x="50" y="357" font-size="10">VkVideoEncodeRateControlInfoKHR {</text>
+  <text x="50" y="371" font-size="10">  layerCount = num_temporal_layers (&gt;=1),</text>
+  <text x="50" y="385" font-size="10">  pLayers[i] = {</text>
+  <text x="50" y="399" font-size="10">    averageBitrate = peak_bps,</text>
+  <text x="50" y="413" font-size="10">    maxBitrate     = peak_bps,</text>
+  <text x="50" y="427" font-size="10">  }                          // == enforced</text>
+  <text x="50" y="441" font-size="10">  virtualBufferSizeInMs = 1500,</text>
+  <text x="50" y="455" font-size="10">}</text>
+  <text x="50" y="475" font-size="10" fill="#1b5e20">+ ValidateRateControl() asserts:</text>
+  <text x="50" y="489" font-size="10" fill="#1b5e20">  pLayers[i].averageBitrate == maxBitrate</text>
+  <text x="50" y="503" font-size="10" fill="#1b5e20">  layerCount &gt; 0</text>
+
+  <!-- VBR -->
+  <rect x="410" y="170" width="380" height="380" rx="6" fill="#ffffff" stroke="#7b1fa2" stroke-width="2"/>
+  <text x="600" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#4a148c">kVariable -- VBR</text>
+
+  <rect x="430" y="215" width="340" height="60" rx="4" fill="url(#vaG)" stroke="#e65100"/>
+  <text x="600" y="237" text-anchor="middle" font-size="11" font-weight="bold">VA-API:</text>
+  <text x="600" y="253" text-anchor="middle" font-size="10">kEncodeVariableBitrate</text>
+  <text x="600" y="268" text-anchor="middle" font-size="10">target_percentage = target/peak * 100</text>
+
+  <rect x="430" y="295" width="340" height="245" rx="4" fill="url(#vulkanG)" stroke="#2e7d32"/>
+  <text x="600" y="317" text-anchor="middle" font-size="11" font-weight="bold">Vulkan Video:</text>
+  <text x="600" y="335" text-anchor="middle" font-size="10">VK_VIDEO_ENCODE_RATE_CONTROL_MODE_VBR_BIT_KHR</text>
+  <text x="440" y="357" font-size="10">VkVideoEncodeRateControlInfoKHR {</text>
+  <text x="440" y="371" font-size="10">  layerCount = num_temporal_layers (&gt;=1),</text>
+  <text x="440" y="385" font-size="10">  pLayers[i] = {</text>
+  <text x="440" y="399" font-size="10">    averageBitrate = target_bps,</text>
+  <text x="440" y="413" font-size="10">    maxBitrate     = peak_bps,</text>
+  <text x="440" y="427" font-size="10">  }</text>
+  <text x="440" y="441" font-size="10">}</text>
+  <text x="440" y="461" font-size="10" fill="#1b5e20">+ ValidateRateControl() asserts:</text>
+  <text x="440" y="475" font-size="10" fill="#1b5e20">  pLayers[i].averageBitrate &lt;= maxBitrate</text>
+  <text x="440" y="489" font-size="10" fill="#1b5e20">  maxBitrate &lt;= caps.maxBitrate</text>
+  <text x="440" y="503" font-size="10" fill="#1b5e20">  layerCount &gt; 0</text>
+
+  <!-- External / CQP -->
+  <rect x="800" y="170" width="380" height="380" rx="6" fill="#ffffff" stroke="#388e3c" stroke-width="2"/>
+  <text x="990" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#1b5e20">kExternal -- CQP / SW RC</text>
+
+  <rect x="820" y="215" width="340" height="60" rx="4" fill="url(#vaG)" stroke="#e65100"/>
+  <text x="990" y="237" text-anchor="middle" font-size="11" font-weight="bold">VA-API:</text>
+  <text x="990" y="253" text-anchor="middle" font-size="10">kEncodeConstantQuantizationParam.</text>
+  <text x="990" y="268" text-anchor="middle" font-size="10">Slice slice_qp_delta = QP - 26</text>
+
+  <rect x="820" y="295" width="340" height="245" rx="4" fill="url(#vulkanG)" stroke="#2e7d32"/>
+  <text x="990" y="317" text-anchor="middle" font-size="11" font-weight="bold">Vulkan Video (Review F5):</text>
+  <text x="990" y="335" text-anchor="middle" font-size="10" font-weight="bold">VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR</text>
+  <text x="830" y="357" font-size="10">VkVideoEncodeRateControlInfoKHR {</text>
+  <text x="830" y="371" font-size="10">  layerCount = 0,           // VUID</text>
+  <text x="830" y="385" font-size="10">  pLayers = nullptr,        // VUID</text>
+  <text x="830" y="399" font-size="10">}</text>
+  <text x="830" y="417" font-size="10" font-weight="bold">PLUS per-slice / per-frame constantQp:</text>
+  <text x="830" y="431" font-size="10">  nalu_slice.constantQp     = sw_qp</text>
+  <text x="830" y="445" font-size="10">  std_slice.slice_qp_delta  = sw_qp - 26</text>
+  <text x="830" y="463" font-size="10" fill="#1b5e20">Set BOTH so:</text>
+  <text x="830" y="477" font-size="10" fill="#1b5e20">  (a) driver picks the right QP</text>
+  <text x="830" y="491" font-size="10" fill="#1b5e20">  (b) emitted slice header decodes to it</text>
+  <text x="830" y="509" font-size="10" fill="#1b5e20">Clamp to [caps.minQp, caps.maxQp]</text>
+
+  <!-- Connecting lines -->
+  <line x1="430" y1="135" x2="200" y2="215" stroke="#37474f" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="550" y1="135" x2="550" y2="215" stroke="#37474f" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="670" y1="135" x2="900" y2="215" stroke="#37474f" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- VUID validation box -->
+  <rect x="20" y="570" width="1160" height="120" rx="8" fill="url(#vuidG)" stroke="#f9a825" stroke-width="2"/>
+  <text x="600" y="595" text-anchor="middle" font-size="14" font-weight="bold" fill="#bf360c">
+    VulkanVideoEncoderWrapper::ValidateRateControl() -- Vulkan VUIDs (Review F4)
+  </text>
+  <text x="30" y="615" font-size="11" fill="#37474f">DEFAULT  : layerCount MUST be 0; pLayers MUST be nullptr; driver decides everything.</text>
+  <text x="30" y="631" font-size="11" fill="#37474f">DISABLED : layerCount MUST be 0; pLayers MUST be nullptr; app fills per-codec constantQp.</text>
+  <text x="30" y="647" font-size="11" fill="#37474f">CBR      : layerCount &gt;= 1 == temporalLayerCount; for each layer: averageBitrate == maxBitrate.</text>
+  <text x="30" y="663" font-size="11" fill="#37474f">VBR      : layerCount &gt;= 1 == temporalLayerCount; for each layer: averageBitrate &lt;= maxBitrate &lt;= caps.maxBitrate.</text>
+  <text x="30" y="681" font-size="11" fill="#37474f" font-style="italic">Centralised: per-codec delegates never set these fields directly; they call into the wrapper.</text>
+</svg>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="t1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dcedc8"/>
+      <stop offset="100%" stop-color="#aed581"/>
+    </linearGradient>
+    <linearGradient id="t2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="100%" stop-color="#81c784"/>
+    </linearGradient>
+    <linearGradient id="t3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/>
+      <stop offset="100%" stop-color="#64b5f6"/>
+    </linearGradient>
+    <linearGradient id="t4" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe0b2"/>
+      <stop offset="100%" stop-color="#ffb74d"/>
+    </linearGradient>
+    <linearGradient id="t5" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8bbd0"/>
+      <stop offset="100%" stop-color="#f06292"/>
+    </linearGradient>
+    <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="600" y="32" text-anchor="middle" font-size="22" font-weight="bold" fill="#263238">
+    Five-Tier Test Onion for Vulkan Video Encode + Decode
+  </text>
+
+  <!-- Concentric rectangles -->
+  <rect x="100" y="80" width="1000" height="600" rx="20" fill="url(#t5)" stroke="#ad1457" stroke-width="2"/>
+  <rect x="160" y="140" width="880" height="490" rx="18" fill="url(#t4)" stroke="#e65100" stroke-width="2"/>
+  <rect x="220" y="200" width="760" height="380" rx="16" fill="url(#t3)" stroke="#1565c0" stroke-width="2"/>
+  <rect x="280" y="260" width="640" height="270" rx="14" fill="url(#t2)" stroke="#2e7d32" stroke-width="2"/>
+  <rect x="340" y="320" width="520" height="160" rx="12" fill="url(#t1)" stroke="#558b2f" stroke-width="2"/>
+
+  <!-- Centre core -->
+  <text x="600" y="380" text-anchor="middle" font-size="16" font-weight="bold" fill="#33691e">Tier 1: Unit (delegate, wrapper)</text>
+  <text x="600" y="400" text-anchor="middle" font-size="11" fill="#33691e">media/gpu/vulkan/*_unittest.cc</text>
+  <text x="600" y="416" text-anchor="middle" font-size="11" fill="#33691e">Mocked Vulkan loader; ~50 ms / case</text>
+  <text x="600" y="432" text-anchor="middle" font-size="10" fill="#33691e">Tier 1 NEW: ~6,500 LOC, 14 files</text>
+  <text x="600" y="450" text-anchor="middle" font-size="10" fill="#33691e">Pre-submit and CQ</text>
+  <text x="600" y="466" text-anchor="middle" font-size="10" fill="#33691e">Coverage gate: 90% line, 80% branch</text>
+
+  <text x="600" y="290" text-anchor="middle" font-size="14" font-weight="bold" fill="#1b5e20">Tier 2: media/gpu gtest (VEA / VDA)</text>
+  <text x="600" y="307" text-anchor="middle" font-size="10" fill="#1b5e20">video_encode_accelerator_tests + video_decode_accelerator_tests + perf variants</text>
+
+  <text x="600" y="230" text-anchor="middle" font-size="14" font-weight="bold" fill="#0d47a1">Tier 3: WebCodecs Web Platform Tests</text>
+  <text x="600" y="247" text-anchor="middle" font-size="10" fill="#0d47a1">third_party/blink/web_tests/external/wpt/webcodecs/  (40+ video files)</text>
+
+  <text x="600" y="170" text-anchor="middle" font-size="14" font-weight="bold" fill="#bf360c">Tier 4: Browser-level / WebRTC / Tast</text>
+  <text x="600" y="187" text-anchor="middle" font-size="10" fill="#bf360c">video.EncodeAccel.*, video.ChromeStackDecoder.*, video.WebRTC*, video.Play.*</text>
+
+  <text x="600" y="110" text-anchor="middle" font-size="14" font-weight="bold" fill="#880e4f">Tier 5: External conformance suites</text>
+  <text x="600" y="127" text-anchor="middle" font-size="10" fill="#880e4f">JVT H.264 + JCT-VC HEVC + Argon AV1 + Fluster + VK-GL-CTS + Vulkan-Video-Samples</text>
+
+  <!-- Side arrows -->
+  <line x1="1130" y1="100" x2="1130" y2="680" stroke="#546e7a" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="1140" y="120" font-size="11" fill="#546e7a">slower</text>
+  <text x="1140" y="135" font-size="11" fill="#546e7a">closer to user</text>
+  <text x="1140" y="660" font-size="11" fill="#546e7a">nightly</text>
+
+  <line x1="70" y1="680" x2="70" y2="100" stroke="#546e7a" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="20" y="680" font-size="11" fill="#546e7a">faster</text>
+  <text x="20" y="695" font-size="11" fill="#546e7a">closer to source</text>
+  <text x="20" y="120" font-size="11" fill="#546e7a">pre-submit</text>
+</svg>

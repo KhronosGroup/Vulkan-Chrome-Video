@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 620" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="vendG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dcedc8"/><stop offset="100%" stop-color="#aed581"/>
+    </linearGradient>
+    <linearGradient id="newG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/><stop offset="100%" stop-color="#64b5f6"/>
+    </linearGradient>
+    <linearGradient id="binG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff9c4"/><stop offset="100%" stop-color="#fff176"/>
+    </linearGradient>
+  </defs>
+
+  <text x="640" y="32" text-anchor="middle" font-size="22" font-weight="bold" fill="#263238">
+    Chromium's third_party/ codec-library pattern (Model D fits here)
+  </text>
+  <text x="640" y="54" text-anchor="middle" font-size="11" fill="#37474f">
+    Every codec Chrome ships today is vendored under third_party/ and built into the chrome binary as a static lib.
+  </text>
+
+  <!-- Existing codecs row -->
+  <text x="40" y="92" font-size="14" font-weight="bold" fill="#1b5e20">Existing third_party/ codec libraries in Chromium (Apache-2.0 / BSD)</text>
+
+  <rect x="40" y="105" width="200" height="105" rx="6" fill="url(#vendG)" stroke="#1b5e20" stroke-width="1.5"/>
+  <text x="140" y="128" text-anchor="middle" font-size="13" font-weight="bold">third_party/libvpx</text>
+  <text x="140" y="146" text-anchor="middle" font-size="10">VP8 + VP9 enc + dec</text>
+  <text x="140" y="162" text-anchor="middle" font-size="10">~150 k LoC vendored</text>
+  <text x="140" y="178" text-anchor="middle" font-size="10">~1.5 MB stripped</text>
+  <text x="140" y="194" text-anchor="middle" font-size="10" fill="#1b5e20">Static, in chrome</text>
+
+  <rect x="250" y="105" width="200" height="105" rx="6" fill="url(#vendG)" stroke="#1b5e20" stroke-width="1.5"/>
+  <text x="350" y="128" text-anchor="middle" font-size="13" font-weight="bold">third_party/libaom</text>
+  <text x="350" y="146" text-anchor="middle" font-size="10">AV1 enc + dec</text>
+  <text x="350" y="162" text-anchor="middle" font-size="10">~700 k LoC vendored</text>
+  <text x="350" y="178" text-anchor="middle" font-size="10">~3.1 MB stripped</text>
+  <text x="350" y="194" text-anchor="middle" font-size="10" fill="#1b5e20">Static, in chrome</text>
+
+  <rect x="460" y="105" width="200" height="105" rx="6" fill="url(#vendG)" stroke="#1b5e20" stroke-width="1.5"/>
+  <text x="560" y="128" text-anchor="middle" font-size="13" font-weight="bold">third_party/dav1d</text>
+  <text x="560" y="146" text-anchor="middle" font-size="10">AV1 fast-path decode</text>
+  <text x="560" y="162" text-anchor="middle" font-size="10">~60 k LoC vendored</text>
+  <text x="560" y="178" text-anchor="middle" font-size="10">~0.9 MB stripped</text>
+  <text x="560" y="194" text-anchor="middle" font-size="10" fill="#1b5e20">Static, in chrome</text>
+
+  <rect x="670" y="105" width="200" height="105" rx="6" fill="url(#vendG)" stroke="#1b5e20" stroke-width="1.5"/>
+  <text x="770" y="128" text-anchor="middle" font-size="13" font-weight="bold">third_party/libavif</text>
+  <text x="770" y="146" text-anchor="middle" font-size="10">AVIF still-image</text>
+  <text x="770" y="162" text-anchor="middle" font-size="10">~30 k LoC vendored</text>
+  <text x="770" y="178" text-anchor="middle" font-size="10">~0.4 MB stripped</text>
+  <text x="770" y="194" text-anchor="middle" font-size="10" fill="#1b5e20">Static, in chrome</text>
+
+  <rect x="880" y="105" width="200" height="105" rx="6" fill="url(#vendG)" stroke="#1b5e20" stroke-width="1.5"/>
+  <text x="980" y="128" text-anchor="middle" font-size="13" font-weight="bold">third_party/libwebp</text>
+  <text x="980" y="146" text-anchor="middle" font-size="10">WebP still + animated</text>
+  <text x="980" y="162" text-anchor="middle" font-size="10">~40 k LoC vendored</text>
+  <text x="980" y="178" text-anchor="middle" font-size="10">~0.5 MB stripped</text>
+  <text x="980" y="194" text-anchor="middle" font-size="10" fill="#1b5e20">Static, in chrome</text>
+
+  <rect x="40" y="220" width="1040" height="35" rx="6" fill="#cfd8dc" stroke="#37474f"/>
+  <text x="560" y="244" text-anchor="middle" font-size="12" fill="#263238">
+    Common pattern: drop-in upstream tree + BUILD.gn (~300-500 LoC) + README.chromium + DEPS pin + OWNERS + LICENSE. Auto-rolled via AutoRoller bots.
+  </text>
+
+  <!-- New row: vulkan_video_samples -->
+  <text x="40" y="295" font-size="14" font-weight="bold" fill="#0d47a1">NEW  -  third_party/vulkan_video_samples (Model D adds this)</text>
+
+  <rect x="40" y="310" width="1040" height="105" rx="6" fill="url(#newG)" stroke="#0d47a1" stroke-width="2"/>
+  <text x="560" y="335" text-anchor="middle" font-size="14" font-weight="bold" fill="#0d47a1">third_party/vulkan_video_samples</text>
+  <text x="560" y="353" text-anchor="middle" font-size="11">HW-accelerated H.264 + HEVC + AV1 encode + decode via Vulkan Video extensions</text>
+  <text x="560" y="370" text-anchor="middle" font-size="11">~25 k LoC vendored  |  ~2-5 MB stripped (depending on enabled codecs)</text>
+  <text x="560" y="387" text-anchor="middle" font-size="11" fill="#0d47a1" font-weight="bold">Static, in chrome (Model D) - or dynamic libvkvideo-encoder.so (Model A)</text>
+  <text x="560" y="404" text-anchor="middle" font-size="10" fill="#1b5e20" font-style="italic">Same source tree, same code, same BYO-VkDevice integration - only the build/link mode differs.</text>
+
+  <!-- Existing pattern arrows -->
+  <line x1="140" y1="210" x2="140" y2="305" stroke="#1b5e20" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="350" y1="210" x2="350" y2="305" stroke="#1b5e20" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="560" y1="210" x2="560" y2="305" stroke="#1b5e20" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="770" y1="210" x2="770" y2="305" stroke="#1b5e20" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="980" y1="210" x2="980" y2="305" stroke="#1b5e20" stroke-width="1.5" stroke-dasharray="3,3"/>
+
+  <!-- File structure -->
+  <text x="40" y="450" font-size="14" font-weight="bold" fill="#263238">Vendored tree contents (Model D)</text>
+
+  <rect x="40" y="465" width="500" height="140" rx="6" fill="#f5f5f5" stroke="#9e9e9e"/>
+  <text x="55" y="487" font-size="11" font-family="Courier" fill="#263238">src/third_party/vulkan_video_samples/</text>
+  <text x="75" y="503" font-size="10" font-family="Courier" fill="#1b5e20">  +- README.chromium     # URL, version, license, mods</text>
+  <text x="75" y="517" font-size="10" font-family="Courier" fill="#1b5e20">  +- DEPS                # upstream commit pin</text>
+  <text x="75" y="531" font-size="10" font-family="Courier" fill="#1b5e20">  +- OWNERS              # media team</text>
+  <text x="75" y="545" font-size="10" font-family="Courier" fill="#0d47a1">  +- BUILD.gn            # WE WRITE (~400 LoC)</text>
+  <text x="75" y="559" font-size="10" font-family="Courier" fill="#1b5e20">  +- LICENSE             # Apache-2.0</text>
+  <text x="75" y="573" font-size="10" font-family="Courier" fill="#1b5e20">  +- chromium_patches/   # rare, ideally empty</text>
+  <text x="75" y="587" font-size="10" font-family="Courier" fill="#1b5e20">  +- vk_video_encoder/   # upstream drop-in</text>
+  <text x="75" y="601" font-size="10" font-family="Courier" fill="#1b5e20">  \- common/             # upstream drop-in</text>
+
+  <!-- Reasons -->
+  <text x="570" y="487" font-size="13" font-weight="bold" fill="#263238">Why static link here?</text>
+  <text x="570" y="507" font-size="11" fill="#1b5e20">  - Single chrome binary, no .so distribution headaches</text>
+  <text x="570" y="523" font-size="11" fill="#1b5e20">  - LTO/PGO across encoder + Chromium boundary</text>
+  <text x="570" y="539" font-size="11" fill="#1b5e20">  - Codec correctness reviewable at each DEPS roll</text>
+  <text x="570" y="555" font-size="11" fill="#1b5e20">  - Per-codec build flags (enable_vulkan_video_encode_h264 = false)</text>
+  <text x="570" y="571" font-size="11" fill="#1b5e20">  - Sandbox-friendly: no dlopen of external library</text>
+  <text x="570" y="587" font-size="11" fill="#1b5e20">  - Same auto-roller infrastructure as every other Chromium codec</text>
+  <text x="570" y="603" font-size="11" fill="#bf360c">  Cost: +2-5 MB per chrome binary (in line with libaom / libvpx).</text>
+</svg>

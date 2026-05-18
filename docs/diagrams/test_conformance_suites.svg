@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 680" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="srcG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fce4ec"/><stop offset="100%" stop-color="#f48fb1"/>
+    </linearGradient>
+    <linearGradient id="midG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff9c4"/><stop offset="100%" stop-color="#fff176"/>
+    </linearGradient>
+    <linearGradient id="vkG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/><stop offset="100%" stop-color="#81c784"/>
+    </linearGradient>
+    <linearGradient id="refG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/><stop offset="100%" stop-color="#64b5f6"/>
+    </linearGradient>
+    <marker id="ar" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="640" y="30" text-anchor="middle" font-size="22" font-weight="bold" fill="#263238">
+    External Conformance Suite Plumbing (Tier 5)
+  </text>
+
+  <!-- Vector sources -->
+  <text x="200" y="80" text-anchor="middle" font-size="14" font-weight="bold" fill="#880e4f">External vector sources</text>
+
+  <rect x="40" y="100" width="320" height="60" rx="6" fill="url(#srcG)" stroke="#ad1457"/>
+  <text x="200" y="124" text-anchor="middle" font-size="12" font-weight="bold">JVT H.264 conformance (ITU)</text>
+  <text x="200" y="142" text-anchor="middle" font-size="10">~100+ bitstreams, JM reference</text>
+  <text x="200" y="156" text-anchor="middle" font-size="10">wftp3 / hhi-jct-vc</text>
+
+  <rect x="40" y="170" width="320" height="60" rx="6" fill="url(#srcG)" stroke="#ad1457"/>
+  <text x="200" y="194" text-anchor="middle" font-size="12" font-weight="bold">JCT-VC HEVC conformance (ITU)</text>
+  <text x="200" y="212" text-anchor="middle" font-size="10">~400+ bitstreams, HM reference</text>
+  <text x="200" y="226" text-anchor="middle" font-size="10">wftp3 / hhi-jvet</text>
+
+  <rect x="40" y="240" width="320" height="60" rx="6" fill="url(#srcG)" stroke="#ad1457"/>
+  <text x="200" y="264" text-anchor="middle" font-size="12" font-weight="bold">Argon Streams AV1 (AOM/Graphcore)</text>
+  <text x="200" y="282" text-anchor="middle" font-size="10">~7 GB formally-verified streams</text>
+  <text x="200" y="296" text-anchor="middle" font-size="10">aomedia.org</text>
+
+  <rect x="40" y="310" width="320" height="60" rx="6" fill="url(#srcG)" stroke="#ad1457"/>
+  <text x="200" y="334" text-anchor="middle" font-size="12" font-weight="bold">AOM AV1 test_vectors.cc</text>
+  <text x="200" y="352" text-anchor="middle" font-size="10">~500 MB</text>
+  <text x="200" y="366" text-anchor="middle" font-size="10">aomedia.googlesource.com</text>
+
+  <rect x="40" y="380" width="320" height="60" rx="6" fill="url(#srcG)" stroke="#ad1457"/>
+  <text x="200" y="404" text-anchor="middle" font-size="12" font-weight="bold">WebM VP9 conformance vectors</text>
+  <text x="200" y="422" text-anchor="middle" font-size="10">~1 GB</text>
+  <text x="200" y="436" text-anchor="middle" font-size="10">webmproject.org</text>
+
+  <rect x="40" y="450" width="320" height="60" rx="6" fill="url(#srcG)" stroke="#ad1457"/>
+  <text x="200" y="474" text-anchor="middle" font-size="12" font-weight="bold">VVS samples (encode side)</text>
+  <text x="200" y="492" text-anchor="middle" font-size="10">~10 YUV input clips</text>
+  <text x="200" y="506" text-anchor="middle" font-size="10">storage.googleapis.com/vulkan-video-samples</text>
+
+  <rect x="40" y="520" width="320" height="60" rx="6" fill="url(#srcG)" stroke="#ad1457"/>
+  <text x="200" y="544" text-anchor="middle" font-size="12" font-weight="bold">Khronos VK-GL-CTS</text>
+  <text x="200" y="562" text-anchor="middle" font-size="10">dEQP-VK.video.encode.* / decode.*</text>
+  <text x="200" y="576" text-anchor="middle" font-size="10">github.com/KhronosGroup/VK-GL-CTS</text>
+
+  <!-- Fetcher / harness -->
+  <text x="640" y="80" text-anchor="middle" font-size="14" font-weight="bold" fill="#bf360c">Test driver (NEW)</text>
+
+  <rect x="490" y="100" width="280" height="270" rx="8" fill="url(#midG)" stroke="#f9a825" stroke-width="2"/>
+  <text x="630" y="124" text-anchor="middle" font-size="13" font-weight="bold" fill="#bf360c">tools/scripts/run_*_conformance.py</text>
+  <text x="510" y="146" font-size="10" fill="#5d4037">  run_jvt_conformance.py</text>
+  <text x="510" y="160" font-size="10" fill="#5d4037">  run_hevc_conformance.py</text>
+  <text x="510" y="174" font-size="10" fill="#5d4037">  run_av1_conformance.py</text>
+  <text x="510" y="188" font-size="10" fill="#5d4037">  run_vp9_conformance.py</text>
+  <text x="510" y="206" font-size="10" fill="#5d4037">  fetch_conformance.py  (download + cache)</text>
+  <text x="510" y="220" font-size="10" fill="#5d4037">  fluster_plugin_vulkan_video.py</text>
+  <text x="510" y="234" font-size="10" fill="#5d4037">  run_vk_gl_cts_video.py</text>
+  <text x="510" y="252" font-size="10" fill="#5d4037">  cross_vendor_diff.py</text>
+  <text x="510" y="270" font-size="10" fill="#5d4037">  update_vulkan_video_allowlist.py</text>
+  <text x="630" y="298" text-anchor="middle" font-size="11" font-weight="bold" fill="#bf360c">Inputs: bitstream + golden MD5</text>
+  <text x="630" y="316" text-anchor="middle" font-size="11" font-weight="bold" fill="#bf360c">Outputs: pass/fail per vector,</text>
+  <text x="630" y="334" text-anchor="middle" font-size="11" font-weight="bold" fill="#bf360c">spec-feature coverage report,</text>
+  <text x="630" y="352" text-anchor="middle" font-size="11" font-weight="bold" fill="#bf360c">crbug auto-filing on regression</text>
+
+  <line x1="360" y1="130" x2="490" y2="160" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="360" y1="200" x2="490" y2="190" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="360" y1="270" x2="490" y2="220" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="360" y1="340" x2="490" y2="250" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="360" y1="410" x2="490" y2="280" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="360" y1="480" x2="490" y2="310" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="360" y1="550" x2="490" y2="340" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Vulkan VEA/VDA -->
+  <text x="1060" y="80" text-anchor="middle" font-size="14" font-weight="bold" fill="#1b5e20">System under test</text>
+
+  <rect x="900" y="100" width="320" height="80" rx="8" fill="url(#vkG)" stroke="#2e7d32" stroke-width="2"/>
+  <text x="1060" y="128" text-anchor="middle" font-size="13" font-weight="bold" fill="#1b5e20">VulkanVideoDecodeAccelerator</text>
+  <text x="1060" y="146" text-anchor="middle" font-size="11" fill="#1b5e20">decodes test bitstream</text>
+  <text x="1060" y="164" text-anchor="middle" font-size="11" fill="#1b5e20">via chromium_vulkan_video_cli</text>
+
+  <rect x="900" y="200" width="320" height="80" rx="8" fill="url(#vkG)" stroke="#2e7d32" stroke-width="2"/>
+  <text x="1060" y="228" text-anchor="middle" font-size="13" font-weight="bold" fill="#1b5e20">VulkanVideoEncodeAccelerator</text>
+  <text x="1060" y="246" text-anchor="middle" font-size="11" fill="#1b5e20">encodes YUV; check JM/HM/aom</text>
+  <text x="1060" y="264" text-anchor="middle" font-size="11" fill="#1b5e20">accept the output</text>
+
+  <rect x="900" y="300" width="320" height="80" rx="8" fill="url(#refG)" stroke="#1565c0" stroke-width="2"/>
+  <text x="1060" y="328" text-anchor="middle" font-size="13" font-weight="bold" fill="#0d47a1">Reference decoders</text>
+  <text x="1060" y="346" text-anchor="middle" font-size="11" fill="#0d47a1">JM (ldecod), HM (TAppDecoder),</text>
+  <text x="1060" y="364" text-anchor="middle" font-size="11" fill="#0d47a1">aomdec, libvpx, openh264</text>
+
+  <line x1="770" y1="170" x2="900" y2="150" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="770" y1="220" x2="900" y2="240" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="770" y1="290" x2="900" y2="340" stroke="#37474f" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Outputs -->
+  <rect x="340" y="450" width="900" height="180" rx="10" fill="#e8f5e9" stroke="#1b5e20" stroke-width="2"/>
+  <text x="790" y="480" text-anchor="middle" font-size="14" font-weight="bold" fill="#1b5e20">Outputs</text>
+  <text x="360" y="505" font-size="11" fill="#2e7d32">Pass rates per codec / driver:</text>
+  <text x="360" y="525" font-size="11" fill="#37474f">- JVT pass rate, JCT-VC pass rate, Argon pass rate, fluster pass rate, dEQP-VK.video pass rate</text>
+  <text x="360" y="545" font-size="11" fill="#37474f">- Per-spec-feature coverage matrix (CABAC, FMO, T8x8, intra-refresh, ...)</text>
+  <text x="360" y="565" font-size="11" fill="#37474f">- MD5 diff vs golden / vs other vendor</text>
+  <text x="360" y="585" font-size="11" fill="#37474f">- ChromePerf timeseries: pass-rate over time per (codec, driver)</text>
+  <text x="360" y="605" font-size="11" fill="#37474f">- Driver allowlist auto-tuner: skip drivers where a spec feature is broken</text>
+</svg>

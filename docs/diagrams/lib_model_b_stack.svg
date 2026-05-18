@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 740" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="renderG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e3f2fd"/><stop offset="100%" stop-color="#bbdefb"/>
+    </linearGradient>
+    <linearGradient id="gpuG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff3e0"/><stop offset="100%" stop-color="#ffe0b2"/>
+    </linearGradient>
+    <linearGradient id="chromiumG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/><stop offset="100%" stop-color="#64b5f6"/>
+    </linearGradient>
+    <linearGradient id="vendoredG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/><stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="adapterG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff9c4"/><stop offset="100%" stop-color="#fff176"/>
+    </linearGradient>
+    <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="600" y="30" text-anchor="middle" font-size="22" font-weight="bold" fill="#263238">
+    Model B Stack: Where Each Component Lives
+  </text>
+  <text x="600" y="50" text-anchor="middle" font-size="12" fill="#546e7a">
+    Vendor the codec layer; replace the device context and entry layer with Chromium-native code
+  </text>
+
+  <!-- Renderer process -->
+  <rect x="60" y="70" width="1080" height="80" rx="8" fill="url(#renderG)" stroke="#0d47a1" stroke-width="2"/>
+  <text x="600" y="98" text-anchor="middle" font-size="14" font-weight="bold" fill="#0d47a1">Renderer Process</text>
+  <text x="600" y="120" text-anchor="middle" font-size="11">WebCodecs VideoEncoder / WebRTC PeerConnection / MediaRecorder</text>
+  <text x="600" y="138" text-anchor="middle" font-size="10">(unchanged)</text>
+
+  <line x1="600" y1="150" x2="600" y2="180" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="630" y="170" font-size="11" fill="#37474f">Mojo</text>
+
+  <!-- GPU process -->
+  <rect x="60" y="180" width="1080" height="540" rx="8" fill="url(#gpuG)" stroke="#e65100" stroke-width="2"/>
+  <text x="600" y="208" text-anchor="middle" font-size="14" font-weight="bold" fill="#bf360c">GPU Process — single VkDevice</text>
+
+  <!-- Top: Chromium VEA -->
+  <rect x="80" y="225" width="1040" height="60" rx="6" fill="url(#chromiumG)" stroke="#1565c0"/>
+  <text x="600" y="248" text-anchor="middle" font-size="13" font-weight="bold">media/gpu/vulkan/  (NEW — Chromium-native, ~4,200 LoC)</text>
+  <text x="600" y="266" text-anchor="middle" font-size="10">vulkan_video_encode_accelerator + vulkan_video_encoder_wrapper + h26{4,5}_/av1_vulkan_video_encoder_delegate</text>
+  <text x="600" y="280" text-anchor="middle" font-size="10">+ vulkan_video_bitstream_buffer + vulkan_video_encode_capability_enumerator</text>
+
+  <line x1="600" y1="285" x2="600" y2="315" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Adapter layer -->
+  <rect x="80" y="315" width="1040" height="60" rx="6" fill="url(#adapterG)" stroke="#f9a825" stroke-width="2"/>
+  <text x="600" y="338" text-anchor="middle" font-size="13" font-weight="bold" fill="#bf360c">media/gpu/vulkan/vulkan_video_device_adapter.{h,cc}  (NEW — ~300 LoC)</text>
+  <text x="600" y="356" text-anchor="middle" font-size="10">Adapter pattern: implements the vendored VulkanDeviceContext interface using gpu::VulkanDeviceQueue handles</text>
+  <text x="600" y="370" text-anchor="middle" font-size="10" fill="#bf360c">This is the bridge that lets us KEEP the codec implementation but REUSE the compositor VkDevice.</text>
+
+  <line x1="600" y1="375" x2="600" y2="405" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Vendored codec layer -->
+  <rect x="80" y="405" width="1040" height="180" rx="6" fill="url(#vendoredG)" stroke="#2e7d32" stroke-width="2"/>
+  <text x="600" y="430" text-anchor="middle" font-size="13" font-weight="bold" fill="#1b5e20">third_party/vulkan_video_samples/  (VENDORED — codec sources only)</text>
+
+  <rect x="100" y="450" width="500" height="120" rx="4" fill="#ffffff" stroke="#558b2f"/>
+  <text x="350" y="470" text-anchor="middle" font-size="12" font-weight="bold">vk_video_encoder/libs/VkVideoEncoder/</text>
+  <text x="115" y="488" font-size="10">" VkVideoEncoderH264.{h,cpp}</text>
+  <text x="115" y="502" font-size="10">" VkVideoEncoderH265.{h,cpp}</text>
+  <text x="115" y="516" font-size="10">" VkVideoEncoderAV1.{h,cpp}</text>
+  <text x="115" y="530" font-size="10">" VkEncoderDpb{H264,H265,AV1}.{h,cpp}</text>
+  <text x="115" y="544" font-size="10">" VkVideoGopStructure.{h,cpp}</text>
+  <text x="115" y="558" font-size="10">" VkEncoderConfig.{h,cpp}</text>
+
+  <rect x="620" y="450" width="500" height="120" rx="4" fill="#ffffff" stroke="#558b2f"/>
+  <text x="870" y="470" text-anchor="middle" font-size="12" font-weight="bold">common/libs/VkCodecUtils/</text>
+  <text x="635" y="488" font-size="10">" VulkanVideoImagePool.{h,cpp}</text>
+  <text x="635" y="502" font-size="10">" VulkanBufferPool.{h,cpp}</text>
+  <text x="635" y="516" font-size="10">" VulkanCommandBufferPool.{h,cpp}</text>
+  <text x="635" y="530" font-size="10">" VkImageResource.{h,cpp} (no compositor coupling)</text>
+  <text x="635" y="544" font-size="10">" VkBufferResource.{h,cpp}</text>
+  <text x="635" y="558" font-size="10">" VulkanFilterYuvCompute.{h,cpp} (RGBA→NV12)</text>
+
+  <line x1="600" y1="585" x2="600" y2="615" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Bottom: Chromium GPU base -->
+  <rect x="80" y="615" width="1040" height="90" rx="6" fill="url(#chromiumG)" stroke="#1565c0"/>
+  <text x="600" y="638" text-anchor="middle" font-size="13" font-weight="bold">gpu/vulkan/  (EXISTING Chromium)</text>
+  <text x="600" y="658" text-anchor="middle" font-size="11">gpu::VulkanDeviceQueue — the SAME VkDevice used by the SkiaRenderer compositor</text>
+  <text x="600" y="675" text-anchor="middle" font-size="10">VulkanFunctionPointers / VulkanFenceHelper / VulkanCommandPool</text>
+  <text x="600" y="691" text-anchor="middle" font-size="10" fill="#0d47a1">Shared with the compositor → real zero-copy from SharedImage backings</text>
+
+  <!-- NOT vendored callout -->
+  <rect x="800" y="225" width="320" height="80" rx="6" fill="#ffebee" stroke="#c62828" stroke-width="2"/>
+  <text x="960" y="248" text-anchor="middle" font-size="12" font-weight="bold" fill="#c62828">NOT vendored / replaced</text>
+  <text x="820" y="266" font-size="10" fill="#bf360c">- vulkan_video_encoder_ext.cpp (entry layer)</text>
+  <text x="820" y="280" font-size="10" fill="#bf360c">- VulkanDeviceContext (replaced by adapter)</text>
+  <text x="820" y="294" font-size="10" fill="#bf360c">- demos/, json_config/, std::cout noise</text>
+
+  <text x="600" y="720" text-anchor="middle" font-size="11" fill="#37474f" font-style="italic">
+    Yellow = the linchpin: a small Chromium-side adapter lets us swap out the lib's device context without rewriting any codec code.
+  </text>
+</svg>

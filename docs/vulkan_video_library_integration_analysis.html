@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugging the Vulkan-Video-Samples Library into Chromium</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --accent-blue: #2563eb;
+            --accent-purple: #7c3aed;
+            --accent-green: #16a34a;
+            --accent-orange: #d97706;
+            --accent-red: #dc2626;
+            --accent-pink: #db2777;
+            --border-color: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-fg: #e2e8f0;
+            --inline-code-bg: #f1f5f9;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-primary);
+               color: var(--text-primary); line-height: 1.7; font-size: 15.5px; }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+        header { background: linear-gradient(135deg, #ecfeff 0%, #a5f3fc 100%);
+                 padding: 2rem 0; border-bottom: 3px solid var(--accent-blue); }
+        header h1 { font-size: 1.95rem;
+                    background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                    background-clip: text; margin-bottom: 0.4rem; line-height: 1.2; }
+        header .subtitle { color: var(--text-secondary); font-size: 1.05rem; }
+        header .meta { margin-top: 1rem; font-size: 0.88rem; color: var(--text-muted); }
+        header .meta span { margin-right: 1.5rem; }
+        nav { background: #ffffff; padding: 0.5rem 0;
+              border-bottom: 1px solid var(--border-color);
+              position: sticky; top: 0; z-index: 99;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        nav a { color: var(--text-secondary); text-decoration: none;
+                padding: 0.4rem 0.8rem; border-radius: 6px;
+                font-size: 0.85rem; transition: all 0.2s; }
+        nav a:hover { background: var(--bg-tertiary); color: var(--accent-blue); }
+        main { padding: 2rem 0 4rem; }
+        section { margin-bottom: 3rem; }
+        section h2 { color: var(--accent-blue);
+                     border-bottom: 2px solid var(--accent-blue);
+                     padding-bottom: 0.5rem; margin-bottom: 1rem; font-size: 1.6rem; }
+        section h3 { margin-top: 1.5rem; margin-bottom: 0.6rem;
+                     color: var(--text-primary); font-size: 1.2rem; }
+        section h4 { margin-top: 1rem; margin-bottom: 0.4rem;
+                     color: var(--text-secondary); font-size: 1.0rem; }
+        p { margin-bottom: 0.9rem; }
+        ul, ol { margin-bottom: 0.9rem; padding-left: 1.5rem; }
+        li { margin-bottom: 0.3rem; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+        th, td { border: 1px solid var(--border-color);
+                 padding: 0.5rem 0.7rem; text-align: left; vertical-align: top; }
+        th { background: var(--bg-tertiary); font-weight: 600; }
+        tr:nth-child(even) { background: var(--bg-secondary); }
+        code { background: var(--inline-code-bg); padding: 0.1rem 0.4rem;
+               border-radius: 4px; font-family: 'Consolas', 'Monaco', monospace;
+               font-size: 0.88em; color: var(--accent-purple); }
+        pre { background: var(--code-bg); color: var(--code-fg);
+              padding: 1rem; border-radius: 6px; overflow-x: auto;
+              font-size: 0.85rem; font-family: 'Consolas', 'Monaco', monospace;
+              line-height: 1.5; margin: 1rem 0; }
+        pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+        blockquote { border-left: 4px solid var(--accent-orange);
+                     background: #fff7ed; padding: 0.7rem 1rem;
+                     margin: 1rem 0; color: var(--text-secondary);
+                     border-radius: 0 4px 4px 0; }
+        .callout-new   { border-left: 4px solid var(--accent-green);
+                         background: #f0fdf4; padding: 0.7rem 1rem; margin: 1rem 0;
+                         border-radius: 0 4px 4px 0; }
+        .callout-risk  { border-left: 4px solid var(--accent-red);
+                         background: #fef2f2; padding: 0.7rem 1rem; margin: 1rem 0;
+                         border-radius: 0 4px 4px 0; }
+        .callout-info  { border-left: 4px solid var(--accent-blue);
+                         background: #eff6ff; padding: 0.7rem 1rem; margin: 1rem 0;
+                         border-radius: 0 4px 4px 0; }
+        .callout-rec   { border-left: 4px solid var(--accent-purple);
+                         background: #faf5ff; padding: 0.7rem 1rem; margin: 1rem 0;
+                         border-radius: 0 4px 4px 0; }
+        .diagram { margin: 1.5rem 0; padding: 1rem; background: white;
+                   border: 1px solid var(--border-color); border-radius: 8px;
+                   box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; }
+        .diagram img, .diagram object { max-width: 100%; height: auto; }
+        .diagram-caption { margin-top: 0.5rem; font-size: 0.85rem;
+                           color: var(--text-muted); font-style: italic; }
+        .tag { display: inline-block; padding: 0.15rem 0.5rem;
+               border-radius: 4px; font-size: 0.75rem; font-weight: 600;
+               margin-right: 0.3rem; text-transform: uppercase; }
+        .tag-cov    { background: #dcfce7; color: #166534; }
+        .tag-part   { background: #fef3c7; color: #92400e; }
+        .tag-gap    { background: #fee2e2; color: #991b1b; }
+        .tag-crit   { background: #fce7f3; color: #9d174d; }
+        .tag-p0     { background: #fee2e2; color: #991b1b; }
+        .tag-rec    { background: #ede9fe; color: #5b21b6; }
+        .toc { background: var(--bg-secondary);
+               border: 1px solid var(--border-color);
+               border-radius: 8px; padding: 1rem 1.5rem; margin-bottom: 2rem; }
+        .toc h3 { margin-top: 0; color: var(--accent-blue); }
+        .toc ol { padding-left: 1.3rem; }
+        .toc a { color: var(--accent-blue); text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .hero {
+            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border: 2px solid var(--accent-purple);
+        }
+        .hero h3 { color: var(--accent-purple); margin-top: 0; }
+        footer { border-top: 1px solid var(--border-color);
+                 padding: 1.5rem 0; margin-top: 4rem;
+                 color: var(--text-muted); font-size: 0.85rem; text-align: center; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1>Plugging the Vulkan-Video-Samples Encoder Library into Chromium</h1>
+        <div class="subtitle">
+            Can the existing library shave development time? What's missing? How much do we save?
+        </div>
+        <div class="meta">
+            <span><strong>Version</strong>: 1.3 (adds Model D — static link via <code>third_party/</code>)</span>
+            <span><strong>Date</strong>: May 19, 2026</span>
+            <span><strong>Status</strong>: Evaluation</span>
+            <span><strong>Saved vs v1.1 from-scratch</strong>: ~8&ndash;10 weeks (Model D), ~9&ndash;10 (Model A)</span>
+        </div>
+        <div class="meta" style="margin-top:0.4rem; font-size:0.83rem; line-height:1.45;">
+            <strong>v1.3 update:</strong> added <strong>Model D</strong> &mdash; static link via
+            <code>third_party/vulkan_video_samples/</code>. This is how every other codec library ships in Chromium
+            (<code>libvpx</code>, <code>libaom</code>, <code>dav1d</code>, <code>libavif</code>, <code>libwebp</code>).
+            Same integration code as Model A; only the build/link mode differs.
+            <strong>New recommendation: Model D for production.</strong>
+            v1.2 findings carry over: <code>VulkanDeviceContext</code> already accepts BYO instance + phys device + device,
+            so G-NEW-9 is ~30 LoC of plumbing, not ~500.
+        </div>
+    </div>
+</header>
+
+<nav>
+    <div class="container">
+        <ul>
+            <li><a href="#tldr">TL;DR</a></li>
+            <li><a href="#interface">1. Library interface</a></li>
+            <li><a href="#sufficiency">2. Sufficiency</a></li>
+            <li><a href="#extensions">3. Extensions needed</a></li>
+            <li><a href="#models">4. Integration models</a></li>
+            <li><a href="#risks">5. Risks</a></li>
+            <li><a href="#effort">6. Effort estimate</a></li>
+            <li><a href="#plan">7. Recommended plan</a></li>
+        </ul>
+    </div>
+</nav>
+
+<main>
+    <div class="container">
+
+        <!-- TL;DR -->
+        <section id="tldr">
+            <h2>TL;DR</h2>
+            <div class="hero">
+                <h3>Yes &mdash; vendor under <code>third_party/vulkan_video_samples/</code>, static link, BYO <code>VkDevice</code> from day one (Model D).</h3>
+                <ul>
+                    <li>The library ships <strong>two interfaces</strong>: a CLI-style <code>VulkanVideoEncoder</code> (not usable) and a service-oriented <code>VulkanVideoEncoderExt</code> (very close to what we need).</li>
+                    <li><code>VulkanVideoEncoderExt</code> covers <strong>~70 %</strong> of Chromium's requirements as-is and <strong>~95 %</strong> with 11 concrete upstream extensions (<strong>~3,200 LoC</strong>, ~2 engineer-weeks).</li>
+                    <li><strong>Zero-copy is built in.</strong> Path A reads an externally-imported VkImage directly &mdash; no staging, no copy, no filter.</li>
+                    <li><strong>BYO VkDevice is already supported</strong> by <code>VulkanDeviceContext</code>; the public <code>VkVideoEncoderConfig</code> just needs ~30 LoC to expose it.</li>
+                    <li>Four integration models with effort estimates:
+                        <ul>
+                            <li><strong>Model D v1.3</strong> &mdash; static link via <code>third_party/vulkan_video_samples/</code> (libvpx/libaom-style): <strong>~10.5&ndash;12 weeks</strong>; same-device zero-copy; single chrome binary; LTO across encoder + Chromium. <span class="tag tag-rec">RECOMMENDED</span></li>
+                            <li><strong>Model A</strong> &mdash; dynamic link to <code>libvkvideo-encoder.so</code>: <strong>~10&ndash;11 weeks</strong>; <em>byte-for-byte same Chromium-side code as Model D</em>; useful as the prototyping variant.</li>
+                            <li><strong>Model B</strong> &mdash; vendor codec layer, custom Chromium-native front-end: <strong>~12&ndash;15 weeks</strong>; fallback if we ever need to fork the codec driver loop.</li>
+                            <li><strong>Model C</strong> &mdash; out-of-process sandboxed deployment of Model D: <strong>~13&ndash;16 weeks</strong>; best isolation, latency cost; orthogonal Chromium-architecture decision.</li>
+                        </ul>
+                    </li>
+                    <li>Compared to the <strong>v1.1 from-scratch plan (~19&ndash;21 weeks)</strong>, Model D saves <strong>~8&ndash;10 weeks</strong>.</li>
+                    <li><strong>P0 upstream set</strong> (G-NEW-1, 2, 3, 8, 9, 11): ~870 LoC, ~2 weeks in parallel with Phase 1; pulled into the vendored tree on the next DEPS roll.</li>
+                </ul>
+            </div>
+            <div class="callout-risk">
+                <strong>v1.3 addition:</strong> Static-link via <code>third_party/</code> is Chromium's standard pattern for codec libraries
+                (<code>libvpx</code>, <code>libaom</code>, <code>dav1d</code>, <code>libavif</code>, <code>libwebp</code>).
+                The Vulkan-Video-Samples encoder is Apache-2.0 with no distribution / patent obstacles &mdash; we just write a
+                <code>BUILD.gn</code> (~400 LoC) and let the existing Chromium auto-roller handle DEPS bumps.
+                Switching between Model D (static) and Model A (dynamic) is a single GN argument: <code>vulkan_video_samples_static = true/false</code>.
+            </div>
+            <div class="callout-info">
+                <strong>Speculation flag:</strong> these numbers come from reading the library source end-to-end, not from a prototype. Treat all week ranges as conservative until we land a working Phase-1 of Model A.
+            </div>
+        </section>
+
+        <!-- 1. Interface -->
+        <section id="interface">
+            <h2>1. What the library exposes</h2>
+
+            <h3>1.1 Two public headers</h3>
+            <table>
+                <thead><tr><th>Header</th><th>Style</th><th>Suitability for Chromium</th></tr></thead>
+                <tbody>
+                    <tr><td><code>vulkan_video_encoder.h</code></td><td>argc/argv driven, file-based input/output</td><td><strong>No.</strong> Coarse, single-shot lifetime.</td></tr>
+                    <tr><td><code>vulkan_video_encoder_ext.h</code></td><td>Struct config, external VkImage input, semaphore sync, async retrieval, capability query</td><td><strong>Yes, mostly.</strong> Designed <em>explicitly</em> &ldquo;for cross-process encoder services&rdquo; per its own comments.</td></tr>
+                </tbody>
+            </table>
+
+            <h3>1.2 <code>VulkanVideoEncoderExt</code> &mdash; the relevant interface</h3>
+<pre><code>class VulkanVideoEncoderExt : public VulkanVideoEncoder {
+ public:
+  virtual VkResult InitializeExt(const VkVideoEncoderConfig&amp; config) = 0;
+
+  // Submit / Retrieve
+  virtual VkResult SubmitExternalFrame(const VkVideoEncodeInputFrame&amp; frame,
+                                       VkSemaphore* pStagingCompleteSemaphore = nullptr) = 0;
+  virtual VkResult PollEncodeComplete(uint64_t frameId) = 0;
+  virtual VkResult GetEncodedFrame(VkVideoEncodeResult&amp; result) = 0;
+  virtual void     ReleaseEncodedFrame(uint64_t frameId) = 0;
+  virtual VkFence  GetEncodeFence(uint64_t frameId) = 0;
+
+  // Lifecycle
+  virtual VkResult Flush() = 0;
+  virtual VkResult Reconfigure(const VkVideoEncoderConfig&amp; config) = 0;
+
+  // Capability
+  virtual VkBool32 SupportsFormat(VkFormat) const = 0;
+  virtual uint32_t GetMaxWidth() const = 0;
+  virtual uint32_t GetMaxHeight() const = 0;
+
+  // Device access (caller does NOT own)
+  virtual VkDevice         GetVkDevice() const = 0;
+  virtual VkPhysicalDevice GetVkPhysicalDevice() const = 0;
+  virtual VkInstance       GetVkInstance() const = 0;
+};</code></pre>
+
+            <h3>1.3 Mapping <code>Ext</code> to <code>VideoEncodeAccelerator</code></h3>
+            <table>
+                <thead><tr><th>Chromium VEA call</th><th>Library Ext call(s)</th></tr></thead>
+                <tbody>
+                    <tr><td><code>GetSupportedProfiles()</code></td><td>nothing yet &mdash; gap <strong>G-NEW-1</strong></td></tr>
+                    <tr><td><code>Initialize(config, client, log)</code></td><td><code>CreateVulkanVideoEncoderExt()</code> + <code>InitializeExt(config)</code></td></tr>
+                    <tr><td><code>Encode(frame, force_keyframe)</code></td><td><code>SubmitExternalFrame(frame{forceIDR = force_keyframe})</code></td></tr>
+                    <tr><td><code>UseOutputBitstreamBuffer(buffer)</code></td><td>n/a &mdash; we just memcpy <code>GetEncodedFrame</code>'s pointer into the client's shmem</td></tr>
+                    <tr><td><code>RequestEncodingParametersChange(...)</code></td><td><code>Reconfigure(newConfig)</code> (stub today)</td></tr>
+                    <tr><td><code>Flush(cb)</code></td><td><code>Flush()</code></td></tr>
+                    <tr><td><code>NotifyEncoderInfoChange(info)</code></td><td>gap <strong>G-NEW-8</strong></td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 2. Sufficiency -->
+        <section id="sufficiency">
+            <h2>2. Sufficiency assessment per Chromium requirement</h2>
+            <div class="diagram">
+                <object data="diagrams/lib_interface_gap_heatmap.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">26 requirements from v1.1: 11 covered, 3 partial, 12 gaps (4 of which are critical P0 ship blockers).</div>
+            </div>
+
+            <p>The headline: <strong>11&thinsp;/&thinsp;26 covered</strong>, <strong>3&thinsp;/&thinsp;26 partial</strong>, <strong>12&thinsp;/&thinsp;26 gaps</strong>. Most gaps are interface-shape, not implementation-shape &mdash; the underlying <code>EncoderConfig</code> struct already carries most of what's missing from the public <code>VkVideoEncoderConfig</code>.</p>
+
+            <h3>2.1 Per-gap deep-dive</h3>
+            <p>Each missing or partial feature, broken down: (a) what Chromium calls for &mdash; the caller, the API it expects, and when, (b) what underlying APIs are involved at the Vulkan, Std-Video, and Chromium VEA layers, (c) what the library does today, (d) why it's missing, and (e) the concrete proposed delta.</p>
+
+            <p>A handful of gaps had more than one reasonable closure shape. The chosen alternative is named in the section heading (e.g. "WebRTC index model", "BYO primary + ephemeral fallback") and justified in the deep-dive itself. The ambiguous design points were temporal SVC depth, manual-reference-buffer API shape, output-buffer ownership, capability-enumeration entry point, resize-IDR semantics, and trusted-rate-controller surfacing.</p>
+
+            <div class="callout-info">
+                <strong>Notation: G-NEW-N.</strong> Throughout this document the label <code>G-NEW-N</code> (read: <em>Gap-resolving New extension #N</em>) refers to a specific additive contribution to the Vulkan-Video-Samples public API that closes one or more gaps from the sufficiency table. The eleven proposed extensions (<code>G-NEW-1</code> &hellip; <code>G-NEW-11</code>) are catalogued in &sect;3 with full specifications and LoC estimates. Each is a non-breaking additive change to the public header (<code>vulkan_video_encoder_ext.h</code>) &mdash; existing cmdline callers continue to compile and run unchanged.
+            </div>
+
+            <div class="callout-info">
+                <strong>Driver capability assumption.</strong> For every gap below that maps onto a Vulkan extension or optional capability, the answer to "does my GPU support it?" is <em>query the driver at runtime</em>. The Chromium-side wrapper consults <code>vkGetPhysicalDeviceVideoCapabilitiesKHR</code>, <code>vkGetPhysicalDeviceVideoFormatPropertiesKHR</code>, and the relevant <code>VkPhysicalDeviceVideoEncode*FeaturesKHR</code> chain at session-creation time and exposes downstream features (WebCodecs options, <code>VideoEncoderInfo</code> fields, SDP capability) only when the driver reports support. We do not bake any vendor matrix into Chromium code; this document deliberately avoids per-vendor capability claims.
+            </div>
+
+            <h4>Gap #10 &mdash; Quantization map (<code>VK_KHR_video_encode_quantization_map</code>)</h4>
+
+            <p><strong>What Chromium calls for.</strong> A per-block delta-QP image that nudges the encoder toward higher or lower quality regions per frame. Two scenarios:</p>
+            <ol>
+                <li><strong>WebCodecs scalar quantizer.</strong> <code>VideoEncoder.encode(frame, { quantizer: 28 })</code> &mdash; integer per encode call.</li>
+                <li><strong>ROI / screen-share delta-QP.</strong> Tab-capture / screen-share computes a delta-QP map per frame (lower QP on text regions, higher on static areas).</li>
+            </ol>
+
+            <p><strong>Underlying APIs.</strong></p>
+            <ul>
+                <li>Vulkan extension <code>VK_KHR_video_encode_quantization_map</code>. Adds <code>VkVideoEncodeQuantizationMapInfoKHR</code> in <code>pNext</code> of <code>VkVideoEncodeInfoKHR</code>; driver caps via <code>VkPhysicalDeviceVideoEncodeQuantizationMapFeaturesKHR::videoEncodeQuantizationMap</code> + per-codec <code>quantizationMapTexelSize</code>.</li>
+                <li>Two modes: <strong>delta-QP map</strong> (<code>VK_VIDEO_ENCODE_WITH_QUANTIZATION_DELTA_MAP_BIT_KHR</code>) and <strong>emphasis map</strong> (<code>VK_VIDEO_ENCODE_WITH_EMPHASIS_MAP_BIT_KHR</code>).</li>
+                <li>Chromium: <code>media::VideoEncoder::EncodeOptions::quantizer</code> scalar today; ROI plumbing would add a <code>quantization_map</code> field.</li>
+            </ul>
+
+            <p><strong>Library internals (verified citations).</strong> The library has the full machinery wired; only the public surface is missing.</p>
+
+            <table>
+                <thead><tr><th>Path</th><th>What it does</th></tr></thead>
+                <tbody>
+                    <tr><td><code>VkEncoderConfig.cpp:637-657</code></td><td>Parses <code>--qpMap delta</code> / <code>--qpMap emphasis</code> cmdline flags</td></tr>
+                    <tr><td><code>VkVideoEncoder.cpp:223</code> <code>StageInputFrameQpMap</code></td><td>Uploads QP map from staging buffer to device-side <code>VkImage</code></td></tr>
+                    <tr><td><code>VkVideoEncoder.cpp:1537-1620</code></td><td>Allocates per-frame QP map images at session init with correct usage flags</td></tr>
+                    <tr><td><code>VkVideoEncoder.cpp:2583-2603</code> <code>ProcessQpMap</code></td><td>Per-frame: builds <code>VkVideoEncodeQuantizationMapInfoKHR</code>, chains into <code>pNext</code></td></tr>
+                </tbody>
+            </table>
+
+<pre><code>// VkVideoEncoder.cpp:2583-2603 (the per-frame builder)
+void VkVideoEncoder::ProcessQpMap(VkSharedBaseObj&lt;VkVideoEncodeFrameInfo&gt;&amp; encodeFrameInfo) {
+    if ((m_encoderConfig-&gt;enableQpMap == VK_FALSE) ||
+        ((encodeFrameInfo-&gt;srcQpMapImageResource == nullptr) &amp;&amp;
+         encodeFrameInfo-&gt;srcQpMapStagingResource == nullptr)) {
+        return;
+    }
+    VkVideoPictureResourceInfoKHR* pSrcQpMapPictureResource =
+        encodeFrameInfo-&gt;srcQpMapImageResource-&gt;GetPictureResourceInfo();
+    encodeFrameInfo-&gt;quantizationMapInfo.sType =
+        VK_STRUCTURE_TYPE_VIDEO_ENCODE_QUANTIZATION_MAP_INFO_KHR;
+    encodeFrameInfo-&gt;quantizationMapInfo.quantizationMap =
+        pSrcQpMapPictureResource-&gt;imageViewBinding;
+    encodeFrameInfo-&gt;encodeInfo.flags |=
+        ((m_encoderConfig-&gt;qpMapMode == EncoderConfig::DELTA_QP_MAP) ?
+            VK_VIDEO_ENCODE_WITH_QUANTIZATION_DELTA_MAP_BIT_KHR :
+            VK_VIDEO_ENCODE_WITH_EMPHASIS_MAP_BIT_KHR);
+    vk::ChainNextVkStruct(encodeFrameInfo-&gt;encodeInfo, encodeFrameInfo-&gt;quantizationMapInfo);
+}</code></pre>
+
+            <p>The driver-side wiring is complete. The sample fills <code>srcQpMapImageResource</code> from <code>EncoderQpMapFileHandler</code>; Chromium needs to fill it from the API caller.</p>
+
+            <p><strong>Why missing.</strong> Sample app uses file-based input. No conception of a live API caller passing the map per encode call.</p>
+
+            <p><strong>Proposed delta (G-NEW-4).</strong></p>
+
+<pre><code>// NEW field in VkVideoEncodeInputFrame
+VkImage       qpMapImage;        // optional: VK_NULL_HANDLE if none
+VkImageLayout qpMapImageLayout;
+VkExtent2D    qpMapTexelSize;    // must match caps (queried via G-NEW-1)
+
+// NEW field in VkVideoEncoderConfig
+VkBool32      enableQpMap;
+uint32_t      qpMapMode;         // 0 = delta-QP, 1 = emphasis</code></pre>
+
+            <p><strong>Validation approach.</strong> Encode YUV with QP=28 globally and with a uniform delta-QP map of 0; PSNR should match within 0.05 dB. Then with a checkerboard QP map (&plusmn;6 around QP=28); verify per-region PSNR matches the per-region target QP.</p>
+
+            <h4>Gap #11 &mdash; Intra-refresh (<code>VK_KHR_video_encode_intra_refresh</code>)</h4>
+
+            <p><strong>What Chromium calls for.</strong> WebRTC packet-loss recovery uses progressive intra-refresh: instead of issuing an IDR (a several-kilobyte bitrate spike), the encoder refreshes a strip of macroblocks per frame, completing a full cycle over N frames. The result is identical to an IDR for keyframe purposes but with a near-flat bitrate profile. WebRTC also wants per-frame control: don't refresh during congestion windows, force a refresh after a NACK storm.</p>
+
+            <p><strong>Underlying APIs.</strong></p>
+            <ul>
+                <li>Vulkan extension <code>VK_KHR_video_encode_intra_refresh</code>:
+                    <ul>
+                        <li><code>VkVideoEncodeIntraRefreshInfoKHR</code> chained per-frame; carries <code>intraRefreshIndex</code>.</li>
+                        <li><code>VkVideoEncodeSessionIntraRefreshCreateInfoKHR</code> chained at session creation; carries <code>intraRefreshMode</code> + <code>intraRefreshCycleDuration</code>.</li>
+                    </ul>
+                </li>
+                <li><code>intraRefreshMode</code> enum: <code>PER_PICTURE_PARTITION</code> (slice/tile), <code>BLOCK_BASED</code> (horizontal strip &mdash; most common), <code>BLOCK_ROW_BASED</code>, <code>BLOCK_COLUMN_BASED</code>.</li>
+                <li>Driver caps: <code>VkPhysicalDeviceVideoEncodeIntraRefreshFeaturesKHR::videoEncodeIntraRefresh</code>, <code>VkVideoEncodeIntraRefreshCapabilitiesKHR::supportedIntraRefreshModes</code> / <code>maxIntraRefreshCycleDuration</code> / <code>maxIntraRefreshActiveReferencePictures</code>.</li>
+                <li>Chromium API: today not directly exposed at VEA layer; WebRTC's <code>H264EncoderImpl</code> ships SW-side intra-refresh. With Vulkan we have HW support; plumb new <code>VEA::Config::intra_refresh_period</code> (cycle length, set at Initialize) and per-frame <code>EncodeOptions::intra_refresh_strip</code> (override).</li>
+            </ul>
+
+            <p><strong>Library internals.</strong></p>
+
+<pre><code>// VkVideoEncoder.cpp:2605-2614
+void VkVideoEncoder::FillIntraRefreshInfo(VkSharedBaseObj&lt;VkVideoEncodeFrameInfo&gt;&amp; encodeFrameInfo) {
+    encodeFrameInfo-&gt;intraRefreshInfo.sType =
+        VK_STRUCTURE_TYPE_VIDEO_ENCODE_INTRA_REFRESH_INFO_KHR;
+    encodeFrameInfo-&gt;intraRefreshInfo.intraRefreshCycleDuration =
+        m_encoderConfig-&gt;intraRefreshCycleDuration;
+    encodeFrameInfo-&gt;intraRefreshInfo.intraRefreshIndex =
+        encodeFrameInfo-&gt;gopPosition.intraRefreshIndex;       // ← from GOP only
+    encodeFrameInfo-&gt;encodeInfo.flags |= VK_VIDEO_ENCODE_INTRA_REFRESH_BIT_KHR;
+    vk::ChainNextVkStruct(encodeFrameInfo-&gt;encodeInfo,
+                          encodeFrameInfo-&gt;intraRefreshInfo);
+}</code></pre>
+
+            <p>The GOP-driven <code>gopPosition.intraRefreshIndex</code> works for the cmdline use case but doesn't let WebRTC say "freeze the cycle this frame" or "restart after a NACK".</p>
+
+            <p><strong>Why missing.</strong> Sample-app design &mdash; set once at startup. Per-frame override is the live-API use case.</p>
+
+            <p><strong>Proposed delta (G-NEW-5).</strong></p>
+
+<pre><code>// NEW field in VkVideoEncodeInputFrame
+uint32_t  intraRefreshIndex;      // 0..cycleDuration-1; UINT32_MAX = no IR this frame
+VkBool32  intraRefreshStartCycle; // resets the cycle counter (used after NACK)</code></pre>
+
+            <p><strong>Validation approach.</strong> Encode 60 frames at 30 fps, cycle duration = 30, observe per-frame bitstream sizes: same global QP, an IDR is ~10&times; a P-frame; intra-refresh frames should be ~1.5&ndash;2&times; P-frame. Decode + <code>psnr_per_frame</code>; quality should be flat across the cycle, not spike at the IDR boundary.</p>
+
+            <h4>Gap #12 &mdash; Temporal SVC (T=2/3/4) <em>&mdash; deep scope</em></h4>
+
+            <p><strong>What Chromium calls for.</strong> WebRTC simulcast and SVC adaptive streaming. <code>VideoBitrateAllocation</code> is a 2D matrix <code>bitrates[spatial][temporal]</code> up to <code>kMaxSpatialLayers=5 &times; kMaxTemporalStreams=4 = 20</code> entries. Each temporal layer encodes only frames at specific positions in a 2-/4-/8-frame pattern; layer 0 is the base layer. A client can drop layers under congestion and continue decoding the base.</p>
+
+            <p><strong>Underlying APIs.</strong></p>
+            <ul>
+                <li>Vulkan: per-layer rate control via the <code>pLayers</code> array in <code>VkVideoEncodeRateControlInfoKHR::pLayers[VkVideoEncodeRateControlLayerInfoKHR]</code>.</li>
+                <li>Std-Video: per-frame <code>StdVideoEncodeH264SliceHeader::temporal_id</code>, <code>StdVideoEncodeH265SliceSegmentHeader::nuh_temporal_id_plus1</code>, <code>StdVideoEncodeAV1PictureInfo::temporal_id</code>.</li>
+                <li>GOP: each frame's temporal-layer membership is fixed by the GOP pattern (e.g., T=3 pattern <code>[T0 T2 T1 T2 T0 T2 T1 T2]</code>).</li>
+                <li>Chromium API: <code>media::VideoBitrateAllocation</code> (2D), <code>VideoEncodeAcceleratorConfig::spatial_layers[].num_of_temporal_layers</code>, <code>H264Metadata::temporal_idx</code> / <code>Vp9Metadata::temporal_idx</code> / <code>SVCGenericMetadata::temporal_idx</code>.</li>
+            </ul>
+
+            <p><strong>Library internals.</strong></p>
+
+<pre><code>// VkVideoEncoder.h:228 (the hard-coded size)
+VkVideoEncodeRateControlLayerInfoKHR  m_rateControlLayersInfo[1];   // ← hard-sized!</code></pre>
+
+            <p>So the structure exists for T=1 only. Per-frame submission also doesn't carry the temporal index out to the Std-Video slice header &mdash; the GOP type alone implies it.</p>
+
+            <p><strong>Why missing.</strong> Cmdline sample's primary target is T=1. Temporal SVC deferred. Hard-sizing the array to 1 was a "fix later" call.</p>
+
+            <p><strong>Proposed delta (deep scope; G-NEW-6).</strong></p>
+
+<pre><code>// NEW maximum (matches Chromium's kMaxTemporalStreams + headroom)
+#define VK_MAX_VIDEO_ENCODE_TEMPORAL_LAYERS 4
+
+// CHANGE in VkVideoEncoder.h
+VkVideoEncodeRateControlLayerInfoKHR  m_rateControlLayersInfo[VK_MAX_VIDEO_ENCODE_TEMPORAL_LAYERS];
+
+// NEW fields in VkVideoEncoderConfig (additive)
+uint32_t  temporalLayerCount;                                              // 1..4
+struct {
+    uint64_t  averageBitrate;
+    uint64_t  maxBitrate;
+    uint32_t  framerateNumerator;
+    uint32_t  framerateDenominator;
+} temporalLayers[VK_MAX_VIDEO_ENCODE_TEMPORAL_LAYERS];
+
+// NEW programmable GOP-temporal pattern
+struct VkVideoGopTemporalLayerPattern {
+    uint32_t  patternLength;                                                // e.g., 4 for T=3
+    uint8_t   temporalLayerOfFrame[VK_MAX_GOP_PATTERN_LENGTH];              // 0..temporalLayerCount-1
+};
+VkVideoGopTemporalLayerPattern  temporalPattern;
+
+// NEW field in VkVideoEncodeInputFrame
+uint32_t  temporalLayerIndexOverride;     // UINT32_MAX = use GOP-derived
+
+// NEW in VkVideoEncodeResult (write-back for Chromium metadata)
+uint32_t  encodedTemporalLayerIndex;
+VkBool32  layerSync;</code></pre>
+
+            <p>For WebRTC's 2D matrix, the Chromium-side wrapper flattens per-temporal: <code>lib_config.temporalLayers[t].averageBitrate = sum_over_s(bitrates[s][t])</code>. Spatial SVC is Gap #13.</p>
+
+            <p><strong>Validation approach.</strong> Encode 300 frames at T=3, target bitrates [60%, 20%, 20%] of 3 Mbps. Decode and count frames per temporal layer; verify drop ratios. Decode only base layer (T0); resulting video should be playable at 7.5 fps (30 fps / 4).</p>
+
+            <h4>Gap #13 &mdash; Spatial SVC (S=2 / S=3)</h4>
+
+            <p><strong>What Chromium calls for.</strong> WebRTC VP9 SVC + AV1 SVC: encode the same scene at multiple resolutions in one bitstream. Used in conferencing for variable network conditions.</p>
+
+            <p><strong>Underlying APIs.</strong></p>
+            <ul>
+                <li>Vulkan: no dedicated extension. Spatial SVC has to be implemented as multiple parallel <code>VkVideoSessionKHR</code> instances, each at a different resolution, with reference-picture sharing between them. Khronos has discussed a future extension; as of mid-2026 nothing exists.</li>
+                <li>AV1 spec: native support via <code>obu_extension_header_flag</code> + <code>spatial_id</code>. Vulkan AV1 encoding doesn't expose this.</li>
+                <li>H.264 SVC: dropped from the spec long ago.</li>
+                <li>HEVC: SHVC (scalable HEVC) extension exists but is essentially never implemented in HW encoders.</li>
+            </ul>
+
+            <p><strong>Today.</strong> Not implemented in the library.</p>
+
+            <p><strong>Why missing.</strong> No spec extension to implement against. Even if there were, no current HW encoder hardware supports spatial SVC natively &mdash; it would have to be simulated via multiple parallel sessions, which has tricky reference-frame consistency requirements.</p>
+
+            <p><strong>Proposed delta.</strong> <strong>Deferred to P3 (post-MVP).</strong> Document the workaround: multiple independent VEAs, one per resolution &mdash; that's how Chrome ships HW-accelerated simulcast today via VA-API and D3D12. Native single-bitstream SVC waits for a Khronos spec. Estimated <strong>~1,500 LoC</strong> (when/if the spec exists).</p>
+
+            <h4>Gap #14 &mdash; Manual reference buffer control <em>&mdash; WebRTC index model</em></h4>
+
+            <p><strong>What Chromium calls for.</strong> WebRTC <code>VideoEncodeAcceleratorConfig::manual_reference_buffer_control = true</code> flips the encoder from "GOP-driven reference management" to "caller tells you which reference to use". Three use cases:</p>
+
+            <ol>
+                <li><strong>Packet-loss-resilience.</strong> After a NACK, the encoder is told "don't reference frame N (lost) &mdash; reference frame N-2 instead".</li>
+                <li><strong>Screen content.</strong> Only encode I-frame + delta from a stable "long-term reference"; never reference recent frames.</li>
+                <li><strong>Simulcast layer prediction control.</strong> Each spatial layer references only frames within its own layer.</li>
+            </ol>
+
+            <p>WebRTC models this as a <strong>small fixed-size buffer pool</strong> (typically 8 slots, "frame buffers" in VP8/VP9 terminology). Per frame, caller passes <code>frame_buffer_indices</code> describing which slots are refs and which to update.</p>
+
+            <p><strong>Underlying APIs.</strong></p>
+            <ul>
+                <li>Vulkan: <code>VkVideoEncodeInfoKHR::pSetupReferenceSlot</code> (the slot the encoder writes to) + <code>VkVideoEncodeInfoKHR::pReferenceSlots[]</code> (the refs).</li>
+                <li>Std-Video: codec-specific reference lists (<code>RefPicList0</code> / <code>RefPicList1</code> for H.264; <code>ref_frame_idx[7]</code> for AV1).</li>
+                <li>Chromium API: <code>VideoEncodeAccelerator::Config::manual_reference_buffer_control</code> flag; per-frame metadata <code>SVCGenericMetadata::reference_flags</code> (16-bit bitmask of which 8 buffers are refs) and <code>refresh_flags</code> (which to update).</li>
+            </ul>
+
+            <p><strong>Library internals.</strong> <code>VkEncoderDpb{H264,H265,AV1}</code> manages reference slots internally based on the GOP structure. Internal <code>stdReferenceSlotInfo[]</code> array; no public override.</p>
+
+            <p><strong>Why missing.</strong> Cmdline sample uses a fixed IPPP / IBP / IPBBB pattern; the GOP machinery is sufficient. Exposing a per-frame override means library has to (a) trust the caller, (b) validate the slot configuration against codec rules, (c) update its own DPB tracking. Surgery on the DPB layer.</p>
+
+            <p><strong>Proposed delta (WebRTC index model; G-NEW-7).</strong></p>
+
+<pre><code>// NEW maximum (matches WebRTC's VP8/VP9 frame buffer pool size)
+#define VK_MAX_VIDEO_ENCODE_FRAME_BUFFERS 8
+
+// NEW WebRTC-compatible index model
+struct VkVideoEncodeFrameBufferIndices {
+    uint32_t  referenceFlags;    // bit i ⇒ buffer[i] is used as a reference
+    uint32_t  refreshFlags;      // bit i ⇒ buffer[i] is overwritten by this frame
+    uint32_t  longTermFlags;     // bit i ⇒ buffer[i] is marked LTR after this frame
+};
+
+// NEW field in VkVideoEncoderConfig
+VkBool32  manualReferenceBufferControl;            // opt-in; default VK_FALSE = GOP-driven
+
+// NEW field in VkVideoEncodeInputFrame
+const VkVideoEncodeFrameBufferIndices* pFrameBufferIndices;
+
+// NEW in VkVideoEncodeResult (write-back for SVCGenericMetadata)
+uint32_t  encodedReferenceFlags;
+uint32_t  encodedRefreshFlags;
+uint32_t  encodedLongTermFlags;</code></pre>
+
+            <p>Library implementation: bypasses <code>VkEncoderDpb*::Update()</code>, instead uses the caller's <code>pFrameBufferIndices</code> as the slot-occupancy oracle. Translates the index model to <code>VkVideoReferenceSlotInfoKHR[]</code>; validates against codec rules (H.264 <code>num_ref_frames</code>, HEVC <code>sps_max_dec_pic_buffering_minus1</code>, AV1 <code>ref_frame_idx[7]</code> ordering).</p>
+
+            <p><strong>Alternative slot-based API not chosen.</strong> The Vulkan-native shape (<code>VkVideoReferenceSlotInfoKHR[]</code> + <code>pSetupReferenceSlot</code>) is more flexible but verbose and harder to maintain DPB consistency. The WebRTC index model maps cleanly to all three codecs and matches what Chromium VEA already speaks at the <code>SVCGenericMetadata::reference_flags</code> level.</p>
+
+            <p><strong>Validation approach.</strong> Run a "NACK simulation" test: encode 100 frames with the GOP-driven path, drop frame 50 from the decoder, encode 100 more with manual ref control where frame 51 references frame 49 instead of 50; verify the resulting bitstream decodes without errors and PSNR doesn't drop more than 1 dB at the recovery point.</p>
+
+            <h4>Gap #15 &mdash; Per-frame QP map binding</h4>
+
+            <p><strong>Relationship to #10.</strong> #10 is "expose the feature at all"; #15 is "expose it on a per-frame basis (not just at session creation)". The library's design conflates the two: <code>EncoderConfig::enableQpMap</code> is a session-wide flag, and the per-frame QP map is fetched from disk via <code>EncoderQpMapFileHandler::GetQpMapForFrame(encodeOrderIndex)</code>. There is no API surface for "this frame has a different QP map".</p>
+
+            <p><strong>What Chromium calls for.</strong> Per-frame quantizer / QP-delta map provided by the caller at encode time:</p>
+            <ul>
+                <li>WebCodecs <code>EncodeOptions::quantizer</code> (scalar): WebCodecs delivers this with the <code>encode()</code> call. Each frame can carry a different value.</li>
+                <li>ROI / screen-share delta map: each frame has a fresh map based on tab-capture analysis. The map can change at every frame (e.g., a text cursor moving picks up high-priority blocks).</li>
+            </ul>
+
+            <p><strong>Library internals.</strong> Mechanism is per-frame; just the delivery of the QP map is file-only.</p>
+
+            <table>
+                <thead><tr><th>Path</th><th>What it does</th><th>Per-frame?</th></tr></thead>
+                <tbody>
+                    <tr><td><code>EncoderConfig::enableQpMap</code></td><td>Session-wide enable flag</td><td>No</td></tr>
+                    <tr><td><code>EncoderConfig::qpMapMode</code></td><td>Set at session creation</td><td>No</td></tr>
+                    <tr><td><code>EncoderQpMapFileHandler</code></td><td>Reads <code>qpmap_NNNN.bin</code> files keyed on encode order</td><td>Yes (but file-only)</td></tr>
+                    <tr><td><code>srcQpMapImageResource</code></td><td>Per-frame VkImage holding the actual QP map</td><td>Yes</td></tr>
+                    <tr><td><code>VkVideoEncoder.cpp:2583-2603</code> <code>ProcessQpMap</code></td><td>Builds per-frame <code>VkVideoEncodeQuantizationMapInfoKHR</code></td><td>Yes</td></tr>
+                </tbody>
+            </table>
+
+            <p><strong>Why missing.</strong> Sample design intent: offline encode with file-based QP maps.</p>
+
+            <p><strong>Cross-codec note.</strong> <code>quantizationMapTexelSize</code> is per-codec and queryable per profile via <code>VkVideoEncodeQuantizationMapCapabilitiesKHR::quantizationMapTexelSize</code>. NVIDIA values as of mid-2026: H.264 = 16&times;16, HEVC = 32&times;32, AV1 = 64&times;64. Chromium-side must allocate the right-sized image; determined at session init.</p>
+
+            <p><strong>Proposed delta.</strong> Subsumed by G-NEW-4 (Gap #10). New <code>VkVideoEncodeInputFrame::qpMapImage</code> is set per-frame by the caller; library skips <code>EncoderQpMapFileHandler</code> when <code>qpMapImage != VK_NULL_HANDLE</code>. File-handler path stays for samples/tests.</p>
+
+<pre><code>// In SubmitExternalFrame's input frame:
+VkVideoEncodeInputFrame frame{};
+frame.image            = input_vk_image;
+frame.qpMapImage       = chromium_qp_map_vk_image;   // per-frame, can vary
+frame.qpMapImageLayout = VK_IMAGE_LAYOUT_VIDEO_ENCODE_QUANTIZATION_MAP_KHR;
+frame.qpMapTexelSize   = caps.quantizationMapTexelSize;
+encoder-&gt;SubmitExternalFrame(frame);</code></pre>
+
+            <p><strong>Validation approach.</strong> Same as #10, plus a per-frame variation test: encode 60 frames where the QP map changes every frame (e.g., a moving rectangle of low QP); decode and verify the spatial QP profile matches per frame. Use <code>ffprobe -show_frames</code> and per-frame QP histograms.</p>
+
+            <h4>Gap #18 &mdash; Format negotiation (<code>SupportsFormat</code>, max-size queries)</h4>
+
+            <p><strong>What Chromium calls for.</strong> Three downstream surfaces consume this data:</p>
+            <ol>
+                <li><strong><code>gpu::GPUInfo::video_encode_accelerator_supported_profiles</code></strong> &mdash; populated at GPU-process startup; available in <code>chrome://gpu</code> and via <code>gpu::GpuInfo</code> Mojo.</li>
+                <li><strong>WebRTC SDP capability</strong> &mdash; <code>RTCRtpSender::getCapabilities('video')</code> returns the codecs the browser advertises.</li>
+                <li><strong>WebCodecs <code>VideoEncoder.isConfigSupported(config)</code></strong> &mdash; short-circuits if format/codec/resolution isn't supported.</li>
+            </ol>
+
+            <p>For all three, the per-profile data needs to be <strong>driver-accurate</strong>, not a hardcoded list. Hardcoding "8192&times;8192 max" on a 4K-only adapter means <code>VideoEncoder.isConfigSupported({ width: 7680 })</code> returns <code>true</code> and then <code>encode()</code> fails &mdash; poor DX.</p>
+
+            <p><strong>Underlying APIs.</strong></p>
+            <ul>
+                <li>Vulkan: <code>vkGetPhysicalDeviceVideoFormatPropertiesKHR</code> returns <code>VkVideoFormatPropertiesKHR[]</code> with <code>format</code>, <code>componentMapping</code>, <code>imageType</code>, <code>imageTiling</code>, <code>imageUsageFlags</code>, <code>maxExtent</code>.</li>
+                <li>Vulkan: <code>vkGetPhysicalDeviceVideoCapabilitiesKHR</code> returns <code>VkVideoCapabilitiesKHR::minCodedExtent</code> / <code>maxCodedExtent</code> / <code>pictureAccessGranularityWidth/Height</code> / <code>maxDpbSlots</code> / <code>maxActiveReferencePictures</code>, plus chained <code>VkVideoEncodeCapabilitiesKHR::maxBitrate</code> / <code>maxQualityLevels</code> / <code>rateControlModes</code>, plus codec-specific chained structs.</li>
+            </ul>
+
+            <p><strong>Today in the library.</strong></p>
+
+<pre><code>// vulkan_video_encoder_ext.cpp:649-668
+VkBool32 VulkanVideoEncoderExtImpl::SupportsFormat(VkFormat inputFormat) const {
+    switch (inputFormat) {
+        // Directly encodable (YCbCr 4:2:0)
+        case VK_FORMAT_G8_B8R8_2PLANE_420_UNORM:                      // NV12
+        case VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16:     // P010
+        case VK_FORMAT_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16:     // P012
+        // Via filter (RGBA)
+        case VK_FORMAT_R8G8B8A8_UNORM:
+        case VK_FORMAT_B8G8R8A8_UNORM:
+        case VK_FORMAT_R8G8B8A8_SRGB:
+        case VK_FORMAT_B8G8R8A8_SRGB:
+        case VK_FORMAT_A2B10G10R10_UNORM_PACK32:
+        case VK_FORMAT_R16G16B16A16_SFLOAT:
+            return VK_TRUE;
+        default:
+            return VK_FALSE;
+    }
+}
+
+// vulkan_video_encoder_ext.cpp:670-680
+uint32_t VulkanVideoEncoderExtImpl::GetMaxWidth() const {
+    // TODO: query from device capabilities
+    return 8192;
+}
+uint32_t VulkanVideoEncoderExtImpl::GetMaxHeight() const {
+    // TODO: query from device capabilities
+    return 8192;
+}</code></pre>
+
+            <p>The <code>TODO</code> comment is already in the upstream code &mdash; the author knew this needs fixing.</p>
+
+            <p><strong>Why missing.</strong> Sample knows its inputs; 8192 is a generous upper bound that happens to work for the reference target. It's a sample, not a hardware capability oracle.</p>
+
+            <p><strong>Why hardcoding any specific number is wrong.</strong> Per-codec maximum extent, supported pixel formats, supported chroma subsamplings, and supported bit depths vary across vendors, GPU generations, kernel versions, and driver versions. The only correct answer is to query at runtime via <code>vkGetPhysicalDeviceVideoCapabilitiesKHR</code> + <code>vkGetPhysicalDeviceVideoFormatPropertiesKHR</code> for each <code>(codec, profile)</code> combination Chromium intends to advertise.</p>
+
+            <p><strong>Delta.</strong> Subsumed by G-NEW-1. The hardcoded <code>SupportsFormat()</code> and <code>GetMaxWidth/Height()</code> become thin wrappers over the cached <code>VkVideoEncoderCapabilities</code> populated at init time.</p>
+
+            <p><strong>Validation approach.</strong> On every candidate device, call <code>EnumerateVulkanVideoEncoderCapabilities(codec)</code> for H.264, HEVC, and AV1 and cross-reference the returned <code>maxCodedExtent</code>, supported <code>VkFormat</code>s, and <code>maxBitrate</code> against <code>vulkaninfo --json | jq '.physical_devices[].video_capabilities'</code>. Values must match the driver-reported caps exactly &mdash; no Chromium-side rounding.</p>
+
+            <h4>Gap #19 &mdash; <code>GetSupportedProfiles()</code> at GPU-process startup <em>&mdash; BYO primary + ephemeral fallback</em></h4>
+
+            <p><strong>What Chromium calls for.</strong> Static call at GPU-process startup populating <code>gpu::GPUInfo::video_encode_accelerator_supported_profiles</code> &mdash; <em>before any encoder is constructed</em>. The output drives:</p>
+            <ul>
+                <li><code>chrome://gpu</code> "Video Acceleration Information" section.</li>
+                <li>WebRTC SDP capability &mdash; <code>RTCRtpSender::getCapabilities('video')</code>.</li>
+                <li><code>MediaCapabilities.encodingInfo()</code>.</li>
+                <li>WebCodecs <code>VideoEncoder.isConfigSupported()</code>.</li>
+            </ul>
+
+            <p><strong>Chromium call-site map.</strong></p>
+
+<pre><code>chrome::OnGpuProcessStartup()
+└── content::GpuMain()
+    └── gpu::GpuMain()
+        └── gpu::GpuInit::InitializeAndStartSandbox()
+            └── media::GpuVideoEncodeAcceleratorFactory::GetSupportedProfiles()
+                ├── (VA-API) media::VaapiVideoEncodeAccelerator::GetSupportedProfiles()
+                ├── (D3D12)  media::D3D12VideoEncodeAccelerator::GetSupportedProfiles()
+                ├── (Mac VT) media::VTVideoEncodeAccelerator::GetSupportedProfiles()
+                └── (NEW)    media::VulkanVideoEncodeAccelerator::GetSupportedProfiles()
+                              └── EnumerateVulkanVideoEncoderCapabilities(...)</code></pre>
+
+            <p>In the VA-API path, <code>VaapiVideoEncodeAccelerator::GetSupportedProfiles()</code> opens a probe <code>VADisplay</code>, calls <code>vaQueryConfigEntrypoints</code> / <code>vaQueryConfigAttributes</code>, and tears down &mdash; all before any VEA is created. Our Vulkan path needs the equivalent.</p>
+
+            <p><strong>Underlying APIs.</strong></p>
+            <ul>
+                <li>Chromium: <code>media::VideoEncodeAccelerator::SupportedProfiles GetSupportedProfiles()</code> static factory-side; defined at <code>media/video/video_encode_accelerator.h</code>.</li>
+                <li>Vulkan: requires <code>VkPhysicalDevice</code> to call <code>vkGetPhysicalDeviceVideoCapabilitiesKHR</code> / <code>vkGetPhysicalDeviceVideoFormatPropertiesKHR</code>. No way to query without a complete <code>VkInstance</code> + physical-device enumeration.</li>
+            </ul>
+
+            <p><strong>Library internals.</strong> No exposed entry point. The library can compute these internally during <code>InitializeExt()</code> (<code>VkEncoderConfig::CreateCodecConfig()</code> fills caps via driver calls) but doesn't expose the function for use before a session exists.</p>
+
+            <p><strong>Why missing.</strong> Sample reaches caps by constructing an encoder. No caps/session separation.</p>
+
+            <p><strong>Proposed delta (BYO primary + ephemeral fallback; G-NEW-1).</strong></p>
+
+<pre><code>// PRIMARY: BYO Vulkan handles. Use when caller has initialized gpu::VulkanImplementation.
+extern "C" VK_VIDEO_ENCODER_EXPORT
+VkResult EnumerateVulkanVideoEncoderCapabilities(
+    VkInstance              instance,           // BYO from Chromium's gpu::VulkanInstance
+    VkPhysicalDevice        physicalDevice,     // BYO from VulkanDeviceQueue
+    VkVideoCodecOperationFlagBitsKHR codec,
+    VkVideoEncoderCapabilities* outCaps);
+
+// FALLBACK: ephemeral instance + physical device. For callers that haven't initialized Vulkan
+// yet (e.g., GPU-process startup before VulkanImplementation is built).
+extern "C" VK_VIDEO_ENCODER_EXPORT
+VkResult EnumerateVulkanVideoEncoderCapabilitiesEphemeral(
+    int32_t                 deviceId,           // -1 = pick first capable
+    VkVideoCodecOperationFlagBitsKHR codec,
+    VkVideoEncoderCapabilities* outCaps);
+// Internally: minimal VkInstance + InitPhysicalDevice + enumerate + cleanup.</code></pre>
+
+            <p><strong>Cross-platform implementation notes.</strong></p>
+            <table>
+                <thead><tr><th>Platform</th><th>Caveat</th></tr></thead>
+                <tbody>
+                    <tr><td>Linux (Ubuntu / Fedora)</td><td>Need DRM render-node access for ephemeral instance. GPU sandbox already allows; ephemeral runs before sandbox lock-down.</td></tr>
+                    <tr><td>ChromeOS</td><td><code>vkGetPhysicalDeviceVideoCapabilitiesKHR</code> may return <code>VK_ERROR_VIDEO_PROFILE_OPERATION_NOT_SUPPORTED_KHR</code> on devices without encode HW &mdash; return empty profile set.</td></tr>
+                    <tr><td>Windows</td><td>Ephemeral runs before WDDM video device opened.</td></tr>
+                    <tr><td>Android</td><td>Ephemeral at zygote time; <code>AHARDWAREBUFFER_USAGE_VIDEO_ENCODE</code> not yet valid. Vulkan Video on Android long-term.</td></tr>
+                </tbody>
+            </table>
+
+            <p><strong>Validation approach.</strong> On a machine with no Vulkan Video encode HW, both entry points return empty profile list (not crash, not error). On H.264-only HW, only H.264 profiles appear. Compare against <code>vulkaninfo --json | jq '.physical_devices[0].video_capabilities'</code>.</p>
+
+            <p><strong>LoC:</strong> ~250 (BYO) + ~100 (ephemeral wrapper) = <strong>~350</strong>.</p>
+
+            <h4>Gap #20 &mdash; <code>VideoEncoderInfo</code> for WebRTC <em>&mdash; <code>trustedRateController = true</code> when CBR/VBR supported</em></h4>
+
+            <p><strong>What Chromium calls for.</strong> Once an encoder session is up, the encoder reports its runtime characteristics via <code>media::VideoEncoderInfo</code> (sent over Mojo via <code>VEAClient::NotifyEncoderInfoChange()</code>). WebRTC's bitrate adjuster, simulcast adapter, and quality scaler all consume this struct.</p>
+
+            <p><strong>Why these fields matter to WebRTC behavior.</strong></p>
+            <table>
+                <thead><tr><th>Field</th><th>What WebRTC does with it</th></tr></thead>
+                <tbody>
+                    <tr><td><code>has_trusted_rate_controller=true</code></td><td>Skip the SW bitrate adjuster; trust the HW to track the target. Saves CPU; avoids overshoot/undershoot.</td></tr>
+                    <tr><td><code>has_trusted_rate_controller=false</code></td><td>Run the SW adjuster on top: predict bitrate from past frames, scale target to compensate for HW drift.</td></tr>
+                    <tr><td><code>requested_resolution_alignment=N</code></td><td>Round all input frame sizes up to a multiple of N; insert Skia rescale if needed.</td></tr>
+                    <tr><td><code>supports_simulcast=false</code></td><td>WebRTC creates N parallel encoders for simulcast instead of one with N layers.</td></tr>
+                    <tr><td><code>supports_gpu_shared_images=true</code></td><td>Frames stay on GPU memory end-to-end; no readback.</td></tr>
+                    <tr><td><code>fps_allocation[t]</code></td><td>Quality scaler picks which temporal layer to demote when CPU spikes.</td></tr>
+                    <tr><td><code>resolution_rate_limits[]</code></td><td>Quality scaler picks the next resolution down when bitrate is constrained.</td></tr>
+                </tbody>
+            </table>
+
+            <p><strong>Underlying APIs.</strong> Chromium: <code>VideoEncoderInfo</code> at <code>media/video/video_encoder_info.h</code>; flows via <code>VEAClient::NotifyEncoderInfoChange()</code>. Vulkan: fields map to <code>VkVideoEncodeCapabilitiesKHR</code> + <code>VkPhysicalDeviceVideoEncode*FeaturesKHR</code>.</p>
+
+            <p><strong>Today in the library.</strong> No runtime descriptor exposed. <code>EncoderConfig</code> carries caps internally; public API only exposes <code>GetMaxWidth/Height</code> and <code>SupportsFormat</code> &mdash; no runtime descriptor.</p>
+
+            <p><strong>Why missing.</strong> WebRTC concept; sample has no consumer.</p>
+
+            <p><strong>Proposed delta (G-NEW-8).</strong></p>
+
+<pre><code>struct VkVideoEncoderRuntimeInfo {
+    char                implementationName[64];                        // e.g., "VulkanVideoEncoder-NV"
+    VkBool32            isHardwareAccelerated;                         // always VK_TRUE
+    VkBool32            supportsNativeHandle;                          // VK_TRUE (we accept VkImages)
+    VkBool32            trustedRateController;                         // see note below
+    VkBool32            supportsSimulcast;                             // VK_FALSE initially
+    VkBool32            supportsFrameSizeChange;                       // mirrors caps.supportsResizeWithoutIdr
+    VkBool32            reportsAverageQp;                              // VK_TRUE
+    uint32_t            requestedResolutionAlignmentWidth;             // = caps.pictureAccessGranularityWidth
+    uint32_t            requestedResolutionAlignmentHeight;
+    uint32_t            numberOfManualReferenceBuffers;                // VK_MAX_VIDEO_ENCODE_FRAME_BUFFERS w/ G-NEW-7
+    uint32_t            inputCapacity;
+    uint32_t            frameDelay;                                    // pipeline depth
+    uint32_t            fpsAllocationCount;
+    uint32_t            fpsAllocation[VK_MAX_VIDEO_ENCODE_TEMPORAL_LAYERS];
+    uint32_t            resolutionBitrateLimitCount;
+    struct {
+        VkExtent2D resolution;
+        uint64_t   minBitrate;
+        uint64_t   maxBitrate;
+    } resolutionBitrateLimits[8];
+    VkBool32            applyAlignmentToAllSimulcastLayers;
+    std::vector&lt;VkFormat&gt; gpuSupportedPixelFormats;
+};
+
+virtual VkResult GetRuntimeInfo(VkVideoEncoderRuntimeInfo* out) const = 0;</code></pre>
+
+            <p><strong><code>trustedRateController</code>.</strong> The library reports <code>VK_TRUE</code> whenever active <code>rateControlMode</code> is CBR or VBR <em>and</em> the driver advertised support. Rationale: Vulkan Video drivers are HW-only; modern NVIDIA/AMD/Intel HW encoders all have competent rate control. If quality issues emerge, override via Chromium-side workaround flag rather than vendor table.</p>
+
+<pre><code>// In the lib's GetRuntimeInfo()
+out-&gt;trustedRateController =
+    ((m_rateControlMode == VK_VIDEO_ENCODE_RATE_CONTROL_MODE_CBR_BIT_KHR) ||
+     (m_rateControlMode == VK_VIDEO_ENCODE_RATE_CONTROL_MODE_VBR_BIT_KHR))
+    ? VK_TRUE : VK_FALSE;</code></pre>
+
+            <p><strong>Lifecycle notes.</strong> <code>VideoEncoderInfo</code> is fired whenever the descriptor changes: after Initialize, after Reconfigure (fps_allocation may change with <code>temporalLayerCount</code>), on simulcast layer activation/deactivation, on dynamic profile/level changes. The library should fire a Chromium-side callback whenever <code>Reconfigure()</code> succeeds; add an optional <code>void(*onRuntimeInfoChange)(VkVideoEncoderRuntimeInfo)</code> to <code>VkVideoEncoderConfig</code>; the wrapper hooks it to <code>VEAClient::NotifyEncoderInfoChange()</code>.</p>
+
+            <p><strong>Validation approach.</strong></p>
+            <ol>
+                <li>After Initialize, dump <code>VideoEncoderInfo</code>; compare against VA-API output on the same hardware. The two backends should report qualitatively similar values for fields that are driver-derived (resolution alignment, supported simulcast, trusted-RC).</li>
+                <li>Run WebRTC loopback under congestion (<code>tc qdisc</code> netem). With <code>has_trusted_rate_controller=true</code>, transmitted bitrate stays within 10 % of target across 30 s; IDR frame rate stays &lt; 1/sec.</li>
+                <li>Invoke <code>Reconfigure(bitrate=5 Mbps → 500 Kbps)</code>. <code>NotifyEncoderInfoChange</code> callback fires with updated <code>resolution_rate_limits</code>.</li>
+            </ol>
+
+            <h4>Gap #21 &mdash; <code>Reconfigure()</code> stub <em>&mdash; caller-choice IDR-on-resize</em></h4>
+
+            <p><strong>What Chromium calls for.</strong> Live bitrate/framerate/size updates; <code>VEA::RequestEncodingParametersChange(bitrate, fps, size)</code>. WebRTC's bitrate adjuster runs at ~1 Hz; size changes happen on tab-capture resize, screen rotation, layer switches in simulcast.</p>
+
+            <p><strong>Underlying APIs.</strong> Vulkan: in-flight <code>vkCmdControlVideoCodingKHR(VK_VIDEO_CODING_CONTROL_RATE_CONTROL_BIT_KHR)</code> applies a new <code>VkVideoEncodeRateControlInfoKHR</code> without recreating the session. Resolution change requires recreating <code>VkVideoSessionKHR</code> + <code>VkVideoSessionParametersKHR</code> and forcing IDR on the next frame.</p>
+
+            <p><strong>Today in the library.</strong></p>
+
+<pre><code>// vulkan_video_encoder_ext.cpp:642-647
+VkResult VulkanVideoEncoderExtImpl::Reconfigure(const VkVideoEncoderConfig&amp; config)
+{
+    (void)config;
+    return VK_ERROR_FEATURE_NOT_PRESENT;
+}</code></pre>
+
+            <p>The interface exists; the implementation is a stub. The encoder <em>internally</em> has the live-update primitives:</p>
+            <table>
+                <thead><tr><th>Internal hook</th><th>Purpose</th></tr></thead>
+                <tbody>
+                    <tr><td><code>m_sendRateControlCmd</code></td><td>Set to <code>VK_TRUE</code> to emit <code>vkCmdControlVideoCodingKHR</code> with new RC info on next frame</td></tr>
+                    <tr><td><code>BeginRateControlInfo()</code></td><td>Constructs the <code>VkVideoEncodeRateControlInfoKHR</code> chain</td></tr>
+                    <tr><td><code>m_rateControlInfo</code></td><td>Live rate-control state</td></tr>
+                    <tr><td><code>EncodeVideoSessionParameters()</code></td><td>Re-encodes SPS/PPS into the session-params blob (size change)</td></tr>
+                    <tr><td><code>WaitForThreadsToComplete()</code></td><td>Drain in-flight encodes before disruptive changes</td></tr>
+                </tbody>
+            </table>
+
+            <p>The wiring is there; we just thread a public <code>Reconfigure(config, options)</code> through.</p>
+
+            <p><strong>Why missing.</strong> Offline encode uses one config end-to-end; reconfigure was on the TODO list.</p>
+
+            <p>For Chromium we default <code>forceIdrOnResize = VK_TRUE</code> &mdash; always-IDR is the safe baseline that works on every driver &mdash; and only attempt resize-without-IDR when <code>VkVideoEncoderCapabilities::supportsResizeWithoutIdr</code> is reported true (cap exposed via G-NEW-1).</p>
+
+            <p><strong>Proposed delta (caller-choice IDR; G-NEW-3).</strong></p>
+
+<pre><code>struct VkReconfigureOptions {
+    VkBool32  forceIdrOnResize;          // caller's choice; default VK_TRUE
+    VkBool32  drainBeforeApply;          // wait for in-flight to drain
+    uint64_t  applyAtEncodeOrder;        // 0 = next available
+};
+
+virtual VkResult Reconfigure(const VkVideoEncoderConfig&amp; newConfig,
+                              const VkReconfigureOptions&amp; options) = 0;
+
+// IMPLEMENTATION
+// 1. Diff oldConfig vs newConfig.
+// 2. Bitrate / framerate / quality only:
+//      m_rateControlInfo = new RC values;
+//      m_sendRateControlCmd = true;
+//      next frame emits vkCmdControlVideoCodingKHR(...) and the new RC info takes effect.
+// 3. Size only:
+//      if (options.drainBeforeApply) WaitForInFlight();
+//      recreate VkVideoSessionKHR + VkVideoSessionParametersKHR;
+//      if (options.forceIdrOnResize)         next frame is IDR
+//      else if (supportsResizeWithoutIdr)    skip IDR (driver-supported)
+//      else                                  next frame is IDR (safety fallback).
+// 4. Profile / level change:
+//      always recreate + force IDR (spec requirement).</code></pre>
+
+            <p><strong>Implementation gotchas.</strong></p>
+            <ol>
+                <li><strong>Bitstream pool sizing.</strong> Resolution change ⇒ worst-case bitstream size changes. Caller-provided <code>VkVideoEncodeOutputBuffer::maxSize</code> may suddenly be too small; fail loudly or pre-warn via runtime-info change callback.</li>
+                <li><strong>DPB resizing.</strong> Live resize <em>up</em> requires reallocating; <em>down</em> reuses but may waste memory.</li>
+                <li><strong>Mid-stream rate-control mode change</strong> (CBR → VBR or vice versa) is risky on some drivers; refuse if not IDR-aligned.</li>
+                <li><strong>External rate control</strong> mode requires caller per-frame QP; switching to/from this mid-stream needs care.</li>
+            </ol>
+
+            <p><strong>Validation approach.</strong></p>
+            <ol>
+                <li><strong>Bitrate-only change:</strong> 300 frames at 5 Mbps → <code>Reconfigure(500 Kbps)</code> → 300 more. Per-frame bitstream sizes follow new target within 100 ms. No IDR.</li>
+                <li><strong>Framerate-only change:</strong> similar; no IDR.</li>
+                <li><strong>Resolution change w/ <code>forceIdrOnResize=true</code>:</strong> 4K → 1080p → 4K. IDR on each resize.</li>
+                <li><strong>Resolution change w/ <code>forceIdrOnResize=false</code></strong> (Ada): no IDR; quality may briefly drop. Decoder must support resize signaling.</li>
+                <li><strong>Reconfigure with frames in-flight</strong> (<code>drainBeforeApply=true</code>): pre- and post-reconfigure frames respect their own configs.</li>
+            </ol>
+
+            <p><strong>LoC:</strong> ~300.</p>
+
+            <h4>Gap #22 &mdash; In-memory bitstream return <em>&mdash; caller-owned <code>VkBuffer</code></em></h4>
+
+            <p><strong>What Chromium calls for.</strong> <code>VEA::UseOutputBitstreamBuffer(int32_t bitstream_buffer_id, base::UnsafeSharedMemoryRegion region)</code> pre-shares a pool of shmem buffers; the encoder writes into them and fires <code>VEAClient::BitstreamBufferReady(buffer_id, metadata)</code>. Zero file I/O.</p>
+
+            <p>The flow today (VA-API path) for context:</p>
+
+<pre><code>Renderer process:                          GPU process:
+  CreateSharedMemoryRegion(MAX_SIZE)
+    region.MapToVA(addr)
+  Mojo: UseOutputBitstreamBuffer(region) ----&gt;
+                                             VEA caches region+id mapping
+                                             Internally allocates a VA-API "coded buffer"
+                                             Encodes frame
+                                             Maps the VA-API output, memcpy into shmem
+                                             BitstreamBufferReady(id, metadata) &lt;--
+  on receipt: post the encoded payload upstream</code></pre>
+
+            <p>The <code>memcpy</code> from VA-API's internal coded buffer to shmem is the <strong>single biggest CPU cost</strong> on the encode path today (5&ndash;15 % of encode-side CPU on 4K60 streams). Avoiding it on Vulkan is a measurable win.</p>
+
+            <p><strong>Underlying APIs.</strong></p>
+            <ul>
+                <li>Chromium: <code>media::BitstreamBuffer</code> + <code>base::UnsafeSharedMemoryRegion</code>.</li>
+                <li>Vulkan: encode output goes into <code>VkVideoEncodeInfoKHR::dstBuffer</code> (usage = <code>VK_BUFFER_USAGE_VIDEO_ENCODE_DST_BIT_KHR</code>). Alignment via <code>VkVideoCapabilitiesKHR::minBitstreamBufferOffsetAlignment</code> / <code>minBitstreamBufferSizeAlignment</code>.</li>
+                <li>External memory wrappers per platform:
+                    <ul>
+                        <li><strong>Linux:</strong> <code>VK_EXT_external_memory_host</code> wraps shmem-mapped pointer as <code>VkBuffer</code>. Alternative: <code>VK_KHR_external_memory_fd</code> for memfd.</li>
+                        <li><strong>Windows:</strong> <code>VK_KHR_external_memory_win32</code> with <code>D3DKMT_HANDLE</code> or NT handle.</li>
+                        <li><strong>Android:</strong> <code>VK_ANDROID_external_memory_android_hardware_buffer</code> for AHB-backed shmem.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <p><strong>Today in the library.</strong></p>
+
+<pre><code>// vulkan_video_encoder_ext.cpp:574-583
+result.frameId        = front.frameId;
+result.pts            = front.pts;
+result.dts            = 0;              // TODO: compute from encode order
+result.pBitstreamData = nullptr;        // Bitstream is in file for now
+result.bitstreamSize  = 0;
+result.pictureType    = 0;              // TODO: extract from GOP position
+result.isIDR          = VK_FALSE;
+result.temporalLayerId = 0;
+result.status         = VK_SUCCESS;</code></pre>
+
+            <p>The encoder writes to <code>m_outputBitstreamBuffer</code> (internally allocated <code>VkBuffer</code>), then a separate file-writer thread <code>vkMapMemory</code>s and writes to disk. The mapped data is <em>thrown away</em> from the API surface.</p>
+
+            <p><strong>Why missing.</strong> Sample outputs to file.</p>
+
+            <p><strong>Proposed delta (caller-owned; G-NEW-2).</strong></p>
+
+<pre><code>struct VkVideoEncodeOutputBuffer {
+    VkBuffer            buffer;          // caller-allocated; usage = VIDEO_ENCODE_DST
+    VkDeviceMemory      memory;          // VK_NULL_HANDLE if VMA / external
+    VkDeviceSize        offset;          // offset to start writing
+    VkDeviceSize        maxSize;         // upper bound; lib refuses if bitstream &gt; maxSize
+    VkExternalMemoryHandleTypeFlagBits externalHandleType;
+    // When set, library imports caller's external memory into its VkDevice + binds it to `buffer`.
+};
+
+// NEW field in VkVideoEncodeInputFrame
+const VkVideoEncodeOutputBuffer* pOutputBuffer;  // optional; null ⇒ lib-owned buffer
+
+// NEW field in VkVideoEncoderConfig
+VkBool32  disableFileOutput;     // VK_TRUE ⇒ no outputPath / no internal file-writer thread</code></pre>
+
+            <p><strong>Chromium-side construction sketch (per-frame).</strong></p>
+
+<pre><code>void VulkanVideoEncodeAccelerator::UseOutputBitstreamBuffer(
+    media::BitstreamBuffer bitstream_buffer) {
+  // bitstream_buffer.region() is the renderer-shared shmem region.
+  std::unique_ptr&lt;VkVideoEncodeOutputBuffer&gt; ob =
+      CreateOrFindCachedOutputBuffer(bitstream_buffer.region());
+  pending_output_buffers_.push_back({bitstream_buffer.id(), std::move(ob)});
+}
+
+std::unique_ptr&lt;VkVideoEncodeOutputBuffer&gt;
+VulkanVideoEncodeAccelerator::CreateOrFindCachedOutputBuffer(
+    const base::UnsafeSharedMemoryRegion&amp; region) {
+  // 1. Cache by region.GetGUID().
+#if BUILDFLAG(IS_LINUX)
+  base::ScopedFD fd = region.PassPlatformHandle();
+  VkImportMemoryFdInfoKHR import = {
+      .sType      = VK_STRUCTURE_TYPE_IMPORT_MEMORY_FD_INFO_KHR,
+      .handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT,
+      .fd         = fd.release(),
+  };
+#elif BUILDFLAG(IS_WIN)
+  HANDLE handle = region.PassPlatformHandle().Take();
+  VkImportMemoryWin32HandleInfoKHR import = { ..., .handle = handle };
+#endif
+  // 2. Bind VkBuffer with VK_BUFFER_USAGE_VIDEO_ENCODE_DST_BIT_KHR + imported memory.
+  // 3. Cache and return VkVideoEncodeOutputBuffer { buffer, memory, 0, region.GetSize() }.
+}
+
+void VulkanVideoEncodeAccelerator::Encode(scoped_refptr&lt;VideoFrame&gt; frame,
+                                          bool force_keyframe) {
+  auto [bitstream_id, ob] = std::move(pending_output_buffers_.front());
+  pending_output_buffers_.pop_front();
+
+  VkVideoEncodeInputFrame in_frame{};
+  in_frame.image          = ...;       // SharedImage VkImage
+  in_frame.pOutputBuffer  = ob.get();  // caller-owned output
+  // ... wait/signal semaphores, force IDR flag, etc.
+  encoder_-&gt;SubmitExternalFrame(in_frame);
+  in_flight_output_buffers_[in_frame.frameId] = { bitstream_id, std::move(ob) };
+}</code></pre>
+
+            <p>The encoded bytes land <strong>directly in the renderer-visible shmem region</strong> &mdash; true zero-copy on the output path.</p>
+
+            <p><strong>Required extensions per platform.</strong></p>
+            <table>
+                <thead><tr><th>Platform</th><th>Extension we depend on for caller-owned shmem <code>VkBuffer</code></th></tr></thead>
+                <tbody>
+                    <tr><td>Linux</td><td><code>VK_EXT_external_memory_host</code> (Vulkan 1.1+) or <code>VK_KHR_external_memory_fd</code></td></tr>
+                    <tr><td>Windows</td><td><code>VK_KHR_external_memory_win32</code></td></tr>
+                    <tr><td>Android</td><td><code>VK_ANDROID_external_memory_android_hardware_buffer</code></td></tr>
+                </tbody>
+            </table>
+
+            <p>The Chromium-side wrapper checks <code>vkEnumerateDeviceExtensionProperties()</code> at init time and refuses to register the Vulkan VEA backend if the required external-memory extension is absent on the selected <code>VkPhysicalDevice</code> &mdash; falling back to the lib-owned + memcpy path is the alternative.</p>
+
+            <p><strong>Validation approach.</strong></p>
+            <ol>
+                <li><strong>Functional:</strong> encode 100 frames into a shmem region; mmap from test harness; pipe through <code>ffmpeg -c:v copy</code> and <code>ffprobe</code>; all 100 frames decode.</li>
+                <li><strong>Zero-copy assertion:</strong> counter in the encoder shim that's incremented every time the encoder would have done a <code>memcpy</code> (no <code>pOutputBuffer</code> supplied). Should stay at 0 for an entire Chromium encode session.</li>
+                <li><strong>Cache hit rate:</strong> WebCodecs ~30 fps with same shmem region reused; cache should hit on every frame after the first ~5. Drops below 95 % indicate mailbox lifetime bugs.</li>
+                <li><strong>Resize:</strong> increase output buffer size mid-stream; verify cache invalidates and re-imports.</li>
+                <li><strong>Encoder fallback:</strong> omit <code>pOutputBuffer</code> (lib-owned path); verify back-compat works.</li>
+            </ol>
+
+            <p><strong>LoC:</strong> ~250 (was ~120; the bump covers external-memory-handle plumbing).</p>
+
+            <h4>Gap #23 &mdash; Capability descriptor (<code>requested_resolution_alignment</code>, max bitrate, ...)</h4>
+
+            <p><strong>Relationship to #18, #19, #20.</strong></p>
+            <table>
+                <thead><tr><th>Gap</th><th>When</th><th>Consumer</th></tr></thead>
+                <tbody>
+                    <tr><td>#18 Format negotiation</td><td>Per-codec format list</td><td><code>GetSupportedProfiles().gpu_supported_pixel_formats</code></td></tr>
+                    <tr><td>#19 GetSupportedProfiles</td><td>GPU process startup, no encoder yet</td><td><code>chrome://gpu</code>, SDP capability, <code>MediaCapabilities</code></td></tr>
+                    <tr><td><strong>#23 Capability descriptor</strong></td><td>After session created, before encoding</td><td><code>VideoEncoderInfo</code> at <code>NotifyEncoderInfoChange()</code></td></tr>
+                    <tr><td>#20 VideoEncoderInfo</td><td>Runtime, on changes</td><td>WebRTC bitrate adjuster, quality scaler</td></tr>
+                </tbody>
+            </table>
+
+            <p><strong>What Chromium calls for.</strong> The <code>VideoEncoderInfo</code> fields that come from driver caps:</p>
+
+            <table>
+                <thead><tr><th>Field</th><th>Source</th><th>Vulkan API</th></tr></thead>
+                <tbody>
+                    <tr><td><code>requested_resolution_alignment</code></td><td>driver</td><td><code>VkVideoCapabilitiesKHR::pictureAccessGranularityWidth/Height</code></td></tr>
+                    <tr><td><code>resolution_rate_limits[]</code></td><td>per-profile + per-level</td><td>Codec level tables + <code>VkVideoEncodeCapabilitiesKHR::maxBitrate</code></td></tr>
+                    <tr><td><code>apply_alignment_to_all_simulcast_layers</code></td><td>always true on HW</td><td>n/a (Chromium-side knowledge)</td></tr>
+                    <tr><td><code>requires_input_frame_idr_on_resize</code></td><td>session caps</td><td><code>VkVideoEncodeCapabilitiesKHR::flags</code></td></tr>
+                    <tr><td><code>fps_allocation</code></td><td>session config</td><td><code>temporalLayerCount</code> + GOP pattern</td></tr>
+                    <tr><td><code>min_bitrate_per_resolution</code></td><td>per-codec</td><td>Vulkan caps + codec level tables</td></tr>
+                    <tr><td><code>has_trusted_rate_controller</code></td><td>driver</td><td>G-NEW-8 <code>trustedRateController</code></td></tr>
+                </tbody>
+            </table>
+
+            <p><code>resolution_rate_limits</code> is the trickiest. WebRTC's quality scaler uses this to predict whether bumping to 2160p at the current bitrate budget will keep quality acceptable. Vulkan doesn't expose "for resolution R, max bitrate is B"; we derive it from codec level tables (e.g., H.264 Level 5.2 max = 240 Mbps for High profile) + driver caps. Existing table at <code>media/video/h264_level_limits.cc</code>.</p>
+
+            <p><strong>Today in the library.</strong> Internal <code>EncoderConfig::videoEncodeCapabilities</code> holds Vulkan-returned caps post-init; no public method to retrieve.</p>
+
+            <p><strong>Why missing.</strong> Same as #18 / #19 &mdash; no caller asking.</p>
+
+            <p><strong>Proposed delta.</strong> Subsumed by G-NEW-1 + G-NEW-8. <code>VkVideoEncoderCapabilities</code> carries pre-init values; <code>VkVideoEncoderRuntimeInfo</code> carries post-init values.</p>
+
+<pre><code>// media/gpu/vulkan/vulkan_video_encoder_caps_to_video_encoder_info.cc
+media::VideoEncoderInfo TranslateRuntimeInfo(
+    const VkVideoEncoderRuntimeInfo&amp; lib_info,
+    media::VideoCodecProfile profile) {
+  media::VideoEncoderInfo out;
+  out.implementation_name = lib_info.implementationName;
+  out.has_trusted_rate_controller = lib_info.trustedRateController;
+  out.is_hardware_accelerated = lib_info.isHardwareAccelerated;
+  out.supports_native_handle = lib_info.supportsNativeHandle;
+  out.supports_simulcast = lib_info.supportsSimulcast;
+  out.supports_gpu_shared_images = true;  // Chromium-side knowledge
+  out.requested_resolution_alignment = std::max(
+      lib_info.requestedResolutionAlignmentWidth,
+      lib_info.requestedResolutionAlignmentHeight);
+  out.apply_alignment_to_all_simulcast_layers = true;
+  // Fill resolution_rate_limits[] from lib_info + level table
+  for (uint32_t i = 0; i &lt; lib_info.resolutionBitrateLimitCount; ++i) {
+    out.resolution_rate_limits.push_back({
+        gfx::Size(lib_info.resolutionBitrateLimits[i].resolution.width,
+                  lib_info.resolutionBitrateLimits[i].resolution.height),
+        media::Bitrate::ConstantBitrate(lib_info.resolutionBitrateLimits[i].minBitrate),
+        media::Bitrate::ConstantBitrate(lib_info.resolutionBitrateLimits[i].maxBitrate),
+    });
+  }
+  return out;
+}</code></pre>
+
+            <p><strong>Validation approach.</strong> Compare populated <code>VideoEncoderInfo</code> against VA-API output on the same machine for the same codec. Discrepancies in <code>requested_resolution_alignment</code> mean WebRTC may pass misaligned frames; discrepancies in <code>resolution_rate_limits</code> may cause the quality scaler to over- or under-estimate.</p>
+
+            <h4>Gap #24 &mdash; Protected encode</h4>
+
+            <p><strong>What Chromium calls for.</strong> Encrypt-on-encode for DRM-bound content. Two scenarios:</p>
+            <ol>
+                <li><strong>Screen capture on managed devices</strong> &mdash; enterprise / DRM-policy-aware desktops: re-encode protected content (Netflix, Hulu, Disney+) without exposing cleartext.</li>
+                <li><strong>Re-encoding protected sources</strong> &mdash; decode protected stream inside CDM, decode on protected decoder, re-encode protected output.</li>
+            </ol>
+
+            <p><strong>Underlying APIs.</strong></p>
+            <ul>
+                <li>Vulkan core: <code>VK_VIDEO_SESSION_CREATE_PROTECTED_CONTENT_BIT_KHR</code>, <code>VK_QUEUE_PROTECTED_BIT</code> queues, <code>VK_MEMORY_PROPERTY_PROTECTED_BIT</code>.</li>
+                <li>Vulkan 1.1: <code>VK_KHR_protected_memory</code> (now core).</li>
+                <li>Per-platform:
+                    <ul>
+                        <li>Linux/ChromeOS: vendor-specific (NVIDIA <code>VK_NV_protected_memory</code>; AMD TMR).</li>
+                        <li>Android: <code>AHARDWAREBUFFER_USAGE_PROTECTED_CONTENT</code> via <code>VK_EXT_external_memory_android_hardware_buffer</code>.</li>
+                        <li>Windows: D3D11 OPR wrapped via Vulkan; not widely deployed.</li>
+                    </ul>
+                </li>
+                <li>Chromium: <code>VEA::Config::is_protected</code>; CDM trust chain via <code>media::CdmContext::GetChromeOsCdmContext()</code> (ChromeOS), <code>media::MojoCdm</code>.</li>
+            </ul>
+
+            <p><strong>Today in the library.</strong> No protected-content flag plumbing.</p>
+
+            <p><strong>Why missing.</strong></p>
+            <ol>
+                <li>Requires HW + driver + ICD support &mdash; not universal.</li>
+                <li>Testing requires a CDM and protected content &mdash; not in lib's CI.</li>
+                <li>Protected memory model restrictive (no <code>vkMapMemory</code> on protected buffers; staging/QP-map paths assume mapping).</li>
+                <li>Outside the library's scope as a sample.</li>
+            </ol>
+
+            <p><strong>Proposed delta.</strong> <strong>None for MVP</strong> &mdash; non-goal per main design F12. If a real consumer materialises:</p>
+
+<pre><code>// NEW fields in VkVideoEncoderConfig (future, P3+)
+VkBool32  enableProtectedContent;             // session-level
+VkBool32  protectedSubmitOnly;                // VK_TRUE ⇒ all submits use protected queues</code></pre>
+
+            <p>Internal changes required: RGBA→NV12 compute filter must run on protected queue or be disabled; QP-map staging can't <code>vkMapMemory</code>; bitstream readback goes via CDM-side channel.</p>
+
+            <p><strong>Validation approach.</strong> Run known protected fixture (Widevine test pattern); assert no decrypted bytes appear in user-space buffers between encode call and CDM delivery. Use Android's protected-memory auditor or ChromeOS's <code>cros_healthd</code> probes.</p>
+
+            <h4>Gap #25 &mdash; Shared device with Chromium compositor (<code>gpu::VulkanDeviceQueue</code>)</h4>
+
+            <p><strong>What Chromium calls for.</strong> Single <code>VkDevice</code> shared between compositor / WebGPU / decode / encode. Single device = no cross-device DMA-BUF round-trip, no duplicated device-state memory, simpler synchronization.</p>
+
+            <p><strong>Underlying APIs.</strong></p>
+            <ul>
+                <li>Chromium: <code>gpu::VulkanDeviceQueue</code>, <code>gpu::VulkanImplementation</code>, and a <strong>new proposed</strong> SharedImage Vulkan-video representation API modeled after ToT's <code>SharedImageManager::ProduceVideo()</code> path.</li>
+                <li>Library: <code>VulkanDeviceContext</code> non-owning lifecycle <em>already</em> supports BYO instance + phys device + device via <code>m_importedInstanceHandle</code> / <code>m_importedDeviceHandle</code> flags. Quoted in §0.2 errata.</li>
+            </ul>
+
+            <p><strong>Today in the library.</strong> Capability is at the <code>VulkanDeviceContext</code> layer already. Only the public <code>VkVideoEncoderConfig</code> doesn't expose the deeper handles:</p>
+
+<pre><code>// common/libs/VkCodecUtils/VulkanDeviceContext.cpp:1049-1056
+// (already in tree)
+if (vkDevice == VK_NULL_HANDLE) {
+    ... CreateDevice(m_physDevice, &amp;devInfo, nullptr, &amp;m_device); ...
+    m_importedDeviceHandle = false;
+} else {
+    m_device = vkDevice;
+    m_importedDeviceHandle = true;
+}
+
+// Destructor (line 1137-1145)
+if (m_device) {
+    if (!m_importedDeviceHandle) {        // don't destroy if BYO
+        DeviceWaitIdle();
+        DestroyDevice(m_device, nullptr);
+    }
+    m_device = VkDevice();
+}</code></pre>
+
+            <p><strong>Why missing.</strong> Public config plumbed <code>externalInstance</code> only; v1.1 mistakenly sized this at ~500 LoC of feature work; v1.2 finding revealed it's ~30 LoC of plumbing.</p>
+
+            <p><strong>Proposed delta (G-NEW-9, ~30 LoC).</strong></p>
+
+<pre><code>// NEW fields in VkVideoEncoderConfig (additive)
+VkPhysicalDevice externalPhysicalDevice;
+VkDevice         externalDevice;
+uint32_t         externalEncodeQueueFamilyIndex;
+uint32_t         externalComputeQueueFamilyIndex;
+
+// vulkan_video_encoder_ext.cpp::InitVulkanDevice — forward to existing parameters:
+result = m_vkDevCtx.InitPhysicalDevice(..., config.externalPhysicalDevice);
+result = m_vkDevCtx.CreateVulkanDevice(..., config.externalDevice);</code></pre>
+
+            <p><strong>Validation approach.</strong> After Initialize, the library logs <code>m_importedDeviceHandle = true</code>. Encode a frame; verify with a Vulkan validation layer that <code>vkCmdEncodeVideoKHR</code> ran on the Chromium-provided device (same <code>VkDevice</code> handle as <code>gpu::VulkanDeviceQueue::GetVulkanDevice()</code>).</p>
+
+            <h3>2.2 Gap categorisation summary</h3>
+            <table>
+                <thead><tr><th>Gap</th><th>Severity</th><th>Why it's missing</th><th>Effort to fix upstream</th></tr></thead>
+                <tbody>
+                    <tr><td>#10 Quantization map (public iface)</td><td>Moderate</td><td>Sample app uses file-based input</td><td>~150 LoC (G-NEW-4)</td></tr>
+                    <tr><td>#11 Intra-refresh (public iface)</td><td>Moderate</td><td>Sample applies one cycle to all frames</td><td>~80 LoC (G-NEW-5)</td></tr>
+                    <tr><td>#12 Temporal SVC (deep)</td><td>Moderate</td><td>T=1 default; per-layer array hard-sized to 1</td><td>~250 LoC (G-NEW-6)</td></tr>
+                    <tr><td>#13 Spatial SVC</td><td>Light (deferred)</td><td>No Vulkan spec; no HW support</td><td>~1,500 LoC if/when spec exists</td></tr>
+                    <tr><td>#14 Manual reference control (WebRTC idx)</td><td>Moderate</td><td>DPB driven by GOP only</td><td>~400 LoC (G-NEW-7)</td></tr>
+                    <tr><td>#15 Per-frame QP map binding</td><td>Light</td><td>Subsumed by #10</td><td>0 (covered by G-NEW-4)</td></tr>
+                    <tr><td>#18 Format negotiation</td><td>Light</td><td>Subsumed by #19</td><td>0 (covered by G-NEW-1)</td></tr>
+                    <tr><td>#19 GetSupportedProfiles (BYO + ephemeral)</td><td><strong>Critical</strong></td><td>No caps/session separation</td><td>~350 LoC (G-NEW-1)</td></tr>
+                    <tr><td>#20 VideoEncoderInfo (trusted RC = always_true)</td><td><strong>Critical</strong></td><td>WebRTC concept absent from samples</td><td>~150 LoC (G-NEW-8)</td></tr>
+                    <tr><td>#21 Reconfigure (caller-choice IDR)</td><td><strong>Critical</strong></td><td>Live reconfigure not needed for cmdline</td><td>~300 LoC (G-NEW-3)</td></tr>
+                    <tr><td>#22 In-memory bitstream (caller-owned VkBuffer)</td><td><strong>Critical</strong></td><td>Sample writes to file</td><td>~250 LoC (G-NEW-2)</td></tr>
+                    <tr><td>#23 Capability descriptor</td><td>Light</td><td>Subsumed by #19 / #20</td><td>0 (covered)</td></tr>
+                    <tr><td>#24 Protected encode</td><td>Non-goal</td><td>Out of MVP scope</td><td>0 (deferred)</td></tr>
+                    <tr><td>#25 Shared device (BYO VkDevice)</td><td><strong>Critical</strong></td><td>Public config never plumbed it</td><td>~30 LoC (G-NEW-9) &mdash; plumbing only</td></tr>
+                </tbody>
+            </table>
+
+            <p><strong>Total upstream effort for P0 gaps (v1.3): ~1,130 LoC</strong> (v1.2 was ~870; the +260 covers ephemeral-instance fallback in G-NEW-1, caller-owned-buffer external-memory plumbing in G-NEW-2, deep WebRTC-compatible temporal-SVC GOP patterns in G-NEW-6, and extra <code>VideoEncoderInfo</code> fields in G-NEW-8). All deltas land additively on the existing public surface &mdash; no breaking changes to current cmdline callers.</p>
+        </section>
+
+        <!-- 3. Extensions -->
+        <section id="extensions">
+            <h2>3. Concrete extensions the library needs</h2>
+            <p>The labels <code>G-NEW-N</code> (read: <em>Gap-resolving New extension #N</em>) are introduced in &sect;2.1. Each <code>G-NEW-N</code> is a specific additive contribution to the public Vulkan-Video-Samples API that closes one or more of the sufficiency-table gaps. Eleven extensions are catalogued below. None of them break existing cmdline callers &mdash; every change is additive: new struct fields default to neutral values, new functions are standalone.</p>
+            <p>For Chromium MVP we need <strong>11</strong> upstream interface deltas. Total ~3,510 LoC of upstream contributions (v1.3 sizing); the P0 subset is <strong>~1,130 LoC</strong> and ~2 engineer-weeks.</p>
+
+            <table>
+                <thead><tr><th>ID</th><th>Gap (v1.3 sizing)</th><th>LoC</th><th>Priority</th></tr></thead>
+                <tbody>
+                    <tr><td>G-NEW-1</td><td>Capability enumeration (BYO primary + ephemeral fallback)</td><td><strong>~350</strong></td><td><span class="tag tag-p0">P0</span></td></tr>
+                    <tr><td>G-NEW-2</td><td>In-memory bitstream return (caller-owned <code>VkBuffer</code>; external-memory shmem)</td><td><strong>~250</strong></td><td><span class="tag tag-p0">P0</span></td></tr>
+                    <tr><td>G-NEW-3</td><td>Functional <code>Reconfigure()</code> (caller-choice IDR-on-resize)</td><td>~300</td><td><span class="tag tag-p0">P0</span></td></tr>
+                    <tr><td>G-NEW-4</td><td>Per-frame QP map binding</td><td>~150</td><td>P2</td></tr>
+                    <tr><td>G-NEW-5</td><td>Per-frame intra-refresh window</td><td>~80</td><td>P2</td></tr>
+                    <tr><td>G-NEW-6</td><td>Temporal SVC layers (deep: <code>[VK_MAX_VIDEO_ENCODE_TEMPORAL_LAYERS=4]</code> + programmable GOP pattern)</td><td><strong>~250</strong></td><td>P1</td></tr>
+                    <tr><td>G-NEW-7</td><td>Manual reference buffer control (WebRTC index model)</td><td>~400</td><td>P2</td></tr>
+                    <tr><td>G-NEW-8</td><td><code>VideoEncoderInfo</code>-style runtime descriptor (<code>trustedRC=true</code> on CBR/VBR)</td><td><strong>~150</strong></td><td><span class="tag tag-p0">P0</span></td></tr>
+                    <tr><td>G-NEW-9</td><td>BYO <code>VkDevice</code> plumbing (was 500 LoC; <strong>now ~30 LoC</strong>)</td><td><strong>~30</strong></td><td><span class="tag tag-p0">P0</span></td></tr>
+                    <tr><td>G-NEW-10</td><td>Spatial SVC</td><td>~1,500</td><td>P3 (defer)</td></tr>
+                    <tr><td>G-NEW-11</td><td>Silence <code>std::cout</code> / <code>std::cerr</code> noise (sandbox-safety)</td><td>~50</td><td><span class="tag tag-p0">P0</span></td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 4. Models -->
+        <section id="models">
+            <h2>4. Four integration models</h2>
+            <div class="diagram">
+                <object data="diagrams/lib_integration_models.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Side-by-side: Model D vendors and static-links the library; Model A links it as a separate <code>.so</code>; Model B vendors only the codec layer and writes a custom front-end; Model C deploys Model D in a sandboxed utility process via Mojo.</div>
+            </div>
+
+            <div class="diagram">
+                <object data="diagrams/lib_third_party_pattern.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Model D drops <code>third_party/vulkan_video_samples/</code> into the same slot Chromium uses for every other codec library &mdash; <code>libvpx</code>, <code>libaom</code>, <code>dav1d</code>, <code>libavif</code>, <code>libwebp</code>.</div>
+            </div>
+
+            <h3>Comparison (v1.3)</h3>
+            <table>
+                <thead><tr><th>Aspect</th><th>Model D (rec.)</th><th>Model A (dynamic)</th><th>Model B</th><th>Model C (OOP)</th><th>v1.1 baseline</th></tr></thead>
+                <tbody>
+                    <tr><td>Build / link mode</td><td><strong>static, in chrome</strong></td><td>dynamic, external <code>.so</code></td><td>static, in chrome</td><td>static, in utility binary</td><td>n/a</td></tr>
+                    <tr><td>Chromium-side LoC</td><td>~2,350</td><td>~2,350 (same)</td><td>~4,200</td><td>~3,750 + Mojo</td><td>~9,000</td></tr>
+                    <tr><td>GN/build LoC</td><td>~400 (one-time)</td><td>~50</td><td>~400</td><td>~400</td><td>~50</td></tr>
+                    <tr><td>Upstream contribution</td><td>~870</td><td>~870</td><td>~0</td><td>~870</td><td>n/a</td></tr>
+                    <tr><td><strong>Zero-copy from compositor</strong></td><td>&#10003; same device + Path A</td><td>&#10003; same device + Path A</td><td>&#10003; same device</td><td>&#10003; Mojo + Path A</td><td>&#10003;</td></tr>
+                    <tr><td>Devices in this process</td><td><strong>1 (shared)</strong></td><td>1 (shared)</td><td>1 (shared)</td><td>1 (utility owns its own)</td><td>1</td></tr>
+                    <tr><td>Single binary</td><td>&#10003;</td><td>&#10005; external <code>.so</code></td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+                    <tr><td>LTO/PGO across encoder + Chromium</td><td>&#10003;</td><td>&#10005;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+                    <tr><td>Per-codec build flags</td><td>&#10003;</td><td>&#10005;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+                    <tr><td>Binary size cost vs A</td><td>+2&ndash;5 MB</td><td>baseline</td><td>+2&ndash;5 MB</td><td>+2&ndash;5 MB</td><td>+5&ndash;8 MB</td></tr>
+                    <tr><td>Codec correctness reviewable at roll</td><td>&#10003; source diff</td><td>&#10005; opaque <code>.so</code> SHA</td><td>&#10003;</td><td>&#10003;</td><td>n/a</td></tr>
+                    <tr><td>Short-term patch lane</td><td>&#10003; <code>chromium_patches/</code></td><td>&#10005;</td><td>&#10003;</td><td>&#10003;</td><td>n/a</td></tr>
+                    <tr><td>Update cadence</td><td>DEPS source roll</td><td>DEPS <code>.so</code> bump</td><td>we cherry-pick</td><td>DEPS source roll</td><td>n/a</td></tr>
+                    <tr><td>Crash isolation</td><td>weak</td><td>weak</td><td>weak</td><td><strong>strong</strong></td><td>weak</td></tr>
+                    <tr><td>Time to first H.264 CQP</td><td>W3.5</td><td><strong>W3</strong></td><td>W4.5</td><td>W3.5</td><td>W6</td></tr>
+                    <tr><td><strong>Calendar effort</strong></td><td><strong>10.5&ndash;12 weeks</strong></td><td>10&ndash;11 weeks</td><td>12&ndash;15 weeks</td><td>13&ndash;16 weeks</td><td>19&ndash;21 weeks</td></tr>
+                    <tr><td>Matches Chromium codec pattern</td><td>&#10003; (<code>libvpx</code>, <code>libaom</code>, ...)</td><td>&#10005; (unique)</td><td>&#10003;</td><td>&#10003;</td><td>n/a</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Why Model D wins for production (v1.3)</h3>
+            <ul>
+                <li><strong>Standard Chromium codec pattern.</strong> Identical packaging to <code>libvpx</code>, <code>libaom</code>, <code>dav1d</code>, <code>libavif</code>, <code>libwebp</code>. Reviewable by every Chromium media OWNER.</li>
+                <li><strong>Same integration code as Model A</strong> &mdash; literally byte-for-byte. Only <code>BUILD.gn</code> differs. We can switch between them with one GN argument.</li>
+                <li><strong>Single chrome binary</strong> &mdash; no <code>.so</code> distribution, no <code>dlopen</code> failure modes, no path search, no sandbox load-policy.</li>
+                <li><strong>LTO/PGO across the boundary</strong> &mdash; the inliner sees <code>VulkanVideoEncoderExt::SubmitExternalFrame()</code> and Chromium's caller together.</li>
+                <li><strong>Per-codec build flags</strong> &mdash; ship only the codecs we need (<code>enable_vulkan_video_encode_h264 = false</code> for embedded ChromeOS, etc.).</li>
+                <li><strong>Codec correctness reviewable at each roll</strong> &mdash; auto-rolled DEPS bumps show a source diff in code review.</li>
+                <li><strong>Short-term patch lane</strong> &mdash; <code>third_party/vulkan_video_samples/chromium_patches/</code> for the rare case where we need a fix that hasn't shipped upstream.</li>
+                <li><strong>Matches OOP deployment</strong> &mdash; if Chromium video acceleration moves to a utility process (Model C), the library code is unchanged; only Mojo plumbing differs.</li>
+            </ul>
+
+            <h3>Model A (dynamic) is the prototyping variant</h3>
+            <p>Model A is byte-for-byte the same Chromium-side code, just dynamic-linked. It's useful when:</p>
+            <ul>
+                <li>You want to iterate on a separately-distributed library binary without rebuilding Chrome.</li>
+                <li>A vendor driver ships <code>libvkvideo-encoder.so</code> separately and we want to swap-test it.</li>
+                <li>Initial prototyping before the <code>third_party/</code> vendoring effort is approved.</li>
+            </ul>
+            <p>For production ship, Model A is unusual in the Chromium codec landscape. Move to Model D.</p>
+
+            <div class="callout-rec">
+                <strong>Plan (Model D):</strong>
+                <ol>
+                    <li><strong>Phase 0 (~0.5&ndash;1 week)</strong> &mdash; Vendor <code>third_party/vulkan_video_samples/</code>: drop sources, write <code>BUILD.gn</code> (~400 LoC), <code>README.chromium</code>, <code>OWNERS</code>, <code>LICENSE</code>, DEPS pin.</li>
+                    <li><strong>Phase 1 (parallel)</strong> &mdash; Land the P0 upstream set (G-NEW-1, 2, 3, 8, 9, 11; ~870 LoC) and write the Chromium-side shim.</li>
+                    <li><strong>Phase 2&ndash;6</strong> &mdash; H.264 CQP &rarr; CBR/VBR/Reconfigure &rarr; SharedImage hooks &rarr; HEVC + AV1 (free from library) &rarr; advanced (SVC, QP map, intra-refresh, manual refs).</li>
+                </ol>
+                <strong>Total:</strong> ~10.5&ndash;12 weeks, ~2,350 Chromium LoC + ~400 GN LoC + ~870 upstream LoC.
+            </div>
+
+            <h3 id="model-c-deepdive">Model C deep-dive: Vulkan-Video-Samples as an OOP utility-process service</h3>
+
+            <p><strong>Important context:</strong> Chromium already ships an OOP-VEA path on Linux/ChromeOS for VA-API today. The whole infrastructure &mdash; utility-process launcher, Mojo interfaces, sandbox policy, browser-side broker, command-buffer SharedImage transport &mdash; is already in tree. Model C for Vulkan is a new backend behind the existing OOP-VEA scaffold, not a new IPC stack.</p>
+
+            <div class="diagram">
+                <object data="diagrams/lib_model_c_oop_architecture.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Model C reuses Chromium's existing OOP-VEA infrastructure (the green/orange/blue boundaries are all already in tree). The only new piece is the Vulkan backend statically linked into the utility process binary.</div>
+            </div>
+
+            <h4>What is a Chromium "utility process"?</h4>
+
+            <table>
+                <thead><tr><th>Process</th><th>Owned by</th><th>Sandbox</th><th>Purpose</th></tr></thead>
+                <tbody>
+                    <tr><td>Browser (parent)</td><td><code>chrome</code> binary</td><td>none &mdash; broker</td><td>UI, networking, controls children</td></tr>
+                    <tr><td>Renderer</td><td>one per site</td><td>tight (<code>kRenderer</code>)</td><td>Blink, V8, layout</td></tr>
+                    <tr><td>GPU</td><td>one per browser</td><td>wide (<code>kGpu</code>, talks to driver)</td><td>Vulkan/GL/Skia, compositor, today's VEA/VDA</td></tr>
+                    <tr><td><strong>Utility</strong></td><td>per-service</td><td>varies (<code>kHardwareVideoEncoding</code>, <code>kAudio</code>, ...)</td><td>Network, audio, video decode (OOP-D), <strong>video encode (OOP-VEA)</strong>, CDM, on-device ML, ...</td></tr>
+                </tbody>
+            </table>
+
+            <p>A utility process is a sandboxed child process that hosts a single Mojo service. Launched on demand via <code>content::ServiceProcessHost::Launch&lt;T&gt;()</code>, torn down when the last Mojo connection drops. Its sandbox profile is declared inline in the <code>.mojom</code> file:</p>
+
+<pre><code>// media/mojo/mojom/video_encode_accelerator.mojom:102-104
+[EnableIf=allow_linux_video_acceleration,
+    ServiceSandbox=sandbox.mojom.Sandbox.kHardwareVideoEncoding]
+interface VideoEncodeAcceleratorProviderFactory { ... };</code></pre>
+
+            <p>The browser <strong>enforces</strong> that any binding of this interface goes to a process sandboxed at <code>kHardwareVideoEncoding</code>. Cross-renderer leaks via the encoder are architecturally impossible &mdash; the .mojom doc literally says <em>"each renderer process should get its own corresponding utility process."</em></p>
+
+            <h4>Existing OOP-VEA scaffold in Chromium (verified, all in tree today)</h4>
+
+            <table>
+                <thead><tr><th>Component</th><th>Path</th><th>Role</th></tr></thead>
+                <tbody>
+                    <tr><td>Feature flag</td><td><code>media::kUseOutOfProcessVideoEncoding</code></td><td>Gates the whole OOP path</td></tr>
+                    <tr><td>Build gate</td><td><code>USE_LINUX_VIDEO_ACCELERATION</code></td><td>Linux + ChromeOS</td></tr>
+                    <tr><td>Mojo interfaces</td><td><code>media/mojo/mojom/video_encode_accelerator.mojom</code></td><td><code>VideoEncodeAccelerator</code>, <code>...Provider</code>, <code>...ProviderFactory</code></td></tr>
+                    <tr><td>Sandbox label</td><td><code>Sandbox::kHardwareVideoEncoding</code> in <code>sandbox/policy/sandbox_type.cc:70</code></td><td>Inline in mojom; enforced at process launch</td></tr>
+                    <tr><td>Sandbox policy (Linux)</td><td><code>sandbox/policy/linux/sandbox_seccomp_bpf_linux.cc:223-227</code></td><td>Currently reuses GPU sandbox (transitional per TODO)</td></tr>
+                    <tr><td>Utility-process launcher</td><td><code>content/browser/media/video_encode_accelerator_provider_launcher.cc:13</code></td><td><code>ServiceProcessHost::Launch().WithDisplayName("Video Encoder")</code></td></tr>
+                    <tr><td>Browser-side broker</td><td><code>render_process_host_impl_receiver_bindings.cc:361-380</code></td><td>Plumbs renderer requests to a per-renderer utility process</td></tr>
+                    <tr><td>Service registrar</td><td><code>content/utility/services.cc:437</code></td><td><code>services.Add(RunVideoEncodeAcceleratorProviderFactory)</code></td></tr>
+                    <tr><td>Factory</td><td><code>media/mojo/services/mojo_video_encode_accelerator_provider_factory.cc</code></td><td>One factory per utility process</td></tr>
+                    <tr><td>Provider</td><td><code>media/mojo/services/mojo_video_encode_accelerator_provider.cc</code></td><td>One provider per renderer</td></tr>
+                    <tr><td>VEA service-side wrapper</td><td><code>media/mojo/services/mojo_video_encode_accelerator_service.cc</code></td><td>Wraps <code>media::VideoEncodeAccelerator</code> for Mojo</td></tr>
+                </tbody>
+            </table>
+
+            <h4>Zero-copy across the process boundary</h4>
+
+            <p><strong>Pixel data does not traverse the Mojo pipe.</strong> The encode flow uses the existing <code>EncodeCommandBufferId</code> back-channel:</p>
+
+<pre><code>// media/mojo/mojom/video_encode_accelerator.mojom:62-65
+struct EncodeCommandBufferId {
+  mojo_base.mojom.UnguessableToken channel_token;
+  int32 route_id;
+};</code></pre>
+
+            <ol>
+                <li>Renderer's <code>VideoFrame</code> is backed by a <code>SharedImage</code> mailbox (canvas / tab capture / camera).</li>
+                <li>Renderer's <code>MojoVideoEncodeAccelerator</code> sends <code>Encode(frame, options)</code> with the mailbox token + <code>EncodeCommandBufferId{channel_token, route_id}</code>. No pixel bytes in the Mojo payload.</li>
+                <li>Utility process uses <code>EncodeCommandBufferId</code> to ask the <strong>GPU process</strong>'s <code>CommandBufferStub</code> for the actual backing.</li>
+                <li>GPU process exports a <strong>DMA-BUF FD</strong> (Linux) / <strong>shared NT handle</strong> (Windows) / <code>AHardwareBuffer</code> (Android). <strong>The kernel duplicates the FD</strong> into the utility process's FD table. The pixel pages live in DRAM exactly once.</li>
+                <li>Utility process imports the FD into its own <code>VkDevice</code> via <code>VkImportMemoryFdInfoKHR</code> + <code>VkImageDrmFormatModifierExplicitCreateInfoEXT</code>. The library's <strong>Path A</strong> consumes the imported <code>VkImage</code> directly.</li>
+                <li><code>vkCmdEncodeVideoKHR</code> runs in the utility process. Bitstream goes into <code>VkVideoEncodeResult::pBitstreamData</code>.</li>
+                <li>Bitstream flows back over Mojo as <code>mojo_base.mojom.UnsafeSharedMemoryRegion</code> (pre-shared via <code>UseOutputBitstreamBuffer()</code>). It's small (~kilobytes/frame), so the Mojo cost is negligible.</li>
+            </ol>
+
+            <h4>What Model C changes vs Model D</h4>
+
+            <table>
+                <thead><tr><th>Concern</th><th>Model D (in-process)</th><th>Model C (OOP)</th></tr></thead>
+                <tbody>
+                    <tr><td>Where <code>VulkanVideoEncodeAccelerator</code> runs</td><td>GPU process</td><td>Utility process</td></tr>
+                    <tr><td>Which <code>gpu::VulkanDeviceQueue</code> it uses</td><td>the GPU process's shared compositor <code>VkDevice</code></td><td>a <strong>utility-process-private</strong> <code>VkDevice</code> created at service startup</td></tr>
+                    <tr><td>Source frame access</td><td>Proposed <code>SharedImageManager::ProduceVulkanVideo()</code> directly</td><td><code>CommandBufferHelper</code> round-trip &rarr; GPU process exports DMA-BUF/handle &rarr; utility imports it</td></tr>
+                    <tr><td>Binary the library links into</td><td><code>//chrome</code></td><td>Utility process binary</td></tr>
+                    <tr><td>Sandbox profile</td><td><code>kGpu</code></td><td><code>kHardwareVideoEncoding</code> (currently = GPU policy; tightening on the roadmap)</td></tr>
+                    <tr><td>Service registration</td><td>factory wiring in <code>gpu_video_encode_accelerator_factory.cc</code></td><td><code>services.Add(RunVulkanVideoEncodeAcceleratorProviderFactory)</code> in <code>content/utility/services.cc</code></td></tr>
+                </tbody>
+            </table>
+
+            <p>The library code in <code>third_party/vulkan_video_samples/</code> is unchanged; just statically linked into a different binary.</p>
+
+            <h4>Why Model C, given Models D / A already give zero-copy</h4>
+
+            <table>
+                <thead><tr><th>Concern</th><th>In-process (Model D / A)</th><th>OOP (Model C)</th></tr></thead>
+                <tbody>
+                    <tr><td>Encoder crash kills</td><td>GPU process &rarr; tab + WebGL + compositor</td><td>only "Video Encoder" utility; GPU process and tab survive</td></tr>
+                    <tr><td>Bug exfiltrates secrets to ...</td><td>GPU process address space (compositor, all WebGL, all SharedImages)</td><td>utility process address space &mdash; empty except for the in-flight frame</td></tr>
+                    <tr><td>Driver bug crash</td><td>tab crash</td><td>next encode fails; tab keeps running</td></tr>
+                    <tr><td>Extra driver privileges</td><td>GPU sandbox is widest; not much room</td><td>utility can have a <strong>narrower</strong> sandbox than GPU</td></tr>
+                    <tr><td>Memory residency</td><td>encoder bloats GPU process heap</td><td>utility process has its own heap</td></tr>
+                    <tr><td>Driver replacement</td><td>requires GPU process restart</td><td>restart only the utility process</td></tr>
+                </tbody>
+            </table>
+
+            <p>In short: Model C is the security/reliability hardening deployment of Models D / A. It pays a latency cost (~0.5&ndash;2 ms p99 per frame for the Mojo round-trip; pixel data still zero-copies through DMA-BUF) in exchange for crash isolation, a tighter sandbox, and per-renderer isolation.</p>
+
+            <h4>Effort delta on top of Model D</h4>
+
+            <table>
+                <thead><tr><th>Component</th><th>LoC</th><th>Notes</th></tr></thead>
+                <tbody>
+                    <tr><td>Chromium-side integration code (same as Model D)</td><td>~2,350</td><td>unchanged</td></tr>
+                    <tr><td><code>third_party/vulkan_video_samples/</code> as utility-binary dep</td><td>0 net (~30 in <code>BUILD.gn</code>)</td><td>same sources as Model D</td></tr>
+                    <tr><td><code>VulkanVideoEncodeAcceleratorProvider</code> (utility-side)</td><td>~300</td><td>mirrors VA-API's provider</td></tr>
+                    <tr><td>Cross-process SharedImage importer (utility-process side)</td><td>~400</td><td>DMA-BUF FD import + VkImage cache per mailbox</td></tr>
+                    <tr><td>Service registration</td><td>~40</td><td>one-liner in <code>content/utility/services.cc</code></td></tr>
+                    <tr><td>Sandbox policy tightening (optional)</td><td>~250</td><td>can ship with the GPU-policy-as-transition</td></tr>
+                    <tr><td>Build gate</td><td>~20</td><td><code>enable_vulkan_video_encode</code> &amp; <code>USE_LINUX_VIDEO_ACCELERATION</code></td></tr>
+                    <tr><td>Tests</td><td>~1,500</td><td>OOP-specific scenarios + Mojo round-trip</td></tr>
+                    <tr><td>Upstream P0 contributions (shared with Model D)</td><td>~870</td><td>same set</td></tr>
+                    <tr><td><strong>OOP-specific delta on top of Model D</strong></td><td><strong>~2,500</strong></td><td></td></tr>
+                    <tr><td><strong>Grand total Chromium-side</strong></td><td><strong>~4,850</strong></td><td></td></tr>
+                    <tr><td><strong>Calendar effort</strong></td><td colspan="2"><strong>~13&ndash;16 weeks</strong> &mdash; Model D (10.5&ndash;12w) + ~3&ndash;4w OOP integration + Mojo tests</td></tr>
+                </tbody>
+            </table>
+
+            <p>Most of the OOP overhead is <strong>test infrastructure</strong>, not Mojo plumbing &mdash; the Mojo plumbing is ~700 LoC because the infrastructure is already in tree.</p>
+
+            <div class="callout-rec">
+                <strong>When to add Model C:</strong> ship <strong>Model D first</strong> (MVP at ~10.5&ndash;12 weeks). When/if the OOP requirement materializes (security review, driver crashy on a given platform, sandbox-tightening pressure), <strong>add Model C</strong> behind a <code>kUseOutOfProcessVulkanVideoEncoding</code> feature flag (~3&ndash;4 weeks of additional work on top of Model D). The two can ship side-by-side, gated by the flag.
+            </div>
+        </section>
+
+        <!-- 5. Risks -->
+        <section id="risks">
+            <h2>5. Risks</h2>
+            <table>
+                <thead><tr><th>#</th><th>Risk</th><th>Severity</th></tr></thead>
+                <tbody>
+                    <tr><td>R1</td><td><code>Reconfigure()</code> is a stub returning <code>VK_ERROR_FEATURE_NOT_PRESENT</code>. WebRTC bitrate adjuster needs dynamic reconfigure or it will force IDR-on-change.</td><td><strong>High</strong></td></tr>
+                    <tr><td>R2</td><td><code>GetEncodedFrame()</code> sets <code>pBitstreamData = nullptr</code>. MVP cannot ship without G-NEW-2.</td><td><strong>Critical</strong></td></tr>
+                    <tr><td>R3</td><td>Public <code>VkVideoEncoderConfig</code> only exposes <code>externalInstance</code>; missing fields are ~30 LoC plumbing because <code>VulkanDeviceContext</code> already supports BYO physical-device + device with proper non-owning lifecycle (v1.1 thought this was a 500-LoC feature).</td><td>Low</td></tr>
+                    <tr><td>R4</td><td>Library emits <code>std::cout</code>/<code>std::cerr</code> noise; sandbox-incompatible without G-NEW-11.</td><td>Med</td></tr>
+                    <tr><td>R5</td><td><code>temporalLayerCount</code> exists in GOP code but per-frame <code>rateControlLayersInfo[1]</code> is hard-sized to 1. T=2 / T=3 needs G-NEW-6.</td><td>Med</td></tr>
+                    <tr><td>R6</td><td><code>BuildEncoderConfig()</code> still translates struct config back to argc/argv strings. Fragile.</td><td>Med</td></tr>
+                    <tr><td>R7</td><td><code>SupportsFormat()</code> is a hardcoded list, not queried from device caps.</td><td>Med</td></tr>
+                    <tr><td>R8</td><td>Library asserts a compute queue exists for RGBA &rarr; NV12 conversion. Chromium's <code>gpu::VulkanDeviceQueue</code> may not expose one.</td><td>Med</td></tr>
+                    <tr><td>R9</td><td>Library's <code>Flush()</code> drops the encoder; next submit fails. Chromium's <code>VEA::Flush()</code> is non-terminal.</td><td>High (we wrap it)</td></tr>
+                    <tr><td>R10</td><td><code>GetMaxWidth/Height</code> return constant 8192; falsely advertise 8K on 4K-only HW.</td><td>Low (fixed by G-NEW-1)</td></tr>
+                    <tr><td>R11</td><td>Library's internal <code>EncoderConfig</code> is not a stable ABI. Vendored Model B must track upstream.</td><td>Med</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 6. Effort -->
+        <section id="effort">
+            <h2>6. Effort estimate vs v1.1</h2>
+            <div class="diagram">
+                <object data="diagrams/lib_execution_gantt.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">All four plans share the same 6-phase structure; the per-phase durations shrink wherever the library does the heavy lifting.</div>
+            </div>
+
+            <h3>Per-phase breakdown (v1.3)</h3>
+            <table>
+                <thead><tr><th>Phase</th><th>v1.1</th><th>Model D (rec.)</th><th>Model A (dynamic)</th><th>Model B</th><th>Model C</th></tr></thead>
+                <tbody>
+                    <tr><td>0. Vendoring (one-time)</td><td>n/a</td><td><strong>0.5&ndash;1w</strong></td><td>0 (DEPS bump only)</td><td>0.5&ndash;1w</td><td>0.5&ndash;1w</td></tr>
+                    <tr><td>1. Foundation + BYO device</td><td>3w</td><td>2w</td><td>2w</td><td>2w</td><td>2w</td></tr>
+                    <tr><td>2. H.264 CQP</td><td>3w</td><td><strong>0.5w</strong></td><td>0.5w</td><td>1.5w</td><td>1w</td></tr>
+                    <tr><td>3. CBR/VBR + Reconfigure</td><td>2w</td><td>1.5w</td><td>1.5w</td><td>1.5w</td><td>1.5w</td></tr>
+                    <tr><td>4. GPU-backed input</td><td>3w</td><td><strong>1w</strong> (same-device repr)</td><td>1w</td><td>2w</td><td>3w (Mojo)</td></tr>
+                    <tr><td>5. HEVC + AV1</td><td>5w</td><td><strong>1w</strong></td><td>1w</td><td><strong>2w</strong></td><td><strong>1w</strong></td></tr>
+                    <tr><td>6. Advanced</td><td>3w</td><td>2w</td><td>2w</td><td>3w</td><td>2w</td></tr>
+                    <tr><td><strong>MVP total</strong></td><td><strong>19w</strong></td><td><strong>8.5w</strong></td><td><strong>8w</strong></td><td><strong>12.5w</strong></td><td><strong>11w</strong></td></tr>
+                    <tr><td>+ Upstream P0 (parallel)</td><td>&mdash;</td><td>2w</td><td>2w</td><td>0w</td><td>2w</td></tr>
+                    <tr><td><strong>Calendar weeks</strong></td><td><strong>19&ndash;21</strong></td><td><strong>10.5&ndash;12</strong></td><td><strong>10&ndash;11</strong></td><td><strong>12&ndash;15</strong></td><td><strong>13&ndash;16</strong></td></tr>
+                </tbody>
+            </table>
+
+            <div class="callout-new">
+                <strong>Saved by going library-backed (v1.3):</strong> ~8&ndash;10 weeks for Model D, ~9&ndash;10 for Model A, ~5&ndash;7 for Model B, ~3&ndash;6 for Model C.
+                Model D adds ~0.5&ndash;1 week of one-time vendoring infrastructure vs Model A &mdash; all the per-phase work is identical.
+            </div>
+        </section>
+
+        <!-- 7. Plan -->
+        <section id="plan">
+            <h2>7. Recommended plan &mdash; Model D v1.3 (static link via third_party/)</h2>
+
+            <h3>One-step plan: vendor + static link + BYO <code>VkDevice</code> (~10.5&ndash;12 weeks)</h3>
+            <p>Vendor <code>third_party/vulkan_video_samples/</code> following the standard Chromium pattern; write a <code>BUILD.gn</code> (~400 LoC); link the library statically into the chrome binary; pass our existing <code>VkDevice</code> via the BYO chain that <code>VulkanDeviceContext</code> already implements; add ~30 LoC of plumbing on the public <code>VkVideoEncoderConfig</code> upstream. SharedImage backings live on the same device, so the library's <strong>Path A</strong> reads them directly &mdash; no FD export/import, no second VkImage, no staging. Same Chromium-side integration code as Model A.</p>
+
+<pre><code># //third_party/vulkan_video_samples/BUILD.gn (sketch, ~400 LoC)
+declare_args() {
+  enable_vulkan_video_encode_h264 = true
+  enable_vulkan_video_encode_h265 = true
+  enable_vulkan_video_encode_av1  = true
+  # If false, build against an external libvkvideo-encoder.so instead.
+  vulkan_video_samples_static     = true
+}
+
+source_set("vulkan_video_samples") {
+  sources = [ "vk_video_encoder/src/vulkan_video_encoder_ext.cpp",
+              "vk_video_encoder/libs/VkVideoEncoder/VkVideoEncoder.cpp",
+              "common/libs/VkCodecUtils/VulkanDeviceContext.cpp",
+              ... ]
+  if (enable_vulkan_video_encode_h264) {
+    sources += [ "vk_video_encoder/libs/VkVideoEncoder/VkVideoEncoderH264.cpp", ... ]
+  }
+  if (enable_vulkan_video_encode_h265) { ... }
+  if (enable_vulkan_video_encode_av1)  { ... }
+  deps = [ "//third_party/vulkan-headers" ]
+  public_configs = [ ":vulkan_video_samples_config" ]
+}</code></pre>
+
+<pre><code># //media/gpu/vulkan/BUILD.gn (Chromium-side, unchanged from Model A)
+source_set("vulkan_video_encode") {
+  sources = [ "vulkan_video_encode_accelerator.cc", ... ]
+  deps   = [ "//third_party/vulkan_video_samples",   # &lt;-- static dep
+             "//gpu/command_buffer/service",
+             "//gpu/vulkan",
+             "//media/base" ]
+}</code></pre>
+
+<pre><code>EncoderStatus VulkanVideoEncodeAccelerator::Initialize(const Config&amp; cfg, ...) {
+  VkVideoEncoderConfig lib_config = MapToLibConfig(cfg);
+
+  // BYO chain &mdash; pass Chromium's existing Vulkan handles to the library.
+  lib_config.externalInstance              = vk_implementation_-&gt;GetVulkanInstance();
+  lib_config.externalPhysicalDevice        = vulkan_device_queue_-&gt;GetVulkanPhysicalDevice();
+  lib_config.externalDevice                = vulkan_device_queue_-&gt;GetVulkanDevice();
+  lib_config.externalEncodeQueueFamilyIndex  = vulkan_device_queue_-&gt;GetVideoEncodeQueueFamilyIndex();
+  lib_config.externalComputeQueueFamilyIndex = vulkan_device_queue_-&gt;GetComputeQueueFamilyIndex();
+
+  lib_config.disableFileOutput = VK_TRUE;             // G-NEW-2 + G-NEW-11
+  lib_config.silenceStdio      = VK_TRUE;
+  VK_CHECK(CreateVulkanVideoEncoderExt(lib_encoder_));
+  VK_CHECK(lib_encoder_-&gt;InitializeExt(lib_config));
+  ...
+}
+
+void VulkanVideoEncodeAccelerator::Encode(scoped_refptr&lt;VideoFrame&gt; frame, bool force_kf) {
+  // SharedImage backing IS on the library's VkDevice (= Chromium's VkDevice).
+  // Same-device representation accessor; no FD export/import, no second VkImage.
+  std::unique_ptr&lt;gpu::VulkanVideoImageRepresentation&gt; repr =
+      shared_image_manager_-&gt;ProduceVulkanVideo(frame-&gt;shared_image()-&gt;mailbox(),
+                                                  memory_tracker_, vulkan_device_queue_);
+  auto access = repr-&gt;BeginScopedReadAccess();
+
+  VkVideoEncodeInputFrame ext_frame = {
+      .image                = access-&gt;image(),
+      .format               = VK_FORMAT_G8_B8R8_2PLANE_420_UNORM,
+      .imageTiling          = VK_IMAGE_TILING_OPTIMAL,
+      .currentLayout        = VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR,
+      .forceIDR             = force_kf,
+      .waitSemaphoreCount   = 1, .pWaitSemaphores   = access-&gt;acquire_semaphore_ptr(),
+      .signalSemaphoreCount = 1, .pSignalSemaphores = access-&gt;release_semaphore_ptr(),
+      ...
+  };
+  VK_CHECK(lib_encoder_-&gt;SubmitExternalFrame(ext_frame));
+}</code></pre>
+
+            <h4>What we write in Chromium (~6,200 LoC total)</h4>
+            <ul>
+                <li><code>vulkan_video_encode_accelerator.{h,cc}</code> &mdash; VEA surface + lifecycle (~900 LoC).</li>
+                <li><code>vulkan_video_encoder_config_builder.{h,cc}</code> &mdash; maps <code>VEA::Config</code> to <code>VkVideoEncoderConfig</code> (~250 LoC).</li>
+                <li><code>gpu::VulkanVideoImageRepresentation</code> + proposed <code>SharedImageManager::ProduceVulkanVideo()</code> (~650 LoC).</li>
+                <li><code>vulkan_video_encode_capability_enumerator.{h,cc}</code> &mdash; wraps G-NEW-1 (~150 LoC).</li>
+                <li><code>vulkan_video_bitstream_buffer.{h,cc}</code> &mdash; memcpy from <code>VkVideoEncodeResult</code> into shmem (~150 LoC).</li>
+                <li><code>VideoEncoderInfo</code> plumbing on top of G-NEW-8 (~100 LoC).</li>
+                <li>Factory wiring (~150 LoC) + tests (~3,850 LoC).</li>
+            </ul>
+
+            <h4>What we contribute upstream (~870 LoC, all in Phase 1)</h4>
+            <ul>
+                <li>G-NEW-1 capability enumeration (~250 LoC).</li>
+                <li>G-NEW-2 in-memory bitstream return (~120 LoC).</li>
+                <li>G-NEW-3 functional <code>Reconfigure()</code> (~300 LoC).</li>
+                <li>G-NEW-8 runtime info (~120 LoC).</li>
+                <li>G-NEW-9 BYO <code>VkDevice</code> plumbing (~30 LoC).</li>
+                <li>G-NEW-11 silence stdio (~50 LoC).</li>
+            </ul>
+
+            <div class="callout-rec">
+                <strong>Why Model D beats Models A and B (v1.3):</strong>
+                <ul>
+                    <li><strong>vs Model A (dynamic):</strong> single chrome binary, LTO/PGO across encoder + Chromium, per-codec build flags, sandbox-friendly (no <code>.so</code> load), codec correctness reviewable at each DEPS roll. Same Chromium-side code &mdash; switch with one GN argument.</li>
+                    <li><strong>vs Model B (custom front-end):</strong> we keep the upstream <code>VulkanVideoEncoderExt</code> wrapper instead of writing 4,200 LoC of Chromium-native front-end; we don't carry patches; first runnable H.264 CQP at W3.5 vs W4.5; same codec correctness (B vendors a subset; D vendors the whole thing).</li>
+                </ul>
+                Model B remains the <strong>fallback</strong> only if we ever need to fork the codec driver loop (no concrete need today).
+            </div>
+
+            <h3>In-process vs OOP (Model C) is a deployment choice</h3>
+            <p>The library code in Model D is identical whether the encoder runs in the GPU process or in a utility process (Model C). Out-of-process deployment adds Mojo plumbing + a sandbox policy but does not change the library integration. Ship in-process for the MVP, migrate to OOP later for sandbox-tightening without touching the encoder code.</p>
+
+            <h3>Revised execution Gantt (v1.3)</h3>
+<pre><code>Week    0  1  2  3  4  5  6  7  8  9 10 11 12
+P0 ████             Vendor third_party/vulkan_video_samples + BUILD.gn (one-time)
+P1     ████████     Static-link wiring + BYO device + ProduceVulkanVideo
+P2             ████ H.264 CQP via Path A (same-device VkImage)
+P3                  ████ H.264 CBR/VBR + Reconfigure
+P4                      ████ VideoEncoderInfo + remaining SharedImage hooks
+P5                           ████████ HEVC + AV1 (free from library)
+P6                                   ██████ SVC + QP map + intra-refresh + manual refs</code></pre>
+
+            <h3>Phase exit criteria</h3>
+            <ul>
+                <li><strong>Phase 0</strong>: <code>autoninja -C out/Release chrome</code> green on Linux/Windows/Mac with the vendored tree in place; <code>gn check</code> clean.</li>
+                <li><strong>Phase 1</strong>: <code>media_unittests --gtest_filter="*Vulkan*"</code> green; <code>chrome --enable-features=VulkanVideoEncode</code> reports H.264/H.265/AV1 via library enumeration (G-NEW-1). Library reports running on Chromium's <code>VkDevice</code> (debug log of <code>m_importedDeviceHandle</code>).</li>
+                <li><strong>Phase 2</strong>: encode &rarr; SW-decode &rarr; PSNR &ge; 38 dB at CQP 26 on <code>bear</code> 1080p30; bitstream comes from <code>VkVideoEncodeResult::pBitstreamData</code> (G-NEW-2). <strong>Zero-copy verified</strong> by a DCHECK counter that asserts the proposed <code>ProduceVulkanVideo</code> path returned a same-device VkImage.</li>
+                <li><strong>Phase 3</strong>: WebRTC loopback with bitrate adjuster bouncing 500 kbps &harr; 5 Mbps without glitches (G-NEW-3).</li>
+                <li><strong>Phase 4</strong>: <code>VideoEncoderInfo::supports_gpu_shared_images = true</code>; tab capture &rarr; WebRTC encode without CPU readback.</li>
+                <li><strong>Phase 5</strong>: Tier-5 conformance pass rates per the test plan.</li>
+                <li><strong>Phase 6</strong>: WebCodecs WPT for QP map / intra-refresh / manual refs / SVC all green.</li>
+            </ul>
+        </section>
+
+    </div>
+</main>
+
+<footer>
+    <div class="container">
+        Generated from <code>VULKAN_VIDEO_LIBRARY_INTEGRATION_ANALYSIS.md</code> &mdash; Vulkan-Video-Samples HEAD, Chromium HEAD (May 2026)
+    </div>
+</footer>
+
+</body>
+</html>

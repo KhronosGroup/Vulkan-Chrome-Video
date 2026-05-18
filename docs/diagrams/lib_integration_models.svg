@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="gpuG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff3e0"/><stop offset="100%" stop-color="#ffe0b2"/>
+    </linearGradient>
+    <linearGradient id="libG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/><stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="chromiumG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/><stop offset="100%" stop-color="#64b5f6"/>
+    </linearGradient>
+    <linearGradient id="utilG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8bbd0"/><stop offset="100%" stop-color="#f06292"/>
+    </linearGradient>
+    <linearGradient id="byoG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff9c4"/><stop offset="100%" stop-color="#fff176"/>
+    </linearGradient>
+    <linearGradient id="dynG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e1bee7"/><stop offset="100%" stop-color="#ba68c8"/>
+    </linearGradient>
+    <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="700" y="28" text-anchor="middle" font-size="22" font-weight="bold" fill="#263238">
+    Four Integration Models for the Vulkan-Video-Samples Encoder Library (v1.3)
+  </text>
+  <text x="700" y="48" text-anchor="middle" font-size="11" fill="#bf360c" font-weight="bold">
+    v1.3: Added Model D - static link via third_party/vulkan_video_samples/ - matches Chromium's libvpx/libaom/dav1d pattern. New recommendation.
+  </text>
+
+  <!-- ====== Model D ====== -->
+  <text x="180" y="78" text-anchor="middle" font-size="15" font-weight="bold" fill="#1b5e20">
+    Model D: Static link (vendored)
+  </text>
+  <text x="180" y="96" text-anchor="middle" font-size="11" fill="#1b5e20" font-weight="bold">
+    RECOMMENDED v1.3  -  ~10.5-12 weeks
+  </text>
+
+  <rect x="30" y="108" width="300" height="490" rx="8" fill="url(#gpuG)" stroke="#e65100" stroke-width="2"/>
+  <text x="180" y="130" text-anchor="middle" font-size="13" font-weight="bold" fill="#bf360c">Chrome binary (single)</text>
+  <text x="180" y="146" text-anchor="middle" font-size="10" fill="#bf360c">1 VkDevice in this process</text>
+
+  <rect x="45" y="158" width="270" height="60" rx="6" fill="url(#chromiumG)" stroke="#1565c0"/>
+  <text x="180" y="178" text-anchor="middle" font-size="11" font-weight="bold">Compositor / Skia / WebGPU</text>
+  <text x="180" y="194" text-anchor="middle" font-size="10">SharedImage backings on this VkDevice</text>
+  <text x="180" y="210" text-anchor="middle" font-size="10" fill="#0d47a1">gpu::VulkanDeviceQueue</text>
+
+  <rect x="45" y="226" width="270" height="50" rx="6" fill="url(#byoG)" stroke="#f9a825" stroke-width="2"/>
+  <text x="180" y="244" text-anchor="middle" font-size="11" font-weight="bold" fill="#bf360c">SharedImageManager::ProduceVulkanVideo</text>
+  <text x="180" y="258" text-anchor="middle" font-size="10">Returns same-device VkImage</text>
+  <text x="180" y="272" text-anchor="middle" font-size="10">+ acquire/release semaphores</text>
+
+  <line x1="180" y1="276" x2="180" y2="298" stroke="#37474f" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <rect x="45" y="304" width="270" height="180" rx="6" fill="url(#libG)" stroke="#2e7d32" stroke-width="2"/>
+  <text x="180" y="324" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b5e20">third_party/vulkan_video_samples/</text>
+  <text x="180" y="338" text-anchor="middle" font-size="9" fill="#1b5e20">(vendored sources, static lib)</text>
+  <text x="60" y="357" font-size="10">VulkanVideoEncoderExt with</text>
+  <text x="60" y="371" font-size="10">externalDevice = our VkDevice (BYO)</text>
+  <text x="60" y="389" font-size="10">SubmitExternalFrame(VkImage)</text>
+  <text x="60" y="403" font-size="10">  -&gt; Path A: direct encode</text>
+  <text x="60" y="417" font-size="10" fill="#1b5e20">  -&gt; vkCmdEncodeVideoKHR reads it</text>
+  <text x="60" y="431" font-size="10" fill="#1b5e20">  -&gt; NO COPY, NO STAGING</text>
+  <text x="60" y="449" font-size="10" fill="#1b5e20">LTO across encoder + Chromium</text>
+  <text x="60" y="463" font-size="10" fill="#1b5e20">Per-codec build flags</text>
+  <text x="60" y="477" font-size="10" fill="#1b5e20">No dlopen, no .so distribution</text>
+
+  <rect x="30" y="504" width="300" height="50" rx="6" fill="#a5d6a7" stroke="#1b5e20" stroke-width="2"/>
+  <text x="180" y="527" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b5e20">
+    Zero-copy YES  |  1 VkDevice  |  1 binary
+  </text>
+  <text x="180" y="544" text-anchor="middle" font-size="11" fill="#1b5e20">
+    ~6,200 LoC Chromium + ~400 GN + ~870 upstream
+  </text>
+
+  <text x="180" y="572" text-anchor="middle" font-size="11" fill="#1b5e20" font-weight="bold">
+    Saves ~8-10 weeks vs v1.1 from-scratch
+  </text>
+  <text x="180" y="590" text-anchor="middle" font-size="10" fill="#1b5e20">
+    Standard Chromium codec pattern
+  </text>
+
+  <!-- ====== Model A ====== -->
+  <text x="520" y="78" text-anchor="middle" font-size="15" font-weight="bold" fill="#6a1b9a">
+    Model A: Dynamic link (.so)
+  </text>
+  <text x="520" y="96" text-anchor="middle" font-size="11" fill="#6a1b9a">
+    Prototype variant  -  ~10-11 weeks
+  </text>
+
+  <rect x="370" y="108" width="300" height="490" rx="8" fill="url(#gpuG)" stroke="#e65100" stroke-width="2"/>
+  <text x="520" y="130" text-anchor="middle" font-size="13" font-weight="bold" fill="#bf360c">Chrome process</text>
+  <text x="520" y="146" text-anchor="middle" font-size="10" fill="#bf360c">1 VkDevice in this process</text>
+
+  <rect x="385" y="158" width="270" height="60" rx="6" fill="url(#chromiumG)" stroke="#1565c0"/>
+  <text x="520" y="178" text-anchor="middle" font-size="11" font-weight="bold">Compositor / Skia / WebGPU</text>
+  <text x="520" y="194" text-anchor="middle" font-size="10">SharedImage backings on this VkDevice</text>
+  <text x="520" y="210" text-anchor="middle" font-size="10" fill="#0d47a1">gpu::VulkanDeviceQueue</text>
+
+  <rect x="385" y="226" width="270" height="50" rx="6" fill="url(#byoG)" stroke="#f9a825" stroke-width="2"/>
+  <text x="520" y="244" text-anchor="middle" font-size="11" font-weight="bold" fill="#bf360c">SharedImageManager::ProduceVulkanVideo</text>
+  <text x="520" y="258" text-anchor="middle" font-size="10">Same VkImage, same semaphores</text>
+  <text x="520" y="272" text-anchor="middle" font-size="10">(same Chromium-side code as D)</text>
+
+  <line x1="520" y1="276" x2="520" y2="298" stroke="#37474f" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#arr)"/>
+  <text x="540" y="288" font-size="9" fill="#6a1b9a" font-style="italic">dlopen</text>
+
+  <rect x="385" y="304" width="270" height="180" rx="6" fill="url(#dynG)" stroke="#6a1b9a" stroke-width="2"/>
+  <text x="520" y="324" text-anchor="middle" font-size="12" font-weight="bold" fill="#4a148c">libvkvideo-encoder.so</text>
+  <text x="520" y="338" text-anchor="middle" font-size="9" fill="#4a148c">(separate binary in DEPS)</text>
+  <text x="400" y="357" font-size="10">VulkanVideoEncoderExt with</text>
+  <text x="400" y="371" font-size="10">externalDevice = our VkDevice (BYO)</text>
+  <text x="400" y="389" font-size="10">SubmitExternalFrame(VkImage)</text>
+  <text x="400" y="403" font-size="10" fill="#1b5e20">  -&gt; Path A: direct encode (same code)</text>
+  <text x="400" y="421" font-size="10" fill="#bf360c">No LTO across boundary</text>
+  <text x="400" y="435" font-size="10" fill="#bf360c">.so loaded at runtime</text>
+  <text x="400" y="449" font-size="10" fill="#bf360c">Opaque binary at DEPS roll</text>
+  <text x="400" y="463" font-size="10" fill="#bf360c">Sandbox needs .so load policy</text>
+  <text x="400" y="477" font-size="10" fill="#bf360c">Unusual in Chromium codec landscape</text>
+
+  <rect x="370" y="504" width="300" height="50" rx="6" fill="#e1bee7" stroke="#6a1b9a" stroke-width="2"/>
+  <text x="520" y="527" text-anchor="middle" font-size="12" font-weight="bold" fill="#4a148c">
+    Zero-copy YES  |  1 VkDevice  |  external .so
+  </text>
+  <text x="520" y="544" text-anchor="middle" font-size="11" fill="#4a148c">
+    ~6,200 LoC Chromium + ~870 upstream
+  </text>
+
+  <text x="520" y="572" text-anchor="middle" font-size="10" fill="#4a148c" font-style="italic">
+    Same code as Model D
+  </text>
+  <text x="520" y="590" text-anchor="middle" font-size="10" fill="#4a148c">
+    Just dynamic-link build mode
+  </text>
+
+  <!-- ====== Model B ====== -->
+  <text x="860" y="78" text-anchor="middle" font-size="15" font-weight="bold" fill="#7b1fa2">
+    Model B: Vendor codec layer
+  </text>
+  <text x="860" y="96" text-anchor="middle" font-size="11" fill="#4a148c">
+    Fallback  -  ~12-15 weeks
+  </text>
+
+  <rect x="710" y="108" width="300" height="490" rx="8" fill="url(#gpuG)" stroke="#e65100" stroke-width="2"/>
+  <text x="860" y="130" text-anchor="middle" font-size="13" font-weight="bold" fill="#bf360c">Chrome binary</text>
+
+  <rect x="725" y="158" width="270" height="120" rx="6" fill="url(#chromiumG)" stroke="#1565c0"/>
+  <text x="860" y="178" text-anchor="middle" font-size="12" font-weight="bold">Chromium-native (~4,200 LoC)</text>
+  <text x="740" y="198" font-size="10">VulkanVideoEncodeAccelerator</text>
+  <text x="740" y="212" font-size="10">VulkanVideoEncoderWrapper</text>
+  <text x="740" y="226" font-size="10">VulkanVideoDeviceAdapter</text>
+  <text x="740" y="240" font-size="10">h26{4,5}_/av1_ delegates</text>
+  <text x="740" y="254" font-size="10">VulkanVideoBitstreamBuffer</text>
+  <text x="740" y="268" font-size="10">VulkanVideoEncodeCapabilityEnumerator</text>
+
+  <rect x="725" y="288" width="270" height="50" rx="6" fill="url(#chromiumG)" stroke="#1565c0"/>
+  <text x="860" y="308" text-anchor="middle" font-size="11" font-weight="bold">gpu::VulkanDeviceQueue (shared)</text>
+  <text x="860" y="324" text-anchor="middle" font-size="9" fill="#0d47a1">SAME device + same-device repr</text>
+
+  <rect x="725" y="350" width="270" height="155" rx="6" fill="url(#libG)" stroke="#2e7d32" stroke-width="2"/>
+  <text x="860" y="370" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b5e20">third_party/vulkan_video_samples/</text>
+  <text x="860" y="384" text-anchor="middle" font-size="10" fill="#1b5e20">VENDORED codec sources ONLY</text>
+  <text x="740" y="404" font-size="10">VkVideoEncoder{H264,H265,AV1}.cpp</text>
+  <text x="740" y="418" font-size="10">VkEncoderDpb{H264,H265,AV1}.cpp</text>
+  <text x="740" y="432" font-size="10">VkVideoGopStructure.cpp</text>
+  <text x="740" y="446" font-size="10">VkCodecUtils (pools)</text>
+  <text x="740" y="466" font-size="9" fill="#bf360c">NOT vendored:</text>
+  <text x="740" y="480" font-size="9" fill="#bf360c">  vulkan_video_encoder_ext.cpp (replaced)</text>
+  <text x="740" y="494" font-size="9" fill="#bf360c">  VulkanDeviceContext (replaced)</text>
+
+  <rect x="710" y="510" width="300" height="50" rx="6" fill="#e1bee7" stroke="#7b1fa2" stroke-width="2"/>
+  <text x="860" y="533" text-anchor="middle" font-size="12" font-weight="bold" fill="#4a148c">
+    Zero-copy YES  |  1 VkDevice  |  custom front-end
+  </text>
+  <text x="860" y="550" text-anchor="middle" font-size="11" fill="#4a148c">
+    ~10,200 LoC total  |  no upstream blocker
+  </text>
+
+  <text x="860" y="580" text-anchor="middle" font-size="10" fill="#4a148c">
+    Use only to fork the encoder driver loop
+  </text>
+
+  <!-- ====== Model C ====== -->
+  <text x="1200" y="78" text-anchor="middle" font-size="15" font-weight="bold" fill="#880e4f">
+    Model C: OOP deployment
+  </text>
+  <text x="1200" y="96" text-anchor="middle" font-size="11" fill="#ad1457">
+    Same lib + Mojo  -  ~13-16 weeks
+  </text>
+
+  <rect x="1050" y="108" width="300" height="245" rx="8" fill="url(#gpuG)" stroke="#e65100" stroke-width="2"/>
+  <text x="1200" y="130" text-anchor="middle" font-size="13" font-weight="bold" fill="#bf360c">Chrome GPU process</text>
+
+  <rect x="1065" y="148" width="270" height="65" rx="6" fill="url(#chromiumG)" stroke="#1565c0"/>
+  <text x="1200" y="168" text-anchor="middle" font-size="11" font-weight="bold">VEA Proxy</text>
+  <text x="1200" y="184" text-anchor="middle" font-size="10">MojoVideoEncodeAcceleratorService</text>
+  <text x="1200" y="198" text-anchor="middle" font-size="10">SharedImage export to utility</text>
+  <text x="1200" y="212" text-anchor="middle" font-size="9" fill="#bf360c">+0.5-2 ms IPC latency</text>
+
+  <rect x="1065" y="223" width="270" height="120" rx="6" fill="#cfd8dc" stroke="#37474f"/>
+  <text x="1200" y="243" text-anchor="middle" font-size="11" font-weight="bold">Mojo IPC boundary</text>
+  <text x="1200" y="260" text-anchor="middle" font-size="10">VideoEncodeAccelerator.mojom</text>
+  <text x="1200" y="275" text-anchor="middle" font-size="10">+ image transport (FD/handle/AHB)</text>
+  <text x="1200" y="293" text-anchor="middle" font-size="10" fill="#1b5e20">Pixel data still zero-copied</text>
+  <text x="1200" y="307" text-anchor="middle" font-size="10" fill="#1b5e20">(kernel duplicates FD)</text>
+  <text x="1200" y="325" text-anchor="middle" font-size="9">+ sandbox policy for Vulkan ICDs</text>
+
+  <line x1="1200" y1="353" x2="1200" y2="378" stroke="#37474f" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arr)"/>
+
+  <rect x="1050" y="378" width="300" height="220" rx="8" fill="url(#utilG)" stroke="#ad1457" stroke-width="2"/>
+  <text x="1200" y="400" text-anchor="middle" font-size="13" font-weight="bold" fill="#880e4f">Utility Process (sandboxed)</text>
+  <text x="1200" y="416" text-anchor="middle" font-size="10" fill="#880e4f">owns its own VkDevice</text>
+
+  <rect x="1065" y="426" width="270" height="48" rx="6" fill="url(#chromiumG)" stroke="#1565c0"/>
+  <text x="1200" y="445" text-anchor="middle" font-size="11" font-weight="bold">Mojo service host (~1,500 LoC)</text>
+  <text x="1200" y="462" text-anchor="middle" font-size="10">Translates Mojo to lib calls</text>
+
+  <rect x="1065" y="484" width="270" height="105" rx="6" fill="url(#libG)" stroke="#2e7d32"/>
+  <text x="1200" y="503" text-anchor="middle" font-size="11" font-weight="bold" fill="#1b5e20">Vulkan-Video-Samples (static)</text>
+  <text x="1200" y="518" text-anchor="middle" font-size="10" fill="#1b5e20">Same vendored tree as Model D</text>
+  <text x="1200" y="534" text-anchor="middle" font-size="10" fill="#1b5e20">BYO VkDevice = utility's own</text>
+  <text x="1200" y="550" text-anchor="middle" font-size="10" fill="#1b5e20">Path A consumes imported handle</text>
+  <text x="1200" y="566" text-anchor="middle" font-size="10" fill="#1b5e20">NO PIXEL COPY</text>
+  <text x="1200" y="582" text-anchor="middle" font-size="9" font-style="italic">Same library code as Model D</text>
+
+  <!-- Bottom summary -->
+  <rect x="30" y="630" width="1320" height="120" rx="8" fill="#fff8e1" stroke="#f9a825" stroke-width="2"/>
+  <text x="690" y="655" text-anchor="middle" font-size="14" font-weight="bold" fill="#bf360c">
+    Models D and A use IDENTICAL Chromium-side integration code - only the build/link mode differs.
+  </text>
+  <text x="690" y="675" text-anchor="middle" font-size="11" fill="#bf360c">
+    Switch between them with a single GN argument: vulkan_video_samples_static = true (D)  /  false (A).
+  </text>
+  <text x="690" y="695" text-anchor="middle" font-size="11" fill="#4a148c">
+    Model B = different integration (custom front-end). Model C = different deployment (OOP). Model D's code can be reused in Model C with Mojo plumbing.
+  </text>
+  <text x="690" y="720" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b5e20">
+    Recommendation: Model D for production (standard Chromium third_party/ pattern).
+  </text>
+  <text x="690" y="740" text-anchor="middle" font-size="10" fill="#37474f">
+    Model A as prototyping variant. Model B as fallback. Model C as a future sandbox-tightening deployment of Model D.
+  </text>
+</svg>

@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 940" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="okG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/><stop offset="100%" stop-color="#81c784"/>
+    </linearGradient>
+    <linearGradient id="partialG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff9c4"/><stop offset="100%" stop-color="#fff176"/>
+    </linearGradient>
+    <linearGradient id="gapG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffcdd2"/><stop offset="100%" stop-color="#e57373"/>
+    </linearGradient>
+    <linearGradient id="critG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fce4ec"/><stop offset="100%" stop-color="#f06292"/>
+    </linearGradient>
+  </defs>
+
+  <text x="600" y="32" text-anchor="middle" font-size="22" font-weight="bold" fill="#263238">
+    Library Interface Coverage vs Chromium Requirements
+  </text>
+  <text x="600" y="55" text-anchor="middle" font-size="12" fill="#546e7a">
+    26 requirements from VULKAN_VIDEO_ENCODE_INTEGRATION_DESIGN_DOCUMENT.md v1.1
+  </text>
+
+  <!-- Legend -->
+  <rect x="60" y="80" width="20" height="14" fill="url(#okG)" stroke="#2e7d32"/>
+  <text x="86" y="92" font-size="11" fill="#37474f">Covered (11)</text>
+  <rect x="200" y="80" width="20" height="14" fill="url(#partialG)" stroke="#f9a825"/>
+  <text x="226" y="92" font-size="11" fill="#37474f">Partial (3)</text>
+  <rect x="320" y="80" width="20" height="14" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="346" y="92" font-size="11" fill="#37474f">Gap (8 moderate / 3 light)</text>
+  <rect x="540" y="80" width="20" height="14" fill="url(#critG)" stroke="#ad1457"/>
+  <text x="566" y="92" font-size="11" fill="#37474f">Critical (4 — P0 ship blockers)</text>
+
+  <!-- COVERED column -->
+  <text x="170" y="130" text-anchor="middle" font-size="14" font-weight="bold" fill="#1b5e20">Covered (11)</text>
+
+  <rect x="40" y="145" width="280" height="22" rx="3" fill="url(#okG)" stroke="#2e7d32"/>
+  <text x="55" y="160" font-size="11" font-weight="bold">#1</text>
+  <text x="80" y="160" font-size="11">H.264/H.265/AV1 encode</text>
+
+  <rect x="40" y="172" width="280" height="22" rx="3" fill="url(#okG)" stroke="#2e7d32"/>
+  <text x="55" y="187" font-size="11" font-weight="bold">#2</text>
+  <text x="80" y="187" font-size="11">Std-Video struct conversion</text>
+
+  <rect x="40" y="199" width="280" height="22" rx="3" fill="url(#okG)" stroke="#2e7d32"/>
+  <text x="55" y="214" font-size="11" font-weight="bold">#3</text>
+  <text x="80" y="214" font-size="11">DPB slot management</text>
+
+  <rect x="40" y="226" width="280" height="22" rx="3" fill="url(#okG)" stroke="#2e7d32"/>
+  <text x="55" y="241" font-size="11" font-weight="bold">#4</text>
+  <text x="80" y="241" font-size="11">GOP + B-frames + IDR period</text>
+
+  <rect x="40" y="253" width="280" height="22" rx="3" fill="url(#okG)" stroke="#2e7d32"/>
+  <text x="55" y="268" font-size="11" font-weight="bold">#5</text>
+  <text x="80" y="268" font-size="11">Rate control + VUIDs (Review F4)</text>
+
+  <rect x="40" y="280" width="280" height="22" rx="3" fill="url(#okG)" stroke="#2e7d32"/>
+  <text x="55" y="295" font-size="11" font-weight="bold">#6</text>
+  <text x="80" y="295" font-size="11">Per-codec constantQp (Review F5)</text>
+
+  <rect x="40" y="307" width="280" height="22" rx="3" fill="url(#okG)" stroke="#2e7d32"/>
+  <text x="55" y="322" font-size="11" font-weight="bold">#7</text>
+  <text x="80" y="322" font-size="11">Inline/begin-end query (Review F3)</text>
+
+  <rect x="40" y="334" width="280" height="22" rx="3" fill="url(#okG)" stroke="#2e7d32"/>
+  <text x="55" y="349" font-size="11" font-weight="bold">#8</text>
+  <text x="80" y="349" font-size="11">dstBufferOffset+precedingBytes (F2)</text>
+
+  <rect x="40" y="361" width="280" height="22" rx="3" fill="url(#okG)" stroke="#2e7d32"/>
+  <text x="55" y="376" font-size="11" font-weight="bold">#9</text>
+  <text x="80" y="376" font-size="11">Quality level</text>
+
+  <rect x="40" y="388" width="280" height="22" rx="3" fill="url(#okG)" stroke="#2e7d32"/>
+  <text x="55" y="403" font-size="11" font-weight="bold">#16</text>
+  <text x="80" y="403" font-size="11">Producer/consumer sync (timeline)</text>
+
+  <rect x="40" y="415" width="280" height="22" rx="3" fill="url(#okG)" stroke="#2e7d32"/>
+  <text x="55" y="430" font-size="11" font-weight="bold">#17</text>
+  <text x="80" y="430" font-size="11">External VkImage import (DMA-BUF+modifier)</text>
+
+  <rect x="40" y="442" width="280" height="22" rx="3" fill="url(#okG)" stroke="#2e7d32"/>
+  <text x="55" y="457" font-size="11" font-weight="bold">#26</text>
+  <text x="80" y="457" font-size="11">Validation-layer toggle</text>
+
+  <!-- PARTIAL column -->
+  <text x="490" y="130" text-anchor="middle" font-size="14" font-weight="bold" fill="#f57f17">Partial (3)</text>
+
+  <rect x="360" y="145" width="280" height="34" rx="3" fill="url(#partialG)" stroke="#f9a825"/>
+  <text x="375" y="162" font-size="11" font-weight="bold">#10</text>
+  <text x="400" y="162" font-size="11">Quantization map</text>
+  <text x="400" y="174" font-size="9" fill="#bf360c">In EncoderConfig but not public struct</text>
+
+  <rect x="360" y="184" width="280" height="34" rx="3" fill="url(#partialG)" stroke="#f9a825"/>
+  <text x="375" y="201" font-size="11" font-weight="bold">#11</text>
+  <text x="400" y="201" font-size="11">Intra-refresh</text>
+  <text x="400" y="213" font-size="9" fill="#bf360c">In EncoderConfig but not public struct</text>
+
+  <rect x="360" y="223" width="280" height="34" rx="3" fill="url(#partialG)" stroke="#f9a825"/>
+  <text x="375" y="240" font-size="11" font-weight="bold">#12</text>
+  <text x="400" y="240" font-size="11">Temporal SVC (T=2, T=3)</text>
+  <text x="400" y="252" font-size="9" fill="#bf360c">Hard-sized rateControlLayers[1] in lib</text>
+
+  <!-- LIGHT GAPS -->
+  <text x="490" y="280" text-anchor="middle" font-size="13" font-weight="bold" fill="#c62828">Moderate / light gaps (8)</text>
+
+  <rect x="360" y="295" width="280" height="22" rx="3" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="375" y="310" font-size="11" font-weight="bold">#13</text>
+  <text x="400" y="310" font-size="11">Spatial SVC (S=2, S=3) — defer P3</text>
+
+  <rect x="360" y="322" width="280" height="22" rx="3" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="375" y="337" font-size="11" font-weight="bold">#14</text>
+  <text x="400" y="337" font-size="11">Manual reference buffer control</text>
+
+  <rect x="360" y="349" width="280" height="22" rx="3" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="375" y="364" font-size="11" font-weight="bold">#15</text>
+  <text x="400" y="364" font-size="11">Per-frame QP map input</text>
+
+  <rect x="360" y="376" width="280" height="22" rx="3" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="375" y="391" font-size="11" font-weight="bold">#18</text>
+  <text x="400" y="391" font-size="11">SupportsFormat / GetMaxWidth — stubbed</text>
+
+  <rect x="360" y="403" width="280" height="22" rx="3" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="375" y="418" font-size="11" font-weight="bold">#21</text>
+  <text x="400" y="418" font-size="11">Reconfigure — VK_ERROR_FEATURE_NOT_PRESENT</text>
+
+  <rect x="360" y="430" width="280" height="22" rx="3" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="375" y="445" font-size="11" font-weight="bold">#23</text>
+  <text x="400" y="445" font-size="11">Caps descriptor (resolution alignment, ...)</text>
+
+  <rect x="360" y="457" width="280" height="22" rx="3" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="375" y="472" font-size="11" font-weight="bold">#24</text>
+  <text x="400" y="472" font-size="11">Protected encode (non-goal anyway)</text>
+
+  <rect x="360" y="484" width="280" height="22" rx="3" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="375" y="499" font-size="11" font-weight="bold">stdio</text>
+  <text x="400" y="499" font-size="11">std::cout/std::cerr noise in lib (G-NEW-11)</text>
+
+  <!-- CRITICAL column -->
+  <text x="900" y="130" text-anchor="middle" font-size="14" font-weight="bold" fill="#880e4f">CRITICAL — P0 ship blockers (4)</text>
+
+  <rect x="770" y="145" width="280" height="60" rx="3" fill="url(#critG)" stroke="#ad1457" stroke-width="2"/>
+  <text x="785" y="165" font-size="12" font-weight="bold">#19</text>
+  <text x="810" y="165" font-size="12">GetSupportedProfiles equivalent</text>
+  <text x="785" y="180" font-size="10" fill="#bf360c">Chromium calls this at GPU startup,</text>
+  <text x="785" y="194" font-size="10" fill="#bf360c">BEFORE any encoder exists.</text>
+
+  <rect x="770" y="215" width="280" height="60" rx="3" fill="url(#critG)" stroke="#ad1457" stroke-width="2"/>
+  <text x="785" y="235" font-size="12" font-weight="bold">#20</text>
+  <text x="810" y="235" font-size="12">VideoEncoderInfo equivalent</text>
+  <text x="785" y="250" font-size="10" fill="#bf360c">WebRTC bitrate adjuster + simulcast</text>
+  <text x="785" y="264" font-size="10" fill="#bf360c">need this. No API today.</text>
+
+  <rect x="770" y="285" width="280" height="80" rx="3" fill="url(#critG)" stroke="#ad1457" stroke-width="2"/>
+  <text x="785" y="305" font-size="12" font-weight="bold">#22</text>
+  <text x="810" y="305" font-size="12">In-memory bitstream return</text>
+  <text x="785" y="320" font-size="10" fill="#bf360c">GetEncodedFrame() returns nullptr</text>
+  <text x="785" y="334" font-size="10" fill="#bf360c">with comment "Bitstream is in file</text>
+  <text x="785" y="348" font-size="10" fill="#bf360c">for now". Chromium cannot ship</text>
+  <text x="785" y="362" font-size="10" fill="#bf360c">file I/O in GPU process.</text>
+
+  <rect x="770" y="375" width="280" height="80" rx="3" fill="url(#partG)" stroke="#f9a825" stroke-width="2"/>
+  <text x="785" y="395" font-size="12" font-weight="bold">#25</text>
+  <text x="810" y="395" font-size="12">Bring-your-own VkDevice</text>
+  <text x="785" y="410" font-size="10" fill="#bf360c">VulkanDeviceContext accepts BYO</text>
+  <text x="785" y="424" font-size="10" fill="#bf360c">instance + phys-device + device today;</text>
+  <text x="785" y="438" font-size="10" fill="#bf360c">only public VkVideoEncoderConfig fields</text>
+  <text x="785" y="452" font-size="10" fill="#bf360c">are missing. ~30 LoC plumbing fix.</text>
+
+  <!-- Aggregate summary -->
+  <rect x="40" y="550" width="1120" height="60" rx="8" fill="#fff8e1" stroke="#f9a825" stroke-width="2"/>
+  <text x="600" y="580" text-anchor="middle" font-size="14" font-weight="bold" fill="#bf360c">
+    Aggregate: 11/26 covered, 3/26 partial, 12/26 gaps (4 of which are critical)
+  </text>
+  <text x="600" y="600" text-anchor="middle" font-size="12" fill="#37474f">
+    Most gaps are interface-shape, not implementation-shape — the underlying EncoderConfig already has most fields.
+  </text>
+
+  <!-- Upstream extension table -->
+  <text x="600" y="650" text-anchor="middle" font-size="14" font-weight="bold" fill="#263238">
+    11 concrete extensions (G-NEW-1..11) — ~3,200 LoC total upstream contribution (v1.2; was 3,670 in v1.1)
+  </text>
+
+  <rect x="40" y="670" width="540" height="22" rx="3" fill="url(#critG)" stroke="#ad1457"/>
+  <text x="55" y="685" font-size="11" font-weight="bold">G-NEW-1</text>
+  <text x="125" y="685" font-size="11">Capability enumeration (~250 LoC) — P0</text>
+
+  <rect x="40" y="697" width="540" height="22" rx="3" fill="url(#critG)" stroke="#ad1457"/>
+  <text x="55" y="712" font-size="11" font-weight="bold">G-NEW-2</text>
+  <text x="125" y="712" font-size="11">In-memory bitstream return (~120 LoC) — P0</text>
+
+  <rect x="40" y="724" width="540" height="22" rx="3" fill="url(#critG)" stroke="#ad1457"/>
+  <text x="55" y="739" font-size="11" font-weight="bold">G-NEW-3</text>
+  <text x="125" y="739" font-size="11">Functional Reconfigure() (~300 LoC) — P0</text>
+
+  <rect x="40" y="751" width="540" height="22" rx="3" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="55" y="766" font-size="11" font-weight="bold">G-NEW-4</text>
+  <text x="125" y="766" font-size="11">Per-frame QP map (~150 LoC) — P2</text>
+
+  <rect x="40" y="778" width="540" height="22" rx="3" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="55" y="793" font-size="11" font-weight="bold">G-NEW-5</text>
+  <text x="125" y="793" font-size="11">Per-frame intra-refresh (~80 LoC) — P2</text>
+
+  <rect x="40" y="805" width="540" height="22" rx="3" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="55" y="820" font-size="11" font-weight="bold">G-NEW-6</text>
+  <text x="125" y="820" font-size="11">Temporal SVC layers (~200 LoC) — P1</text>
+
+  <rect x="620" y="670" width="540" height="22" rx="3" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="635" y="685" font-size="11" font-weight="bold">G-NEW-7</text>
+  <text x="705" y="685" font-size="11">Manual reference buffer control (~400 LoC) — P2</text>
+
+  <rect x="620" y="697" width="540" height="22" rx="3" fill="url(#critG)" stroke="#ad1457"/>
+  <text x="635" y="712" font-size="11" font-weight="bold">G-NEW-8</text>
+  <text x="705" y="712" font-size="11">VideoEncoderInfo equivalent (~120 LoC) — P0</text>
+
+  <rect x="620" y="724" width="540" height="22" rx="3" fill="url(#partG)" stroke="#f9a825"/>
+  <text x="635" y="739" font-size="11" font-weight="bold">G-NEW-9</text>
+  <text x="705" y="739" font-size="11">BYO VkDevice plumbing (~30 LoC; v1.1 said ~500) — P0</text>
+
+  <rect x="620" y="751" width="540" height="22" rx="3" fill="url(#gapG)" stroke="#c62828"/>
+  <text x="635" y="766" font-size="11" font-weight="bold">G-NEW-10</text>
+  <text x="705" y="766" font-size="11">Spatial SVC (~1,500 LoC) — defer P3</text>
+
+  <rect x="620" y="778" width="540" height="22" rx="3" fill="url(#critG)" stroke="#ad1457"/>
+  <text x="635" y="793" font-size="11" font-weight="bold">G-NEW-11</text>
+  <text x="705" y="793" font-size="11">Silence stdio (~50 LoC) — P0</text>
+
+  <rect x="40" y="850" width="1120" height="60" rx="8" fill="#e8f5e9" stroke="#1b5e20" stroke-width="2"/>
+  <text x="600" y="878" text-anchor="middle" font-size="13" font-weight="bold" fill="#1b5e20">
+    P0 set v1.2 (G-NEW-1, 2, 3, 8, 9, 11): ~870 LoC upstream, ~2 weeks of work, all in Phase 1 in parallel.
+  </text>
+  <text x="600" y="898" text-anchor="middle" font-size="11" fill="#2e7d32">
+    G-NEW-9 dropped from 500 LoC to ~30 LoC once we noticed VulkanDeviceContext already supports BYO device.
+  </text>
+</svg>

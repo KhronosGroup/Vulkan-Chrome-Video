@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="reG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/><stop offset="100%" stop-color="#81c784"/>
+    </linearGradient>
+    <linearGradient id="newG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe0b2"/><stop offset="100%" stop-color="#ffb74d"/>
+    </linearGradient>
+    <linearGradient id="extG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/><stop offset="100%" stop-color="#64b5f6"/>
+    </linearGradient>
+    <linearGradient id="gapG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fce4ec"/><stop offset="100%" stop-color="#f48fb1"/>
+    </linearGradient>
+  </defs>
+
+  <text x="640" y="32" text-anchor="middle" font-size="22" font-weight="bold" fill="#263238">
+    Gap Analysis : What Exists vs What We Build
+  </text>
+
+  <!-- Legend -->
+  <rect x="40" y="60" width="20" height="14" fill="url(#reG)" stroke="#2e7d32"/>
+  <text x="65" y="72" font-size="11" fill="#37474f">REUSE existing Chromium infra</text>
+  <rect x="290" y="60" width="20" height="14" fill="url(#extG)" stroke="#1565c0"/>
+  <text x="315" y="72" font-size="11" fill="#37474f">REUSE external infra (upstream)</text>
+  <rect x="560" y="60" width="20" height="14" fill="url(#newG)" stroke="#e65100"/>
+  <text x="585" y="72" font-size="11" fill="#37474f">NEW work we must do</text>
+  <rect x="780" y="60" width="20" height="14" fill="url(#gapG)" stroke="#ad1457"/>
+  <text x="805" y="72" font-size="11" fill="#37474f">GAP that current infra cannot fill</text>
+
+  <!-- 5 columns: T1..T5 -->
+  <text x="160" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#33691e">Tier 1 Unit</text>
+  <text x="400" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#1b5e20">Tier 2 VEA/VDA</text>
+  <text x="640" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#0d47a1">Tier 3 WebCodecs WPT</text>
+  <text x="880" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#bf360c">Tier 4 Browser / Tast</text>
+  <text x="1120" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#880e4f">Tier 5 Conformance</text>
+
+  <!-- T1 column -->
+  <rect x="40" y="130" width="240" height="70" rx="6" fill="url(#reG)" stroke="#2e7d32"/>
+  <text x="160" y="153" text-anchor="middle" font-size="11" font-weight="bold">VaapiWrapper unittests</text>
+  <text x="160" y="170" text-anchor="middle" font-size="10">h264_vaapi_video_encoder_delegate_unittest.cc</text>
+  <text x="160" y="186" text-anchor="middle" font-size="10">media_unittests target</text>
+
+  <rect x="40" y="210" width="240" height="100" rx="6" fill="url(#newG)" stroke="#e65100"/>
+  <text x="160" y="232" text-anchor="middle" font-size="11" font-weight="bold">NEW: 14 unit-test files</text>
+  <text x="160" y="248" text-anchor="middle" font-size="10">media/gpu/vulkan/*_unittest.cc</text>
+  <text x="160" y="264" text-anchor="middle" font-size="10">~6,500 LOC</text>
+  <text x="160" y="282" text-anchor="middle" font-size="10">Mock Vulkan dispatch table</text>
+  <text x="160" y="298" text-anchor="middle" font-size="10">DPB / wrapper / accelerator / 6 delegates</text>
+
+  <rect x="40" y="320" width="240" height="80" rx="6" fill="url(#gapG)" stroke="#ad1457"/>
+  <text x="160" y="343" text-anchor="middle" font-size="11" font-weight="bold">GAP G1, G4</text>
+  <text x="160" y="362" text-anchor="middle" font-size="10">No mocked Vulkan loader exists for</text>
+  <text x="160" y="376" text-anchor="middle" font-size="10">media_unittests; gpu/vulkan/tests is GPU-bound</text>
+  <text x="160" y="392" text-anchor="middle" font-size="10">No fake video session</text>
+
+  <!-- T2 column -->
+  <rect x="290" y="130" width="240" height="100" rx="6" fill="url(#reG)" stroke="#2e7d32"/>
+  <text x="410" y="153" text-anchor="middle" font-size="11" font-weight="bold">video_{encode,decode}_</text>
+  <text x="410" y="167" text-anchor="middle" font-size="11" font-weight="bold">accelerator_tests gtest</text>
+  <text x="410" y="184" text-anchor="middle" font-size="10">17 + 19 TEST_F cases</text>
+  <text x="410" y="200" text-anchor="middle" font-size="10">+ perf binaries</text>
+  <text x="410" y="216" text-anchor="middle" font-size="10">+ BitstreamValidator (SW decode)</text>
+
+  <rect x="290" y="240" width="240" height="130" rx="6" fill="url(#newG)" stroke="#e65100"/>
+  <text x="410" y="262" text-anchor="middle" font-size="11" font-weight="bold">NEW: --implementation=vulkan flag</text>
+  <text x="410" y="280" text-anchor="middle" font-size="10">+ ~10 new TEST_F cases for Vulkan</text>
+  <text x="410" y="294" text-anchor="middle" font-size="10">specifics (sync, QP map, intra-ref,</text>
+  <text x="410" y="308" text-anchor="middle" font-size="10">protected, fallback)</text>
+  <text x="410" y="324" text-anchor="middle" font-size="10">+ VulkanLoopbackValidator</text>
+  <text x="410" y="340" text-anchor="middle" font-size="10">+ CrossBackendValidator</text>
+  <text x="410" y="356" text-anchor="middle" font-size="10">~1,450 LOC</text>
+
+  <rect x="290" y="380" width="240" height="80" rx="6" fill="url(#gapG)" stroke="#ad1457"/>
+  <text x="410" y="403" text-anchor="middle" font-size="11" font-weight="bold">GAP G2, G3</text>
+  <text x="410" y="422" text-anchor="middle" font-size="10">BitstreamValidator decodes with SW only</text>
+  <text x="410" y="436" text-anchor="middle" font-size="10">No cross-backend or vulkan-loopback wrapper</text>
+
+  <!-- T3 column -->
+  <rect x="530" y="130" width="240" height="110" rx="6" fill="url(#reG)" stroke="#2e7d32"/>
+  <text x="650" y="153" text-anchor="middle" font-size="11" font-weight="bold">WebCodecs WPT (40+ files)</text>
+  <text x="650" y="170" text-anchor="middle" font-size="10">video-encoder*.https.any.js,</text>
+  <text x="650" y="184" text-anchor="middle" font-size="10">videoDecoder-*.https.any.js,</text>
+  <text x="650" y="198" text-anchor="middle" font-size="10">video-encoder-h264.https.any.js, ...</text>
+  <text x="650" y="216" text-anchor="middle" font-size="10">covers basic / config / flush / annexb</text>
+
+  <rect x="530" y="250" width="240" height="100" rx="6" fill="url(#newG)" stroke="#e65100"/>
+  <text x="650" y="272" text-anchor="middle" font-size="11" font-weight="bold">NEW: 6 + WPT files</text>
+  <text x="650" y="290" text-anchor="middle" font-size="10">QP map, intra-refresh, manual refs,</text>
+  <text x="650" y="304" text-anchor="middle" font-size="10">spatial SVC, zero-copy canvas,</text>
+  <text x="650" y="318" text-anchor="middle" font-size="10">multi-instance decoder,</text>
+  <text x="650" y="332" text-anchor="middle" font-size="10">loss-recovery (wpt_internal)</text>
+  <text x="650" y="346" text-anchor="middle" font-size="10">~1,000 LOC; contributed upstream</text>
+
+  <rect x="530" y="360" width="240" height="80" rx="6" fill="url(#gapG)" stroke="#ad1457"/>
+  <text x="650" y="383" text-anchor="middle" font-size="11" font-weight="bold">GAP G6</text>
+  <text x="650" y="402" text-anchor="middle" font-size="10">WebCodecs recently added these</text>
+  <text x="650" y="416" text-anchor="middle" font-size="10">features but WPT hasn't caught up</text>
+
+  <!-- T4 column -->
+  <rect x="770" y="130" width="240" height="110" rx="6" fill="url(#reG)" stroke="#2e7d32"/>
+  <text x="890" y="153" text-anchor="middle" font-size="11" font-weight="bold">Tast video.* + WebRTC perf</text>
+  <text x="890" y="170" text-anchor="middle" font-size="10">video.EncodeAccel.*</text>
+  <text x="890" y="184" text-anchor="middle" font-size="10">video.ChromeStackDecoder.*</text>
+  <text x="890" y="198" text-anchor="middle" font-size="10">video.WebRTC.* / video.Play.*</text>
+  <text x="890" y="216" text-anchor="middle" font-size="10">+ tools/perf/benchmarks/webrtc.py</text>
+
+  <rect x="770" y="250" width="240" height="100" rx="6" fill="url(#newG)" stroke="#e65100"/>
+  <text x="890" y="272" text-anchor="middle" font-size="11" font-weight="bold">NEW: 6 tast wrappers</text>
+  <text x="890" y="290" text-anchor="middle" font-size="10">video.VulkanEncodeAccel.*,</text>
+  <text x="890" y="304" text-anchor="middle" font-size="10">video.VulkanChromeStackDecoder.*,</text>
+  <text x="890" y="318" text-anchor="middle" font-size="10">video.VulkanPlay.*, VulkanWebRTC.*</text>
+  <text x="890" y="332" text-anchor="middle" font-size="10">+ new HW caps yaml entries</text>
+  <text x="890" y="346" text-anchor="middle" font-size="10">~780 LOC</text>
+
+  <rect x="770" y="360" width="240" height="80" rx="6" fill="url(#gapG)" stroke="#ad1457"/>
+  <text x="890" y="383" text-anchor="middle" font-size="11" font-weight="bold">GAP G5</text>
+  <text x="890" y="402" text-anchor="middle" font-size="10">No hw_enc_*_vulkan capability</text>
+  <text x="890" y="416" text-anchor="middle" font-size="10">No tast wrappers for Vulkan path</text>
+
+  <!-- T5 column -->
+  <rect x="1010" y="130" width="240" height="110" rx="6" fill="url(#extG)" stroke="#1565c0"/>
+  <text x="1130" y="153" text-anchor="middle" font-size="11" font-weight="bold">External suites (REUSE)</text>
+  <text x="1130" y="170" text-anchor="middle" font-size="10">JVT H.264 + JCT-VC HEVC</text>
+  <text x="1130" y="184" text-anchor="middle" font-size="10">Argon AV1 + AOM test vectors</text>
+  <text x="1130" y="198" text-anchor="middle" font-size="10">Fluster + VVS + dEQP-VK.video</text>
+  <text x="1130" y="216" text-anchor="middle" font-size="10">~2000+ test vectors</text>
+
+  <rect x="1010" y="250" width="240" height="120" rx="6" fill="url(#newG)" stroke="#e65100"/>
+  <text x="1130" y="272" text-anchor="middle" font-size="11" font-weight="bold">NEW: harness scripts</text>
+  <text x="1130" y="290" text-anchor="middle" font-size="10">tools/scripts/run_*_conformance.py</text>
+  <text x="1130" y="304" text-anchor="middle" font-size="10">fluster_plugin_vulkan_video.py</text>
+  <text x="1130" y="318" text-anchor="middle" font-size="10">chromium_vulkan_video_cli</text>
+  <text x="1130" y="332" text-anchor="middle" font-size="10">cross_vendor_diff.py</text>
+  <text x="1130" y="346" text-anchor="middle" font-size="10">~1,200 LOC + cli ~400 LOC</text>
+  <text x="1130" y="362" text-anchor="middle" font-size="10">+ infra/config bot recipes</text>
+
+  <rect x="1010" y="380" width="240" height="80" rx="6" fill="url(#gapG)" stroke="#ad1457"/>
+  <text x="1130" y="403" text-anchor="middle" font-size="11" font-weight="bold">GAP G7, G8, G9, G12, G17</text>
+  <text x="1130" y="422" text-anchor="middle" font-size="10">No driver scripts, no fluster plugin,</text>
+  <text x="1130" y="436" text-anchor="middle" font-size="10">no VVS-compatible CLI, no allowlist tool</text>
+
+  <!-- Bottom: cross-cutting gaps -->
+  <text x="640" y="500" text-anchor="middle" font-size="14" font-weight="bold" fill="#263238">Cross-cutting items (not codec-tier-specific)</text>
+
+  <rect x="40" y="515" width="290" height="80" rx="6" fill="url(#newG)" stroke="#e65100"/>
+  <text x="185" y="538" text-anchor="middle" font-size="11" font-weight="bold">NEW soak + heap profile</text>
+  <text x="185" y="558" text-anchor="middle" font-size="10">nightly-vulkan-video-soak (24 h)</text>
+  <text x="185" y="572" text-anchor="middle" font-size="10">leak ceiling = 1 MB/h</text>
+  <text x="185" y="586" text-anchor="middle" font-size="10">GAP G11</text>
+
+  <rect x="350" y="515" width="290" height="80" rx="6" fill="url(#newG)" stroke="#e65100"/>
+  <text x="495" y="538" text-anchor="middle" font-size="11" font-weight="bold">NEW validation-layer enforcement</text>
+  <text x="495" y="558" text-anchor="middle" font-size="10">vk_validation_check.py recipe step</text>
+  <text x="495" y="572" text-anchor="middle" font-size="10">zero errors required at every tier</text>
+  <text x="495" y="586" text-anchor="middle" font-size="10">GAP G14</text>
+
+  <rect x="660" y="515" width="290" height="80" rx="6" fill="url(#newG)" stroke="#e65100"/>
+  <text x="805" y="538" text-anchor="middle" font-size="11" font-weight="bold">NEW bitstream fuzzers</text>
+  <text x="805" y="558" text-anchor="middle" font-size="10">media/gpu/vulkan/fuzzers/{h264,h265,av1}*</text>
+  <text x="805" y="572" text-anchor="middle" font-size="10">+ config fuzzer + loader fuzz</text>
+  <text x="805" y="586" text-anchor="middle" font-size="10">GAP G16</text>
+
+  <rect x="970" y="515" width="280" height="80" rx="6" fill="url(#newG)" stroke="#e65100"/>
+  <text x="1110" y="538" text-anchor="middle" font-size="11" font-weight="bold">NEW protected encode (P3)</text>
+  <text x="1110" y="558" text-anchor="middle" font-size="10">Mock CDM provider</text>
+  <text x="1110" y="572" text-anchor="middle" font-size="10">defer until VK encryption ext lands</text>
+  <text x="1110" y="586" text-anchor="middle" font-size="10">GAP G10</text>
+
+  <!-- Totals -->
+  <rect x="40" y="615" width="1210" height="80" rx="8" fill="#eceff1" stroke="#37474f"/>
+  <text x="640" y="640" text-anchor="middle" font-size="14" font-weight="bold" fill="#263238">Totals</text>
+  <text x="640" y="660" text-anchor="middle" font-size="12" fill="#37474f">~12,130 LOC of net-new test / tooling code  |  ~8 engineer-weeks  |  closes 17 catalogued gaps</text>
+  <text x="640" y="680" text-anchor="middle" font-size="11" fill="#37474f">Reuse: 60% of test surface comes for free; new code is concentrated in mocks, conformance harnesses, and tast wrappers</text>
+</svg>
