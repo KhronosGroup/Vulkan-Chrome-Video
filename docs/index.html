@@ -198,6 +198,7 @@
         .doc-card:nth-child(2) { animation-delay: 0.4s; }
         .doc-card:nth-child(3) { animation-delay: 0.5s; }
         .doc-card:nth-child(4) { animation-delay: 0.6s; }
+        .doc-card:nth-child(5) { animation-delay: 0.7s; }
 
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
@@ -229,6 +230,7 @@
         .doc-card:nth-child(2) .doc-icon { background: rgba(172, 45, 45, 0.2); }
         .doc-card:nth-child(3) .doc-icon { background: rgba(66, 133, 244, 0.2); }
         .doc-card:nth-child(4) .doc-icon { background: rgba(118, 185, 0, 0.2); }
+        .doc-card:nth-child(5) .doc-icon { background: rgba(172, 45, 45, 0.2); }
 
         .doc-content h2 {
             font-size: 1.3rem;
@@ -366,6 +368,16 @@
                     <h2>Chromium Presentation Layer</h2>
                     <p>Deep dive into Chromium's graphics stack, Skia integration, compositor architecture, and video frame display paths.</p>
                     <span class="tag">Architecture</span>
+                </div>
+                <div class="doc-arrow">→</div>
+            </a>
+
+            <a href="vulkan_video_encoder_use_cases.html" class="doc-card">
+                <div class="doc-icon">🎥</div>
+                <div class="doc-content">
+                    <h2>Encoder Use Cases, Processing Graphs &amp; Zero-Copy</h2>
+                    <p>Every browser HW-encode use case (WebRTC, screen share, WebCodecs, MediaRecorder, Cast) mapped to its frame-flow graph, the SharedImage zero-copy seam, plug-in priorities, and per-use-case browser test recipes with caveats.</p>
+                    <span class="tag">Architecture · Testing</span>
                 </div>
                 <div class="doc-arrow">→</div>
             </a>

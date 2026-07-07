@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser HW Encoder — Use Cases, Processing Graphs, Zero-Copy &amp; Testing</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --accent-blue: #2563eb;
+            --accent-purple: #7c3aed;
+            --accent-green: #16a34a;
+            --accent-orange: #d97706;
+            --accent-red: #dc2626;
+            --border-color: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-fg: #e2e8f0;
+            --inline-code-bg: #f1f5f9;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary); color: var(--text-primary);
+            line-height: 1.7; font-size: 15.5px;
+        }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+        header {
+            background: linear-gradient(135deg, #dcfce7 0%, #c7d2fe 100%);
+            padding: 2rem 0; border-bottom: 3px solid var(--accent-green);
+        }
+        header h1 {
+            font-size: 1.95rem;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; margin-bottom: 0.4rem; line-height: 1.2;
+        }
+        header .subtitle { color: var(--text-secondary); font-size: 1.05rem; }
+        header .meta { margin-top: 1rem; font-size: 0.88rem; color: var(--text-muted); }
+        header .meta span { margin-right: 1.5rem; }
+        nav {
+            background: #ffffff; padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        nav .container { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+        nav a {
+            color: var(--text-secondary); text-decoration: none;
+            font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 6px;
+        }
+        nav a:hover { background: var(--bg-tertiary); color: var(--accent-blue); }
+        main { padding: 2rem 0 4rem; }
+        section { margin-bottom: 3rem; }
+        h2 {
+            font-size: 1.55rem; margin: 2.5rem 0 1rem;
+            padding-bottom: 0.4rem; border-bottom: 2px solid var(--border-color);
+            color: var(--accent-blue);
+        }
+        h3 { font-size: 1.2rem; margin: 1.8rem 0 0.8rem; color: var(--text-primary); }
+        h4 { font-size: 1.02rem; margin: 1.2rem 0 0.6rem; color: var(--accent-purple); }
+        p { margin-bottom: 1rem; color: var(--text-secondary); }
+        p strong, li strong { color: var(--text-primary); }
+        ul, ol { margin: 0 0 1rem 1.6rem; color: var(--text-secondary); }
+        li { margin-bottom: 0.35rem; }
+        code {
+            font-family: 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+            font-size: 0.86em; background: var(--inline-code-bg);
+            padding: 0.12rem 0.35rem; border-radius: 4px; color: #be185d;
+        }
+        pre {
+            background: var(--code-bg); color: var(--code-fg);
+            padding: 1rem 1.2rem; border-radius: 8px; overflow-x: auto;
+            margin: 1rem 0 1.5rem; font-size: 0.85rem; line-height: 1.55;
+        }
+        pre code { background: none; color: inherit; padding: 0; }
+        table {
+            width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem;
+            font-size: 0.88rem;
+        }
+        th {
+            background: var(--bg-tertiary); text-align: left;
+            padding: 0.55rem 0.8rem; border: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+        td { padding: 0.5rem 0.8rem; border: 1px solid var(--border-color); vertical-align: top; }
+        tr:nth-child(even) td { background: var(--bg-secondary); }
+        .diagram {
+            margin: 1.5rem 0; padding: 1rem; background: white;
+            border: 1px solid var(--border-color); border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center;
+        }
+        .diagram img, .diagram object { max-width: 100%; height: auto; }
+        .diagram-caption {
+            margin-top: 0.5rem; font-size: 0.85rem;
+            color: var(--text-muted); font-style: italic;
+        }
+        .callout {
+            border-left: 4px solid var(--accent-blue);
+            background: var(--bg-secondary);
+            padding: 0.9rem 1.2rem; margin: 1.2rem 0; border-radius: 0 8px 8px 0;
+            font-size: 0.93rem; color: var(--text-secondary);
+        }
+        .callout.warn { border-left-color: var(--accent-orange); background: #fffbeb; }
+        .callout.danger { border-left-color: var(--accent-red); background: #fef2f2; }
+        .callout.ok { border-left-color: var(--accent-green); background: #f0fdf4; }
+        .callout .callout-title { font-weight: 700; color: var(--text-primary); display: block; margin-bottom: 0.3rem; }
+        .tag {
+            display: inline-block; padding: 0.15rem 0.5rem;
+            border-radius: 999px; font-size: 0.72rem; font-weight: 600;
+            margin-right: 0.4rem; vertical-align: middle;
+        }
+        .tag.works { background: #dcfce7; color: #166534; }
+        .tag.blocked { background: #fee2e2; color: #991b1b; }
+        .tag.partial { background: #fef3c7; color: #92400e; }
+        .tag.gap { background: #ede9fe; color: #5b21b6; }
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 1.5rem 0 3rem; color: var(--text-muted); font-size: 0.85rem;
+        }
+        footer a { color: var(--accent-blue); }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <h1>Browser HW Encoder — Use Cases, Processing Graphs, Zero-Copy Plug-In &amp; Testing</h1>
+        <div class="subtitle">Where the Vulkan Video encode backend plugs into Chromium's real pipelines, and how each pipeline is tested</div>
+        <div class="meta">
+            <span><strong>Status:</strong> v1.1 · 2026-07-07</span>
+            <span><strong>Companion:</strong> <a href="vulkan_video_encode_integration.html">Encode DDD</a> · <a href="vulkan_video_test_plan.html">Test Plan</a> · <a href="vulkan_video_library_integration_analysis.html">Library Analysis</a></span>
+            <span><strong>Markdown source:</strong> VULKAN_VIDEO_ENCODER_PROCESSING_GRAPHS.md</span>
+        </div>
+    </div>
+</header>
+<nav>
+    <div class="container">
+        <a href="#overview">1 Overview</a>
+        <a href="#use-cases">2 Use Cases</a>
+        <a href="#trunk">3 Common Trunk &amp; Zero-Copy Seam</a>
+        <a href="#lanes">4 Frame Journeys</a>
+        <a href="#plugin">5 Plug-In Plan</a>
+        <a href="#testing">6 Use-Case Testing</a>
+        <a href="#caveats">7 Caveats</a>
+        <a href="#refs">8 References</a>
+    </div>
+</nav>
+<main>
+<div class="container">
+
+<!-- ============================ 1 OVERVIEW ============================ -->
+<section id="overview">
+    <h2>1. Overview — one funnel, six consumers</h2>
+    <p>
+        Every hardware-encode consumer in Chromium — WebRTC calls, screen sharing, WebCodecs,
+        MediaRecorder, Cast mirroring, Chrome Remote Desktop — discovers encoders through a single
+        GPU-process funnel: <code>GpuVideoEncodeAcceleratorFactory::CreateVEA()</code>. On the
+        <code>vulkan-on-chrome/dev</code> branch, <code>VulkanVideoEncodeAccelerator</code> registers
+        <strong>first</strong> in that factory's list behind the <code>VulkanVideoEncode</code> feature,
+        so all six use cases pick it up automatically — no per-consumer wiring is needed for
+        <em>functionality</em>. What does need per-consumer work is <strong>zero-copy</strong>, because the
+        decision "can this frame be encoded without a CPU copy?" is made where the frame's SharedImage
+        is <em>created</em>, not where it is consumed (§3).
+    </p>
+    <div class="diagram">
+        <object data="diagrams/encode_use_case_topology.svg" type="image/svg+xml" width="100%"></object>
+        <div class="diagram-caption">All browser encode use cases funnel into the GPU-process factory; the Vulkan backend and vendored NVPRO library sit below it, on the compositor's own VkDevice.</div>
+    </div>
+    <div class="callout">
+        <span class="callout-title">Why this matters strategically on Linux/NVIDIA</span>
+        Upstream Linux HW encode is <strong>default-off</strong> (<code>kAcceleratedVideoEncodeLinux</code>,
+        <code>media/base/media_switches.cc:704</code>) and VA-API is additionally disabled on NVIDIA GPUs
+        (<code>kVaapiOnNvidiaGPUs</code>, <code>:716</code>, crbug.com/1492880). Stock Chrome on an NVIDIA
+        Linux desktop therefore has <em>no hardware encode path at all</em> — every Meet/Zoom/Discord call
+        burns CPU on libvpx/OpenH264. The Vulkan backend is the first real HW encode path for this platform.
+    </div>
+</section>
+
+<!-- ============================ 2 USE CASES ============================ -->
+<section id="use-cases">
+    <h2>2. The use cases in detail</h2>
+
+    <h3>U1 — WebRTC camera call <span class="tag partial">encodes via fallback · zero-copy after P1 · ship needs G-NEW-3/6</span></h3>
+    <table>
+        <tr><th style="width:200px">Entry chain</th><td><code>getUserMedia</code> → <code>RTCPeerConnection</code> → webrtc <code>VideoStreamEncoder</code> → <code>blink::RTCVideoEncoderFactory</code> → <code>blink::RTCVideoEncoder(::Impl)</code> → <code>MojoVideoEncodeAccelerator</code> (<code>third_party/blink/renderer/platform/peerconnection/rtc_video_encoder.cc</code>). Does <strong>not</strong> use <code>VideoEncodeAcceleratorAdapter</code> — it has its own frame preparation.</td></tr>
+        <tr><th>Encoder discovery</th><td><code>RTCVideoEncoderFactory::GetSupportedFormatsInternal()</code> maps <code>GetVideoEncodeAcceleratorSupportedProfiles()</code> → SDP formats; codec gates: <code>kWebRtcAV1HWEncode</code> (AV1), <code>kPlatformHEVCEncoderSupport</code> + <code>kWebRtcAllowH265Send</code> (H.265). Advertised <code>scalability_modes</code> come from the VEA profile — a HW encoder is only picked for L1T2/L1T3 if it reports them.</td></tr>
+        <tr><th>Frame source &amp; storage</th><td>Linux V4L2 camera → CPU I420 buffers. Impl negotiates "NV12 + kGpuMemoryBuffer" or "I420 + kShmem" (<code>:1112</code>). CPU frames are converted+copied into RTCVideoEncoder's <em>own</em> NV12 SharedImage (<code>CreateNV12SharedImageFrame</code>, <code>:2166</code>) whose usage is <code>CPU_WRITE_ONLY | DISPLAY_READ</code> (<code>:682</code>) — <strong>no encode tag → staging fallback today</strong>.</td></tr>
+        <tr><th>Encoder demands</th><td>CBR with <em>dynamic bitrate</em> (congestion control calls <code>RequestEncodingParametersChange</code> continuously — currently a documented <strong>no-op</strong>, needs library G-NEW-3); temporal layers L1T2/L1T3 for adaptation (G-NEW-6; today <code>layerCount==1</code>); simulcast via <code>Config::SpatialLayer</code> (<code>kRtcVideoEncoderConvertSimulcastToSvc</code> rewrites simulcast→SVC); frame-drop feature <code>kWebRTCHardwareVideoEncoderFrameDrop</code>; keyframe-on-demand (works — G-6 forceIDR).</td></tr>
+        <tr><th>Observability</th><td><code>chrome://webrtc-internals</code> outbound-rtp: <code>encoderImplementation</code> shows the VEA class name (ours: <code>"VulkanVideoEncodeAccelerator"</code>), plus <code>powerEfficientEncoder</code>, <code>qualityLimitationReason</code>, <code>totalEncodeTime</code>, <code>qpSum</code>. Both impl fields require the page to be actively capturing.</td></tr>
+        <tr><th>Status on dev</th><td>Reachable and encodes correctly through the staging fallback (2 CPU copies/frame). Zero-copy = P1 one-line tag. Shipping quality = library G-NEW-3 + G-NEW-6.</td></tr>
+    </table>
+
+    <h3>U2 — Screen share (getDisplayMedia → WebRTC) <span class="tag partial">same client as U1 · GPU-native source · zero-copy after P2</span></h3>
+    <table>
+        <tr><th style="width:200px">Entry chain</th><td>Identical send path to U1 (there is no separate encoder for screen share). What differs is the <em>source</em>: <code>viz::FrameSinkVideoCapturerImpl</code> (<code>components/viz/service/frame_sinks/video_capture/</code>) captures compositor output via <code>CopyOutputRequest</code>.</td></tr>
+        <tr><th>Frame source &amp; storage</th><td>The capturer's <code>GpuMemoryBufferVideoFramePool</code> delegates to <code>media::RenderableGpuMemoryBufferVideoFramePool</code>, which creates <strong>GPU-native NV12 SharedImages</strong> with usage <code>GLES2_R/W | RASTER_R/W | DISPLAY_READ [| SCANOUT]</code> (<code>renderable_gpu_memory_buffer_video_frame_pool.cc:224</code>) — no encode tag. The pixels are born in the GPU process, cross to the renderer as a mailbox only, and come back to the GPU process for encode — where they currently take a pointless CPU round-trip.</td></tr>
+        <tr><th>Encoder demands</th><td>As U1, plus screen-content specifics: <code>ContentType::kDisplay</code> (from contentHint / capture type), very low fps with sudden bursts, high-detail intra, intra-refresh for recovery (G-NEW-5, deferred).</td></tr>
+        <tr><th>Status on dev</th><td>Encodes via fallback. P2 (tagging the renderable pool, opt-in) turns this into the flagship all-GPU graph: compositor → capturer → encoder with <strong>zero CPU bytes</strong> — the DDD Phase-4 exit criterion. Watch SCANOUT+encode modifier compatibility on NVIDIA.</td></tr>
+    </table>
+
+    <h3>U3 — WebCodecs VideoEncoder <span class="tag works">works today on dev (P0) — CPU sources zero-copy</span></h3>
+    <table>
+        <tr><th style="width:200px">Entry chain</th><td><code>blink::VideoEncoder</code> (<code>modules/webcodecs/video_encoder.cc</code>) → <code>CreateAcceleratedVideoEncoder()</code> (<code>:648</code>) → <code>media::VideoEncodeAcceleratorAdapter</code> wrapped in <code>VideoEncoderFallback</code> (SW fallback to libvpx/libaom/OpenH264 unless <code>prefer-software</code>). No "broker" exists on the encode side (decode has one; encode does not).</td></tr>
+        <tr><th>Config mapping</th><td><code>hardwareAcceleration</code> → <code>EncoderType</code> (<code>no-preference</code> still tries HW first); <code>latencyMode</code> → realtime vs quality; <code>contentHint</code> → camera vs display content type; <code>bitrateMode: quantizer</code> → <code>Bitrate::Mode::kExternal</code> → per-frame QP (<code>encodeOptions.avc.quantizer</code>) → Vulkan <code>rateControlMode=DISABLED</code>. <code>isConfigSupported({hardwareAcceleration:'prefer-hardware'})</code> is the JS-level probe — resolves <code>supported:false</code> on stock Linux (renderer gate off).</td></tr>
+        <tr><th>Frame source &amp; storage</th><td>CPU frames (camera track, ImageBitmap): copied once into the adapter's mappable-SI pool — which dev tags with <code>VIDEO_ENCODE_ACCELERATOR</code> (<code>adapter.cc:217</code>) → <strong>zero-copy from there</strong>. GPU frames (canvas/WebGL/<code>&lt;video&gt;</code>): passed through <em>unchanged</em> (<code>:1088</code>) with their producer's untagged usage → staging fallback (P3 decision pending).</td></tr>
+        <tr><th>Encoder demands</th><td>Both CQ (per-frame QP) and CBR/VBR; <code>flush()</code> drain; L1T1–L1T3 via <code>scalabilityMode</code> (needs G-NEW-6); optional QP maps later (G-NEW-4 / <code>VK_KHR_video_encode_quantization_map</code>).</td></tr>
+        <tr><th>Status on dev</th><td><strong>The proven path</strong>: this is what the zero-copy gate script drives; measured zero-copy=58/staging=2 on a 60-frame run, bit-identical output vs staging, 51.07 dB PSNR at CQP=26 on the A4000.</td></tr>
+    </table>
+
+    <h3>U4 — MediaRecorder <span class="tag works">works today on dev (P0) — shares the adapter path</span></h3>
+    <table>
+        <tr><th style="width:200px">Entry chain</th><td><code>MediaRecorder</code> → <code>media_recorder_handler.cc</code> → <code>VideoTrackRecorderImpl</code> → HW callback builds <code>media::VideoEncodeAcceleratorAdapter</code> (<code>video_track_recorder.cc:316</code>) with <code>EncoderType::kHardware</code>; SW fallback on <code>OnHardwareEncoderError</code>. Selection consults <code>kPreferredCodecAndVEAProfiles</code> and min-resolution gates (<code>kVEAEncoderMinResolutionWidth/Height</code>).</td></tr>
+        <tr><th>Frame source</th><td>Any <code>MediaStreamTrack</code>: camera (CPU), tab capture (GPU — U2's source), canvas capture. Same adapter dichotomy as U3.</td></tr>
+        <tr><th>Encoder demands</th><td>VBR rate control (the one consumer that defaults to VBR); <code>Flush()</code> drain-once semantics on stop; long-session stability (hours); muxable output (Annex-B → MP4/WebM muxers in Blink). H.265 recording is HW-only and default-on since M136 — a future HEVC target.</td></tr>
+        <tr><th>Status on dev</th><td>Works via the tagged adapter pool exactly like U3. Essentially untested end-to-end in the TEST_PLAN (its only mention is a rate-control matrix row) — recipe §6.4 closes that gap cheaply.</td></tr>
+    </table>
+
+    <h3>U5 — Cast mirroring / tab cast <span class="tag gap">undocumented in DDD/TEST_PLAN · works via factory · zero-copy after P2</span></h3>
+    <table>
+        <tr><th style="width:200px">Entry chain</th><td><code>components/mirroring/service/openscreen_session_host.cc</code> (<code>CreateVideoEncodeAccelerator()</code> wraps <code>MojoVideoEncodeAccelerator</code> directly) → <code>media/cast/encoding/video_encoder.cc::Create()</code> → if <code>use_hardware_encoder</code>: <code>SizeAdaptableExternalVideoEncoder</code> → <code>ExternalVideoEncoder(VEAClientImpl)</code> (<code>media/cast/encoding/external_video_encoder.cc</code>). Capability gating in <code>encoding_support.cc</code>.</td></tr>
+        <tr><th>Frame source</th><td>viz <code>FrameSinkVideoCapturerImpl</code> — the same capture stage as U2, so P2 unlocks both.</td></tr>
+        <tr><th>Encoder demands</th><td>Real-time CBR at fixed latency budget; keyframe-on-demand for receiver recovery; HW-first is <em>default</em>: <code>CastStreamingOfferHardwareFirst</code> enabled, per-codec pins <code>--cast-streaming-force-{enable,disable}-hardware-{av1,h264,hevc,vp8,vp9}</code>; frame-drop feature <code>kCastVideoEncoderFrameDrop</code>.</td></tr>
+        <tr><th>Status</th><td>Reachable through the factory like everyone else, but <strong>absent from the DDD and TEST_PLAN</strong> (known documentation gap). Since Cast is HW-first by default, it may be the first surface users hit organically once the feature ships — add it to the TEST_PLAN when P2 lands (shares U2's graph up to the client).</td></tr>
+    </table>
+
+    <h3>U6 — Chrome Remote Desktop <span class="tag gap">niche · Windows-oriented · inherits backend for free</span></h3>
+    <table>
+        <tr><th style="width:200px">Entry chain</th><td><code>remoting/codec/webrtc_video_encoder_gpu.cc</code> calls <code>GpuVideoEncodeAcceleratorFactory::CreateVEA/GetSupportedProfiles</code> directly (in-process, COM-init under <code>IS_WIN</code>). The web client mostly decodes.</td></tr>
+        <tr><th>Status</th><td>No work planned; listed for completeness — it inherits whatever the factory offers.</td></tr>
+    </table>
+</section>
+
+<!-- ============================ 3 TRUNK/SEAM ============================ -->
+<section id="trunk">
+    <h2>3. The common trunk and the zero-copy seam</h2>
+    <p>
+        Below the Mojo boundary all use cases share one trunk:
+        <code>MojoVideoEncodeAcceleratorService</code> → factory → <code>VulkanVideoEncodeAccelerator</code>,
+        which dispatches per frame on <code>frame-&gt;HasDirectCpuAccess()</code>: CPU frames take the
+        <strong>§6.1 staging path</strong> (LINEAR NV12 <code>VkImage</code>, libyuv write, library does the
+        LINEAR→OPTIMAL copy on the encode queue); SharedImage frames take the
+        <strong>§6.3.2 zero-copy resolve</strong> (<code>SharedImageManager::ProduceVulkanVideo</code> →
+        <code>VkImage</code> with <code>VIDEO_ENCODE_SRC</code> usage + acquire/release semaphores +
+        FOREIGN→encode queue-family transfer).
+    </p>
+    <div class="callout ok">
+        <span class="callout-title">The single load-bearing predicate</span>
+        <code>OzoneImageBacking::ProduceVulkanVideo</code> succeeds <em>iff</em> the SharedImage was created
+        with <code>SHARED_IMAGE_USAGE_VIDEO_ENCODE_ACCELERATOR</code> — a new usage bit (<code>1u&lt;&lt;28</code>)
+        introduced on dev (<code>ozone_image_backing.cc:547</code>). That bit is set at
+        <strong>producer pool creation time</strong>, in renderer/viz code the encoder never sees.
+        "Plugging in zero-copy" for a use case therefore means one thing: <em>tag its producer pool</em>.
+        The GPU-side machinery (backing-factory acceptance, dma-buf import rules, sync, fallback ladder)
+        is already complete.
+    </div>
+    <div class="diagram">
+        <object data="diagrams/encode_zero_copy_seam.svg" type="image/svg+xml" width="100%"></object>
+        <div class="diagram-caption">Producer pools on the left decide the outcome; the GPU-process resolve, fallback ladder and Wayland import rules are shared by all use cases.</div>
+    </div>
+
+    <h3>3.1 Producer → seam matrix</h3>
+    <table>
+        <tr><th>Producer pool / frame prep</th><th>Usage set at (file:line)</th><th>Tagged on dev?</th><th>Serves</th><th>Result today</th></tr>
+        <tr><td><code>VideoEncodeAcceleratorAdapter</code> mappable-SI pool</td><td><code>media/video/video_encode_accelerator_adapter.cc:217</code></td><td><strong>YES (P0)</strong></td><td>U3, U4 CPU sources</td><td>zero-copy ✅</td></tr>
+        <tr><td><code>RTCVideoEncoder</code> NV12 SI frame</td><td><code>rtc_video_encoder.cc:682</code></td><td>no → <strong>P1</strong></td><td>U1, U2 CPU frames</td><td>staging fallback</td></tr>
+        <tr><td><code>RenderableGpuMemoryBufferVideoFramePool</code></td><td><code>renderable_gpu_memory_buffer_video_frame_pool.cc:224</code></td><td>no → <strong>P2</strong></td><td>U2/U5 viz capture (GPU-native!)</td><td>staging fallback</td></tr>
+        <tr><td>Canvas / WebGL / decoder-output backings (adapter pass-through <code>:1088</code>)</td><td>various canvas/media backings</td><td>no → <strong>P3</strong></td><td>U3 GPU inputs</td><td>staging fallback</td></tr>
+        <tr><td>Camera GMB tracker (NV12 GMB camera)</td><td><code>media/capture/</code></td><td>no (rare on desktop Linux)</td><td>ChromeOS-style camera</td><td>staging fallback</td></tr>
+    </table>
+    <p>
+        <code>OzoneImageBackingFactory</code> already <em>accepts</em> the bit
+        (<code>ozone_image_backing_factory.cc:68</code>), and the D3D/AHardwareBuffer factories were
+        pre-plumbed — so on Wayland/Ozone, tagging a producer is <strong>sufficient</strong>; no further
+        backing work is required.
+    </p>
+</section>
+
+<!-- ============================ 4 LANES ============================ -->
+<section id="lanes">
+    <h2>4. Per-use-case frame journeys — where the copies happen</h2>
+    <div class="diagram">
+        <object data="diagrams/encode_use_case_lanes.svg" type="image/svg+xml" width="100%"></object>
+        <div class="diagram-caption">Lane A (U3/U4) is live today; Lane B shows what P1 removes for WebRTC; Lane C is the all-GPU capture graph P2 unlocks — at 4K30 it removes ≈750 MB/s of CPU memory traffic.</div>
+    </div>
+</section>
+
+<!-- ============================ 5 PLUGIN ============================ -->
+<section id="plugin">
+    <h2>5. Recommended zero-copy plug-in order</h2>
+    <table>
+        <tr><th style="width:70px">Priority</th><th>Change</th><th>Unlocks</th><th>Size / risk</th></tr>
+        <tr><td><strong>P0 ✓</strong></td><td>Adapter pool tagging (done on dev)</td><td>U3 WebCodecs + U4 MediaRecorder CPU-source zero-copy; gate script green</td><td>done</td></tr>
+        <tr><td><strong>P1</strong></td><td>Add <code>SHARED_IMAGE_USAGE_VIDEO_ENCODE_ACCELERATOR</code> to <code>si_usage</code> at <code>rtc_video_encoder.cc:682</code></td><td>U1/U2 WebRTC zero-copy for every CPU-source frame (removes 1 CPU copy + map per frame)</td><td>~1 line; bit is ignored by backings that don't check it; mirror the F7-style fallback if SI creation fails</td></tr>
+        <tr><td><strong>P2</strong></td><td>Opt-in encode tag on <code>RenderableGpuMemoryBufferVideoFramePool</code> (ctor arg wired from <code>FrameSinkVideoCapturerImpl</code> when the consumer is an encoder)</td><td>U2/U5 compositor→encoder full-GPU graph — DDD Phase-4 exit criterion</td><td>small; watch SCANOUT+encode DRM-modifier compatibility on NVIDIA; LINEAR-modifier imports already handled (usage stripped → library staging copy, still zero CPU)</td></tr>
+        <tr><td><strong>P3</strong></td><td>Canvas/decoder-output backings: tag-at-source vs copy-into-tagged-pool</td><td>U3 GPU-frame inputs (canvas capture, transcode)</td><td>policy decision first — decide with P2 perf data</td></tr>
+        <tr><td><strong>P4</strong></td><td>Library G-NEW-3 (<code>Reconfigure()</code>) + G-NEW-6 (temporal layers)</td><td>U1/U2 <em>shipping</em> quality (dynamic bitrate, L1T2/T3). Not a seam item — a library workstream</td><td>library-side; U1 acceptance tests encode it as expected-fail until landed</td></tr>
+    </table>
+
+    <h3>5.1 The GPU-RGB input path (P3-RGBA) — where libyuv actually sits, and how to avoid it</h3>
+    <div class="diagram">
+        <object data="diagrams/encode_rgb_compute_filter_path.svg" type="image/svg+xml" width="100%"></object>
+        <div class="diagram-caption">The all-GPU RGB path: RGBA SharedImage → pass-through → STORAGE|SAMPLED import → <code>VulkanFilterYuvCompute::RGBA2YCBCR</code> on the compute queue → NV12 encode source. Three numbered badges mark the Chromium-side changes.</div>
+    </div>
+    <p>
+        libyuv (CPU) appears <strong>only on CPU-source lanes</strong> — it is <em>not</em> part of the
+        §6.3.2 zero-copy path. The one place a <em>GPU-resident</em> frame hits libyuv today is the
+        adapter's non-passthrough branch: a canvas/WebGL RGBA frame fails the pass-through check
+        (<code>video_encode_accelerator_adapter.cc:1085</code> — requires NV12 or an advertised GPU
+        format, and dev advertises <code>{NV12}</code> only), so the adapter CPU-maps a GMB and runs
+        <code>ConvertAndScale</code> (libyuv, <code>:1123</code>) on pixels that never needed to leave
+        the GPU.
+    </p>
+    <table>
+        <tr><th>libyuv / CPU-conversion site</th><th>When it runs</th><th>Avoidable?</th></tr>
+        <tr><td>adapter <code>PrepareCpuFrame</code> / pool write</td><td>frame born on CPU (camera shmem)</td><td>No — one CPU write is inherent to a CPU source</td></tr>
+        <tr><td><code>RTCVideoEncoder::CreateNV12SharedImageFrame</code> (I420→NV12)</td><td>U1/U2 CPU frames</td><td>No (CPU source); P1 removes the <em>second</em> copy</td></tr>
+        <tr><td>VEA §6.1 staging upload (I420→NV12 into LINEAR VkImage)</td><td>fallback for untagged frames</td><td>Yes — eliminated by P0–P2 tagging</td></tr>
+        <tr><td><strong>adapter <code>PrepareGpuFrame</code> → <code>ConvertAndScale</code> (<code>:1123</code>)</strong></td><td><strong>GPU RGBA frame</strong> not in <code>gpu_supported_pixel_formats</code></td><td><strong>Yes — this is P3-RGBA's target</strong></td></tr>
+    </table>
+    <div class="callout ok">
+        <span class="callout-title">The library already ships the GPU converter</span>
+        <code>VulkanFilterYuvCompute</code> (<code>common/libs/VkCodecUtils/</code>) has an explicit
+        <strong><code>RGBA2YCBCR</code> compute-shader operation</strong> (plus <code>YCBCRCOPY</code>,
+        <code>YCBCR2RGBA</code>, subsampling/MSB-shift flags). <code>VkVideoEncoder</code> owns it as
+        <code>m_inputComputeFilter</code> (<code>VkVideoEncoder.h:944</code>, created at
+        <code>VkVideoEncoder.cpp:2118</code>), and the <code>chromium-encode</code> ext API anticipates
+        exactly this: <code>VkVideoEncoderConfig.inputFormat</code> + <code>enablePreprocessFilter</code>
+        ("e.g. RGBA input that needs RGBA→NV12 conversion", <code>vulkan_video_encoder_ext.h:125-128</code>),
+        <code>SupportsFormat(VkFormat)</code> (<code>:453</code>), <code>supportedInputFormats</code> in the
+        G-NEW-1 caps (<code>:540</code>). The compute queue the filter runs on is already enabled on the
+        compositor VkDevice (<code>COMPUTE_QUEUE_FLAG = 0x08</code>) with its family index plumbed via
+        the BYO config (G-NEW-9).
+    </div>
+    <pre><code>canvas/WebGL/capture RGBA SharedImage (GPU)
+  → adapter pass-through          [advertise ARGB/ABGR in VideoEncoderInfo.gpu_supported_pixel_formats]
+  → mailbox over Mojo (no pixels)
+  → ProduceVulkanVideo: single-plane RGBA import
+        [change: import usage STORAGE|SAMPLED for non-YCbCr — today hardcodes VIDEO_ENCODE_SRC,
+         which RGBA is not; the filter READS the RGBA image, only its NV12 OUTPUT is an encode source]
+  → SubmitExternalFrame(inputFormat=B8G8R8A8, enablePreprocessFilter=TRUE)
+  → VulkanFilterYuvCompute::RGBA2YCBCR on the compute queue → library NV12 VIDEO_ENCODE_SRC image
+  → vkCmdEncodeVideoKHR                                       — zero CPU bytes end-to-end</code></pre>
+    <p>
+        Chromium-side changes: (1) advertise RGBA in <code>VideoEncoderInfo.gpu_supported_pixel_formats</code>
+        (VEA <code>CompleteLibraryInitialize</code>), gated on the library's <code>SupportsFormat()</code>;
+        (2) per-format import usage in <code>ProduceVulkanVideo</code>; (3) route resolved RGBA images through
+        <code>enablePreprocessFilter</code>. Sync shape: acquire semaphores → compute (filter) → encode — one
+        extra queue hop the existing timeline-semaphore/QFOT machinery (DDD §9) already models. The DDD kept
+        CPU-side RGBA readback conversion off-plan deliberately — the compute filter <em>is</em> the mechanism.
+        Related: viz tab-capture in NV12-GMB mode already converts RGBA→NV12 <strong>on the GPU</strong>
+        (SkiaRenderer <code>CopyOutputRequest</code> blit), so Lane C never involves libyuv either way; the
+        capturer's <em>default</em> is I420 CPU readback (<code>frame_sink_video_capturer_impl.h:153</code>) —
+        keep encode consumers on NV12-GMB mode.
+    </p>
+
+    <h3>5.2 Zero-copy across window systems — Wayland vs X11 vs the rest</h3>
+    <div class="diagram">
+        <object data="diagrams/encode_zero_copy_ws_matrix.svg" type="image/svg+xml" width="100%"></object>
+        <div class="diagram-caption">The seam is WS-agnostic; per-WS work is one <code>VulkanImplementation</code> import override plus native-pixmap SharedImage availability.</div>
+    </div>
+    <p>
+        The seam (usage bit → <code>ProduceVulkanVideo</code> → representation → fallback ladder →
+        counters) is <strong>window-system-agnostic</strong>. What varies is one hook —
+        <code>VulkanImplementation::CreateImageFromGpuMemoryHandleWithUsage()</code> — plus whether
+        native-pixmap SharedImages exist on the platform:
+    </p>
+    <ul>
+        <li><strong>Wayland (Ozone):</strong> override present on dev (<code>vulkan_implementation_wayland.cc</code>) —
+            zero-copy works today; P1/P2 tagging needs no new WS work.</li>
+        <li><strong>X11 (Ozone):</strong> two independent gaps. (a) No encode-usage override — the base default
+            returns <code>nullptr</code> (<code>vulkan_implementation.cc:86</code>) → staging. Mechanical fix: upstream
+            X11 already has generic dma-buf import (<code>vulkan_implementation_x11.cc:131/:143</code>, DRI3 +
+            DRM modifiers), and the shared <code>vulkan_image_linux.cc</code> machinery (incl. the import-only
+            allocation fix) sits underneath — ~70 lines. (b) The real risk: native-pixmap SharedImages are often
+            unavailable on X11 (esp. NVIDIA) → the adapter's F7 sticky CPU fallback delivers shmem frames →
+            §6.1 staging <em>regardless</em> of any override. Either way <strong>encoding still works and is
+            correct</strong> — just one CPU copy per frame; that's what <code>--allow-staging</code> distinguishes.
+            Sync detail when porting: X11 imports stamp <code>VK_QUEUE_FAMILY_EXTERNAL</code> where dev's Wayland
+            path uses <code>FOREIGN_EXT</code> — the library's acquire barrier keys off this.</li>
+        <li><strong>ChromeOS / DRM-KMS (Ozone):</strong> same <code>OzoneImageBacking</code>/minigbm layer as Wayland;
+            one mechanical override in <code>vulkan_implementation_gbm.cc</code> away — and the platform where NV12
+            GMB <em>camera</em> frames actually exist, making camera→encoder zero-copy reachable.</li>
+        <li><strong>Windows / Android:</strong> dev pre-plumbed the usage bit
+            (<code>d3d_image_backing_factory.cc:256</code>, <code>ahardwarebuffer_image_backing_factory.cc:300</code>);
+            actual representations are future work (DXGI NT-handle / AHB imports per DDD §6.2.2/§6.2.3) — and
+            D3D12/NDK VEAs already serve those platforms, so priority is low.</li>
+        <li><strong>Ozone headless:</strong> software-only, no native buffers — can never zero-copy; CI must use
+            headless Weston (C9).</li>
+    </ul>
+</section>
+
+<!-- ============================ 6 TESTING ============================ -->
+<section id="testing">
+    <h2>6. Prototyping &amp; testing the use-case graphs</h2>
+    <p>
+        The TEST_PLAN's five tiers validate the codec/VEA surface deeply, but real browser
+        <em>pipeline</em> coverage is its acknowledged gap (MediaRecorder essentially untested end-to-end,
+        Cast absent). The environments below close that gap and are ordered as an escalation ladder —
+        each level proves something the previous one structurally cannot.
+    </p>
+    <div class="diagram">
+        <object data="diagrams/encode_test_environments.svg" type="image/svg+xml" width="100%"></object>
+        <div class="diagram-caption">L1 unit → L2 Tier-2 gtest (PSNR gate) → L3 browser zero-copy gate → L4 per-use-case suites. The flag bar at the bottom is the exact browser invocation.</div>
+    </div>
+
+    <h3>6.1 The browser invocation (three features, not one)</h3>
+    <pre><code>chrome --enable-features=AcceleratedVideoEncoder,Vulkan,VulkanVideoEncode \
+       --ozone-platform=wayland \
+       --enable-logging=stderr --vmodule='*vulkan_video_encode_accelerator*=1' \
+       [--ignore-gpu-blocklist] \
+       --use-fake-device-for-media-stream --use-fake-ui-for-media-stream \
+       --use-file-for-fake-video-capture=/path/1080p.y4m</code></pre>
+    <ul>
+        <li><code>AcceleratedVideoEncoder</code> — the Linux <strong>renderer</strong> gate (<code>content/renderer/render_thread_impl.cc:991</code>, verified unpatched on dev): without it no renderer ever asks the GPU process for an encoder, regardless of the factory.</li>
+        <li><code>Vulkan</code> — Skia-on-Vulkan compositing; creates the <code>VulkanDeviceQueue</code> that is the VEA's BYO device (production fail-fasts without it).</li>
+        <li><code>VulkanVideoEncode</code> — selects the backend in the factory (tried first).</li>
+        <li>The renderer also requires <code>GPU_FEATURE_TYPE_ACCELERATED_VIDEO_ENCODE</code> enabled in <code>GpuFeatureInfo</code> — hence the optional <code>--ignore-gpu-blocklist</code>.</li>
+    </ul>
+
+    <h3>6.2 U3 WebCodecs — available now (P0 regression harness)</h3>
+    <ul>
+        <li><strong>Page:</strong> W3C <code>encode-decode-worker</code> sample (knobs: codec, HW preference, <code>latencyMode</code>, bitrate mode, <code>scalabilityMode</code> L1T1–L1T3; measures per-frame encode delay via <code>frame.timestamp</code> correlation). Pin <code>latencyMode</code> when benchmarking — realtime may drop frames.</li>
+        <li><strong>Gate:</strong> <code>media/gpu/vulkan/test/wayland_zero_copy_check.sh</code> — PASS iff <code>zero-copy&gt;0 &amp;&amp; staging==0</code> in the <em>last</em> input-path summary line.</li>
+        <li><strong>Below the browser:</strong> Tier-2 <code>video_encode_accelerator_tests --implementation=vulkan</code> incl. <code>Vulkan_EncodePsnr_H264Baseline</code> (<code>--vulkan_psnr_floor</code>, default 38 dB; 51.07 dB measured).</li>
+    </ul>
+
+    <h3>6.3 U1 WebRTC loopback — target of P1</h3>
+    <ul>
+        <li><strong>Pages:</strong> <code>pc1</code> (minimal loopback; <code>pc1</code>/<code>pc2</code> page globals → drive <code>getStats()</code> from automation), <code>change-codecs</code> (<code>setCodecPreferences</code> for H.264/AV1), <code>extensions/svc</code> (scalabilityMode — meaningful once G-NEW-6 lands). No simulcast sample exists upstream — use fippo's simulcast-playground.</li>
+        <li><strong>Assert via getStats:</strong> <code>encoderImplementation === "VulkanVideoEncodeAccelerator"</code>; <code>framesEncoded</code> advances; <code>totalEncodeTime/framesEncoded</code> &lt; ~33 ms at 30 fps; <code>qualityLimitationReason</code> stays <code>none</code>/<code>bandwidth</code> — never <code>cpu</code> (the top-line "HW is really carrying the load" signal); bitrate (Δ<code>bytesSent</code>×8/Δt) tracks <code>setParameters</code> ramps — <strong>expected-fail until G-NEW-3</strong>.</li>
+        <li><strong>QP caveat:</strong> <code>qpSum/framesEncoded</code> is codec-scale-specific (H.264 0–51 vs VP8 0–127) — never compare across codecs.</li>
+        <li><strong>Story sets:</strong> <code>tools/perf/page_sets/webrtc_cases/</code> (<code>codec_constraints</code>, <code>multiple-peerconnections</code>, <code>pause-play</code>, <code>canvas-capture</code>); ChromeOS tast (<code>video.EncodeAccel.*</code>, <code>webrtc/rtc_peer_connection_perf.go</code>) is the model for real-hardware CI.</li>
+    </ul>
+
+    <h3>6.4 U4 MediaRecorder — cheap E2E win (closes a TEST_PLAN gap)</h3>
+    <ul>
+        <li><code>MediaRecorder(stream, {mimeType:'video/mp4; codecs=avc1'})</code> over a fake-camera stream; exercises VBR + <code>Flush()</code> drain semantics that WebCodecs CQ mode does not.</li>
+        <li>Assert HW selection (chrome://media-internals), zero-copy counters, and that the produced file demuxes and decodes (ffprobe/ffmpeg) with sane PSNR vs the .y4m source.</li>
+    </ul>
+
+    <h3>6.5 U2 screen share / U5 cast — target of P2 (strict)</h3>
+    <ul>
+        <li><code>getDisplayMedia({video:true})</code> + <code>--auto-select-tab-capture-source-by-title=…</code> feeding a loopback PC. The upstream getdisplaymedia sample only <em>captures</em> — combine with <code>capture/video-pc/</code> or hand-roll the PC.</li>
+        <li>U5: Cast is HW-first by default (<code>CastStreamingOfferHardwareFirst</code>); pin the codec with <code>--cast-streaming-force-enable-hardware-h264</code>; sink = openscreen <code>cast_receiver</code> demo or a second Chrome.</li>
+        <li><strong>Acceptance is strict <code>staging==0</code></strong> — this graph has no legitimate CPU hop; any staging tick means a lost tag or a modifier-incompatible pool buffer.</li>
+        <li><strong>Perf probe:</strong> SW-control run (<code>--disable-features=VulkanVideoEncode</code>) vs Vulkan run at 1080p30/4K30: GPU-process CPU% (<code>pidstat</code>) + <code>nvidia-smi --query-gpu=utilization.encoder,encoder.stats.sessionCount,encoder.stats.averageFps,encoder.stats.averageLatency</code> (or <code>nvidia-smi encodersessions</code>; note <code>utilization.encoder</code> is busy-time %, not throughput).</li>
+    </ul>
+
+    <h3>6.6 CI shape</h3>
+    <ul>
+        <li>Each browser job = launch script + page + stderr grep + getStats JSON dump, on a headless-Weston session on the NVIDIA runner (Chromium's own Wayland bots use <code>testing/xvfb.py --use-weston</code> with <code>--ozone-platform=wayland</code>). Promote to the TEST_PLAN Tier-4 lane; keep Tier-2 gtests as the per-CL gate; browser jobs nightly.</li>
+        <li>The Ozone <code>headless</code> platform is <strong>software-only</strong> — it cannot host these jobs. Headless-mode Chrome with <code>--enable-gpu</code> needs a real display server; the <code>--use-angle=vulkan</code> workaround covers WebGL only, not our path.</li>
+        <li>Ubuntu 24.04 AppArmor user-namespace restrictions break unpackaged builds; apply the documented AppArmor profile fix rather than <code>--no-sandbox</code> (sandbox-off runs don't exercise production GPU-process brokering).</li>
+    </ul>
+</section>
+
+<!-- ============================ 7 CAVEATS ============================ -->
+<section id="caveats">
+    <h2>7. Caveats — verified traps, each one cost someone a debugging day</h2>
+
+    <div class="callout danger">
+        <span class="callout-title">C1 · The browser-run flag set is three features, not one</span>
+        The renderer-side gate at <code>content/renderer/render_thread_impl.cc:991</code> means
+        <code>VulkanVideoEncode</code> alone gets the backend <em>registered</em> but no renderer will ever
+        <em>ask</em> for it — WebRTC/WebCodecs/MediaRecorder all silently use software. You need
+        <code>AcceleratedVideoEncoder</code> (renderer gate) + <code>Vulkan</code> (BYO compositor VkDevice)
+        + <code>VulkanVideoEncode</code> (backend selection). Verified unpatched on dev.
+    </div>
+    <div class="callout warn">
+        <span class="callout-title">C2 · Feature renamed at M131; no flags UI on Linux</span>
+        <code>VaapiVideoEncoder</code> → <code>AcceleratedVideoEncoder</code> at M131 — the old spelling
+        silently does nothing. <code>chrome://flags</code> has no entry for it on Linux
+        (<code>about_flags.cc</code> scopes <code>disable-accelerated-video-encode</code> to Mac/Win/CrOS/Android);
+        the command line is the only way.
+    </div>
+    <div class="callout warn">
+        <span class="callout-title">C3 · <code>--enable-features=Vulkan</code> ≠ <code>--use-angle=vulkan</code></span>
+        The former is Skia-on-Vulkan compositing (what we need — it creates the compositor
+        <code>VulkanDeviceQueue</code>); the latter is ANGLE's WebGL backend and does nothing for encode.
+        Colab/WebGPU recipes that pass <code>--use-angle=vulkan</code> are not applicable here.
+    </div>
+    <div class="callout danger">
+        <span class="callout-title">C4 · gtests structurally cannot prove zero-copy</span>
+        A unit-test process has no GPU-service SharedImages and no compositor VkDevice — the Tier-2 harness
+        runs on the library's own device via the test-only <code>SetAllowLibraryDeviceForTesting()</code>.
+        Only browser-level runs (the counter grep / gate script) prove the seam. Budget CI accordingly.
+    </div>
+    <div class="callout warn">
+        <span class="callout-title">C5 · WebCodecs cannot tell you which encoder it used</span>
+        Unlike WebRTC's <code>encoderImplementation</code> stat, WebCodecs has no implementation-report API
+        (w3c/webcodecs#604); <code>isConfigSupported</code> is a hint the UA may ignore
+        (anti-fingerprinting). Ground truth: chrome://gpu Encode rows, chrome://media-internals, vmodule logs.
+    </div>
+    <div class="callout warn">
+        <span class="callout-title">C6 · webrtc-internals impl fields need active capture</span>
+        <code>encoderImplementation</code> / <code>powerEfficientEncoder</code> "MUST NOT exist unless
+        exposing hardware is allowed" — the page must have a live getUserMedia/getDisplayMedia capture.
+        Receive-only pages never show them. Pre-info fallback value is <code>"ExternalEncoder"</code>.
+    </div>
+    <div class="callout danger">
+        <span class="callout-title">C7 · Import-only vkAllocateMemory for dma-buf imports</span>
+        Chaining <code>VkExportMemoryAllocateInfo</code> on an import made the NVIDIA driver return a fresh
+        zeroed allocation — every zero-copy frame encoded solid black with no validation error
+        (fixed on dev in <code>gpu/vulkan/vulkan_image_linux.cc</code>). If frames go black on a new
+        platform, audit the allocation pNext chain first.
+    </div>
+    <div class="callout warn">
+        <span class="callout-title">C8 · LINEAR-modifier multiplanar imports can't be encode sources (A4000/615.06)</span>
+        The Wayland VulkanImplementation strips <code>VIDEO_ENCODE_SRC</code> for DRM-modifier-0 NV12
+        imports (no encode format feature) — those frames take the library's GPU staging copy (still zero
+        CPU). Expect <code>staging</code> ticks from LINEAR pool buffers, not a bug in the seam.
+    </div>
+    <div class="callout warn">
+        <span class="callout-title">C9 · Ozone "headless" is software-only; sandbox-off hides bugs</span>
+        Use headless Weston (the upstream bot pattern) for CI, not <code>--ozone-platform=headless</code>.
+        Prefer the Ubuntu 24.04 AppArmor profile fix over <code>--no-sandbox</code> — the sandbox affects
+        GPU-process brokering that this feature exercises.
+    </div>
+    <div class="callout warn">
+        <span class="callout-title">C10 · Metric semantics</span>
+        <code>qpSum</code> scales are codec-specific (H.264 0–51, VP8 0–127) — never cross-codec-compare.
+        <code>nvidia-smi utilization.encoder</code> is busy-time percent, not throughput.
+        WebRTC adaptation shows a healthy HW encoder as <code>qualityLimitationReason ∈ {none, bandwidth}</code>;
+        <code>cpu</code> means fallback or overload.
+    </div>
+    <div class="callout danger">
+        <span class="callout-title">C11 · <code>RequestEncodingParametersChange</code> is a no-op today</span>
+        Both overloads are documented no-ops pending library G-NEW-3 (Reconfigure) and G-NEW-6 (temporal
+        layers). WebRTC's congestion controller cannot steer bitrate — fine for demos, wrong for shipping;
+        encode U1 bitrate-tracking assertions as expected-fail until the library lands them.
+    </div>
+    <div class="callout warn">
+        <span class="callout-title">C12 · VA-API-on-NVIDIA is off anyway</span>
+        <code>kVaapiOnNvidiaGPUs</code> is default-disabled (crbug.com/1492880) — don't burn time comparing
+        against a VA-API baseline on the NVIDIA runner; the meaningful control run is software
+        (<code>--disable-features=VulkanVideoEncode</code>).
+    </div>
+    <div class="callout warn">
+        <span class="callout-title">C13 · GPU RGBA frames silently drop to CPU libyuv in the adapter</span>
+        Pass-through (<code>adapter.cc:1085</code>) requires the frame format to be NV12 or listed in
+        <code>VideoEncoderInfo.gpu_supported_pixel_formats</code> (dev: <code>{NV12}</code> only) —
+        a GPU-resident canvas/WebGL RGBA frame gets CPU-mapped and converted by
+        <code>ConvertAndScale</code> (<code>:1123</code>). Fix = P3-RGBA (§5.1): advertise RGBA formats and
+        let the library's <code>VulkanFilterYuvCompute::RGBA2YCBCR</code> compute filter convert on-GPU.
+        Watch for it in profiles as unexpected <code>ConvertAndScale</code> samples under encode.
+    </div>
+    <div class="callout warn">
+        <span class="callout-title">C14 · Zero-copy is Wayland-only today; X11 silently degrades to staging</span>
+        Only <code>VulkanImplementationWayland</code> overrides the encode-usage import; on X11 (and DRM/GBM)
+        the base default returns <code>nullptr</code> and every frame takes the staging ladder — correct output,
+        one extra CPU copy, easy to miss because nothing errors. The <code>staging</code> counter is the tell.
+        X11 additionally risks the F7 CPU-frame fallback when native-pixmap SharedImages are unavailable
+        (common on NVIDIA X11). Run zero-copy work and gates on <code>--ozone-platform=wayland</code>.
+    </div>
+</section>
+
+<!-- ============================ 8 REFERENCES ============================ -->
+<section id="refs">
+    <h2>8. References</h2>
+    <ul>
+        <li><strong>Markdown source of this page:</strong> <code>docs/VULKAN_VIDEO_ENCODER_PROCESSING_GRAPHS.md</code></li>
+        <li><strong>WIP branch:</strong> <code>vulkan-on-chrome</code> fork, <code>origin/vulkan-on-chrome/dev</code> (55 commits); library counterpart: <code>vulkan-video-samples-chrome</code>, branch <code>vulkan-on-chrome/chromium-encode</code></li>
+        <li><strong>Companion docs:</strong> <a href="vulkan_video_encode_integration.html">Encode DDD</a> (§6.1/§6.3 input paths, §9 sync), <a href="vulkan_video_test_plan.html">Test Plan</a> (five tiers, §4.2 gates), <a href="vulkan_video_library_integration_analysis.html">Library Integration Analysis</a> (Model D, G-NEW-* gaps)</li>
+        <li><strong>Key upstream files:</strong> <code>media/gpu/gpu_video_encode_accelerator_factory.cc</code>, <code>media/video/video_encode_accelerator_adapter.cc</code>, <code>third_party/blink/renderer/platform/peerconnection/rtc_video_encoder.cc</code>, <code>media/video/renderable_gpu_memory_buffer_video_frame_pool.cc</code>, <code>components/viz/service/frame_sinks/video_capture/</code>, <code>content/renderer/render_thread_impl.cc</code></li>
+        <li><strong>External:</strong> webrtc.github.io/samples (pc1, change-codecs, svc) · w3c.github.io/webcodecs/samples/encode-decode-worker · docs/media/gpu/video_encoder_test_usage.md · docs/gpu/vaapi.md · W3C webrtc-stats (encoderImplementation, powerEfficientEncoder) · w3c/webcodecs#604</li>
+    </ul>
+</section>
+
+</div>
+</main>
+<footer>
+    <div class="container">
+        <p>NVIDIA Vulkan Video External · Chrome Vulkan Video Integration · generated from repo + upstream-source + web-verified research (2026-07-07)</p>
+    </div>
+</footer>
+</body>
+</html>

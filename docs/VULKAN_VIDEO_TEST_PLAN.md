@@ -405,6 +405,14 @@ testing/xvfb.py third_party/blink/tools/run_web_tests.py \
 
 These tests boot the full Chrome stack and exercise user-visible scenarios.
 
+![Browser-level test environments and per-use-case recipes](diagrams/encode_test_environments.svg)
+
+*The escalation ladder feeding this tier — including the exact three-feature flag set
+(`AcceleratedVideoEncoder,Vulkan,VulkanVideoEncode`; the renderer gate at
+`content/renderer/render_thread_impl.cc:991` makes `VulkanVideoEncode` alone insufficient)
+and the authoritative zero-copy gate script. Full per-use-case recipes and caveats:
+[Encoder Use Cases & Processing Graphs](VULKAN_VIDEO_ENCODER_PROCESSING_GRAPHS.md) §4/§7.*
+
 ### 6.1 Existing Tast tests (ChromeOS, verified)
 
 | Tast test | What it covers |
@@ -1156,6 +1164,8 @@ Before flipping `kVulkanVideoEncode` to enabled-by-default:
 | Conformance suite plumbing | [`diagrams/test_conformance_suites.svg`](diagrams/test_conformance_suites.svg) |
 | Gap analysis vs existing infra | [`diagrams/test_gap_analysis.svg`](diagrams/test_gap_analysis.svg) |
 | Test execution Gantt | [`diagrams/test_execution_timeline.svg`](diagrams/test_execution_timeline.svg) |
+| Browser test-environment ladder + use-case recipes | [`diagrams/encode_test_environments.svg`](diagrams/encode_test_environments.svg) |
+| Per-use-case frame journeys / copy counts | [`diagrams/encode_use_case_lanes.svg`](diagrams/encode_use_case_lanes.svg) |
 
 ---
 

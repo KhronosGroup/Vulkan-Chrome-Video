@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="okW" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="wnW" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe0b2"/>
+      <stop offset="100%" stop-color="#ffcc80"/>
+    </linearGradient>
+    <linearGradient id="noW" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffcdd2"/>
+      <stop offset="100%" stop-color="#ef9a9a"/>
+    </linearGradient>
+    <linearGradient id="naW" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#eceff1"/>
+      <stop offset="100%" stop-color="#cfd8dc"/>
+    </linearGradient>
+  </defs>
+
+  <text x="640" y="28" text-anchor="middle" font-size="20" font-weight="bold" fill="#263238">
+    Zero-Copy Across Window Systems — what changes, what stays the same
+  </text>
+  <text x="640" y="50" text-anchor="middle" font-size="11" fill="#546e7a">
+    The seam (usage bit → ProduceVulkanVideo → representation) is WS-agnostic. What varies per WS: the VulkanImplementation import override, native-pixmap availability, and sync/modifier plumbing.
+  </text>
+
+  <!-- header row -->
+  <rect x="20" y="70" width="180" height="46" fill="#37474f"/>
+  <rect x="200" y="70" width="230" height="46" fill="#37474f"/>
+  <rect x="430" y="70" width="240" height="46" fill="#37474f"/>
+  <rect x="670" y="70" width="230" height="46" fill="#37474f"/>
+  <rect x="900" y="70" width="360" height="46" fill="#37474f"/>
+  <text x="110" y="98" text-anchor="middle" font-size="12" font-weight="bold" fill="#ffffff">Window system</text>
+  <text x="315" y="90" text-anchor="middle" font-size="12" font-weight="bold" fill="#ffffff">Backing / native buffer</text>
+  <text x="315" y="106" text-anchor="middle" font-size="10" fill="#cfd8dc">(what the SharedImage wraps)</text>
+  <text x="550" y="90" text-anchor="middle" font-size="12" font-weight="bold" fill="#ffffff">Encode-usage import override</text>
+  <text x="550" y="106" text-anchor="middle" font-size="10" fill="#cfd8dc">CreateImageFromGpuMemoryHandleWithUsage</text>
+  <text x="785" y="90" text-anchor="middle" font-size="12" font-weight="bold" fill="#ffffff">Mappable-SI pool (P0 lane)</text>
+  <text x="785" y="106" text-anchor="middle" font-size="10" fill="#cfd8dc">adapter CPU-source frames</text>
+  <text x="1080" y="98" text-anchor="middle" font-size="12" font-weight="bold" fill="#ffffff">Zero-copy status / what's needed</text>
+
+  <!-- Wayland row -->
+  <rect x="20" y="116" width="180" height="104" fill="url(#okW)" stroke="#388e3c"/>
+  <rect x="200" y="116" width="230" height="104" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="430" y="116" width="240" height="104" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="670" y="116" width="230" height="104" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="900" y="116" width="360" height="104" fill="url(#okW)" stroke="#388e3c"/>
+  <text x="110" y="150" text-anchor="middle" font-size="13" font-weight="bold" fill="#1b5e20">Wayland</text>
+  <text x="110" y="168" text-anchor="middle" font-size="10" fill="#37474f">Ozone/Wayland</text>
+  <text x="110" y="182" text-anchor="middle" font-size="10" fill="#37474f">(the dev target)</text>
+  <text x="315" y="140" text-anchor="middle" font-size="10" fill="#37474f">OzoneImageBacking over</text>
+  <text x="315" y="154" text-anchor="middle" font-size="10" fill="#37474f">GBM/minigbm dma-buf</text>
+  <text x="315" y="168" text-anchor="middle" font-size="10" fill="#37474f">DRM format modifiers via</text>
+  <text x="315" y="182" text-anchor="middle" font-size="10" fill="#37474f">linux-dmabuf feedback</text>
+  <text x="550" y="140" text-anchor="middle" font-size="10" font-weight="bold" fill="#1b5e20">PRESENT (dev)</text>
+  <text x="550" y="156" text-anchor="middle" font-size="10" fill="#37474f">vulkan_implementation_wayland.cc:</text>
+  <text x="550" y="170" text-anchor="middle" font-size="10" fill="#37474f">encode usage, import-only alloc, LINEAR</text>
+  <text x="550" y="184" text-anchor="middle" font-size="10" fill="#37474f">strip, FOREIGN QF, profile-independent bit</text>
+  <text x="785" y="146" text-anchor="middle" font-size="10" font-weight="bold" fill="#1b5e20">available</text>
+  <text x="785" y="162" text-anchor="middle" font-size="10" fill="#37474f">native pixmaps standard on</text>
+  <text x="785" y="176" text-anchor="middle" font-size="10" fill="#37474f">Wayland/GBM (incl. NVIDIA 555+)</text>
+  <text x="1080" y="146" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1b5e20">✅ WORKS TODAY (P0 lane verified)</text>
+  <text x="1080" y="164" text-anchor="middle" font-size="10" fill="#37474f">zero-copy=58/staging=2 measured; bit-identical output;</text>
+  <text x="1080" y="178" text-anchor="middle" font-size="10" fill="#37474f">gate script targets this platform. P1/P2 tagging extends</text>
+  <text x="1080" y="192" text-anchor="middle" font-size="10" fill="#37474f">it to WebRTC + capture with NO new WS work.</text>
+
+  <!-- X11 row -->
+  <rect x="20" y="220" width="180" height="130" fill="url(#wnW)" stroke="#ef6c00"/>
+  <rect x="200" y="220" width="230" height="130" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="430" y="220" width="240" height="130" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="670" y="220" width="230" height="130" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="900" y="220" width="360" height="130" fill="url(#wnW)" stroke="#ef6c00"/>
+  <text x="110" y="268" text-anchor="middle" font-size="13" font-weight="bold" fill="#e65100">X11</text>
+  <text x="110" y="286" text-anchor="middle" font-size="10" fill="#37474f">Ozone/X11</text>
+  <text x="315" y="248" text-anchor="middle" font-size="10" fill="#37474f">Same OzoneImageBacking; pixmaps</text>
+  <text x="315" y="262" text-anchor="middle" font-size="10" fill="#37474f">via DRI3 dma-buf when available.</text>
+  <text x="315" y="278" text-anchor="middle" font-size="10" fill="#37474f">Generic dma-buf Vulkan import EXISTS</text>
+  <text x="315" y="292" text-anchor="middle" font-size="10" fill="#37474f">upstream (vulkan_implementation_x11.cc:</text>
+  <text x="315" y="306" text-anchor="middle" font-size="10" fill="#37474f">131 CanImportGpuMemoryBuffer; :143 fixed-</text>
+  <text x="315" y="320" text-anchor="middle" font-size="10" fill="#37474f">usage import, EXTERNAL QF, SYNC_FD sems)</text>
+  <text x="550" y="256" text-anchor="middle" font-size="10" font-weight="bold" fill="#c62828">MISSING on dev</text>
+  <text x="550" y="272" text-anchor="middle" font-size="10" fill="#37474f">base default returns nullptr →</text>
+  <text x="550" y="286" text-anchor="middle" font-size="10" fill="#37474f">ProduceVulkanVideo fails → staging.</text>
+  <text x="550" y="302" text-anchor="middle" font-size="10" fill="#37474f">Fix is mechanical: mirror the Wayland</text>
+  <text x="550" y="316" text-anchor="middle" font-size="10" fill="#37474f">override (~70 lines; shared</text>
+  <text x="550" y="330" text-anchor="middle" font-size="10" fill="#37474f">vulkan_image_linux.cc underneath)</text>
+  <text x="785" y="252" text-anchor="middle" font-size="10" font-weight="bold" fill="#c62828">THE REAL RISK (F7)</text>
+  <text x="785" y="268" text-anchor="middle" font-size="10" fill="#37474f">native-pixmap SIs often unavailable</text>
+  <text x="785" y="282" text-anchor="middle" font-size="10" fill="#37474f">on X11 (esp. NVIDIA) → adapter's</text>
+  <text x="785" y="296" text-anchor="middle" font-size="10" fill="#37474f">sticky CPU fallback → frames arrive</text>
+  <text x="785" y="310" text-anchor="middle" font-size="10" fill="#37474f">as shmem → §6.1 staging regardless</text>
+  <text x="785" y="324" text-anchor="middle" font-size="10" fill="#37474f">of any import override</text>
+  <text x="1080" y="252" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#e65100">⚠ STAGING TODAY — two independent gaps</text>
+  <text x="1080" y="270" text-anchor="middle" font-size="10" fill="#37474f">(a) add VulkanImplementationX11 override — easy;</text>
+  <text x="1080" y="284" text-anchor="middle" font-size="10" fill="#37474f">(b) mappable-SI/native-pixmap availability — platform-</text>
+  <text x="1080" y="298" text-anchor="middle" font-size="10" fill="#37474f">dependent (DRI3 + driver GBM). Encoding WORKS either</text>
+  <text x="1080" y="312" text-anchor="middle" font-size="10" fill="#37474f">way (F7 → staging, correct output). Sync detail: X11 uses</text>
+  <text x="1080" y="326" text-anchor="middle" font-size="10" fill="#37474f">EXTERNAL QF vs dev's FOREIGN — pick per acquire barrier</text>
+  <text x="1080" y="340" text-anchor="middle" font-size="10" fill="#37474f">semantics when porting the override.</text>
+
+  <!-- ChromeOS row -->
+  <rect x="20" y="350" width="180" height="96" fill="url(#wnW)" stroke="#ef6c00"/>
+  <rect x="200" y="350" width="230" height="96" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="430" y="350" width="240" height="96" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="670" y="350" width="230" height="96" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="900" y="350" width="360" height="96" fill="url(#wnW)" stroke="#ef6c00"/>
+  <text x="110" y="390" text-anchor="middle" font-size="13" font-weight="bold" fill="#e65100">ChromeOS / DRM-KMS</text>
+  <text x="110" y="408" text-anchor="middle" font-size="10" fill="#37474f">Ozone/DRM (no display server)</text>
+  <text x="315" y="384" text-anchor="middle" font-size="10" fill="#37474f">Same OzoneImageBacking over</text>
+  <text x="315" y="398" text-anchor="middle" font-size="10" fill="#37474f">minigbm dma-buf — identical to</text>
+  <text x="315" y="412" text-anchor="middle" font-size="10" fill="#37474f">Wayland at this layer</text>
+  <text x="550" y="384" text-anchor="middle" font-size="10" font-weight="bold" fill="#c62828">MISSING on dev</text>
+  <text x="550" y="400" text-anchor="middle" font-size="10" fill="#37474f">add the same override to</text>
+  <text x="550" y="414" text-anchor="middle" font-size="10" fill="#37474f">vulkan_implementation_gbm.cc</text>
+  <text x="785" y="384" text-anchor="middle" font-size="10" font-weight="bold" fill="#1b5e20">available</text>
+  <text x="785" y="400" text-anchor="middle" font-size="10" fill="#37474f">native pixmaps are the platform</text>
+  <text x="785" y="414" text-anchor="middle" font-size="10" fill="#37474f">norm (camera HAL NV12 GMBs too)</text>
+  <text x="1080" y="382" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#e65100">⚠ one mechanical override away</text>
+  <text x="1080" y="400" text-anchor="middle" font-size="10" fill="#37474f">Same code path as Wayland; also the platform where</text>
+  <text x="1080" y="414" text-anchor="middle" font-size="10" fill="#37474f">GMB camera frames (U1 GPU path) actually exist —</text>
+  <text x="1080" y="428" text-anchor="middle" font-size="10" fill="#37474f">camera → encoder zero-copy becomes reachable.</text>
+
+  <!-- Windows row -->
+  <rect x="20" y="446" width="180" height="88" fill="url(#naW)" stroke="#78909c"/>
+  <rect x="200" y="446" width="230" height="88" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="430" y="446" width="240" height="88" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="670" y="446" width="230" height="88" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="900" y="446" width="360" height="88" fill="url(#naW)" stroke="#78909c"/>
+  <text x="110" y="482" text-anchor="middle" font-size="13" font-weight="bold" fill="#37474f">Windows</text>
+  <text x="110" y="500" text-anchor="middle" font-size="10" fill="#37474f">D3D backings</text>
+  <text x="315" y="478" text-anchor="middle" font-size="10" fill="#37474f">D3DImageBacking (DXGI); Vulkan</text>
+  <text x="315" y="492" text-anchor="middle" font-size="10" fill="#37474f">import would use OPAQUE_WIN32</text>
+  <text x="315" y="506" text-anchor="middle" font-size="10" fill="#37474f">NT-handle external memory</text>
+  <text x="550" y="478" text-anchor="middle" font-size="10" fill="#37474f">n/a yet — but dev pre-plumbed the</text>
+  <text x="550" y="492" text-anchor="middle" font-size="10" fill="#37474f">usage bit in d3d_image_backing_</text>
+  <text x="550" y="506" text-anchor="middle" font-size="10" fill="#37474f">factory.cc:256</text>
+  <text x="785" y="484" text-anchor="middle" font-size="10" fill="#37474f">different mechanism</text>
+  <text x="785" y="500" text-anchor="middle" font-size="10" fill="#37474f">(DXGI shared handles)</text>
+  <text x="1080" y="478" text-anchor="middle" font-size="11" font-weight="bold" fill="#37474f">future — needs D3D ProduceVulkanVideo</text>
+  <text x="1080" y="496" text-anchor="middle" font-size="10" fill="#37474f">DDD §6.2.2 fallback design exists; note D3D12 VEA</text>
+  <text x="1080" y="510" text-anchor="middle" font-size="10" fill="#37474f">already serves Windows — priority is low.</text>
+
+  <!-- Android + headless row -->
+  <rect x="20" y="534" width="180" height="88" fill="url(#naW)" stroke="#78909c"/>
+  <rect x="200" y="534" width="230" height="88" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="430" y="534" width="240" height="88" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="670" y="534" width="230" height="88" fill="#ffffff" stroke="#b0bec5"/>
+  <rect x="900" y="534" width="360" height="88" fill="url(#naW)" stroke="#78909c"/>
+  <text x="110" y="566" text-anchor="middle" font-size="13" font-weight="bold" fill="#37474f">Android / headless</text>
+  <text x="110" y="584" text-anchor="middle" font-size="10" fill="#37474f">AHardwareBuffer / Ozone-headless</text>
+  <text x="315" y="566" text-anchor="middle" font-size="10" fill="#37474f">AHB backing has a clean Vulkan</text>
+  <text x="315" y="580" text-anchor="middle" font-size="10" fill="#37474f">import (DDD §6.2.3); Ozone-headless</text>
+  <text x="315" y="594" text-anchor="middle" font-size="10" fill="#37474f">has NO native buffers at all</text>
+  <text x="550" y="566" text-anchor="middle" font-size="10" fill="#37474f">Android: usage bit pre-plumbed</text>
+  <text x="550" y="580" text-anchor="middle" font-size="10" fill="#37474f">(ahardwarebuffer_image_backing_</text>
+  <text x="550" y="594" text-anchor="middle" font-size="10" fill="#37474f">factory.cc:300); headless: n/a</text>
+  <text x="785" y="572" text-anchor="middle" font-size="10" fill="#37474f">Android yes (AHB GMBs);</text>
+  <text x="785" y="588" text-anchor="middle" font-size="10" fill="#37474f">headless: software-only</text>
+  <text x="1080" y="566" text-anchor="middle" font-size="11" font-weight="bold" fill="#37474f">Android future (NDK VEA exists);</text>
+  <text x="1080" y="584" text-anchor="middle" font-size="11" font-weight="bold" fill="#37474f">headless Ozone can NEVER zero-copy —</text>
+  <text x="1080" y="600" text-anchor="middle" font-size="10" fill="#37474f">use headless Weston for CI, not --ozone-platform=headless</text>
+
+  <!-- invariants bar -->
+  <rect x="20" y="646" width="1240" height="94" rx="8" fill="#f4fbf4" stroke="#81c784" stroke-width="2"/>
+  <text x="640" y="670" text-anchor="middle" font-size="12" font-weight="bold" fill="#2e7d32">Invariant across ALL window systems (the parts you never rewrite)</text>
+  <text x="640" y="690" text-anchor="middle" font-size="10.5" fill="#37474f">SHARED_IMAGE_USAGE_VIDEO_ENCODE_ACCELERATOR bit + producer tagging (P0–P3) · SharedImageManager::ProduceVulkanVideo + VulkanVideoImageRepresentation +</text>
+  <text x="640" y="706" text-anchor="middle" font-size="10.5" fill="#37474f">AccessStream::kVulkanVideoEncode · VEA resolve/fallback ladder + counters + gate methodology · vendored library API (SubmitExternalFrame, compute filter, G-NEW-*)</text>
+  <text x="640" y="726" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#2e7d32">Per-WS work = one VulkanImplementation import override + whatever makes native-pixmap SharedImages available on that platform.</text>
+</svg>

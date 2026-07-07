@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 700" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="rgbG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fce4ec"/>
+      <stop offset="100%" stop-color="#f8bbd0"/>
+    </linearGradient>
+    <linearGradient id="gpuP" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="cmpG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b2ebf2"/>
+      <stop offset="100%" stop-color="#80deea"/>
+    </linearGradient>
+    <linearGradient id="encP" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d1c4e9"/>
+      <stop offset="100%" stop-color="#b39ddb"/>
+    </linearGradient>
+    <linearGradient id="badG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffcdd2"/>
+      <stop offset="100%" stop-color="#ef9a9a"/>
+    </linearGradient>
+    <marker id="a3" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+    <marker id="a3r" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+  </defs>
+
+  <text x="640" y="28" text-anchor="middle" font-size="20" font-weight="bold" fill="#263238">
+    P3-RGBA: GPU-Resident RGB → NV12 via the Encoder's Compute Filter (zero CPU bytes)
+  </text>
+  <text x="640" y="50" text-anchor="middle" font-size="11" fill="#546e7a">
+    libyuv runs ONLY on CPU-source lanes. The one GPU-frame offender today: adapter ConvertAndScale (CPU) for RGBA frames not in gpu_supported_pixel_formats.
+  </text>
+
+  <!-- TODAY strip -->
+  <rect x="20" y="70" width="1240" height="80" rx="8" fill="#fff8f6" stroke="#ef9a9a" stroke-width="2"/>
+  <text x="35" y="92" font-size="12" font-weight="bold" fill="#c62828">TODAY (the offender)</text>
+  <text x="640" y="112" text-anchor="middle" font-size="11.5" fill="#37474f">canvas/WebGL RGBA SharedImage (GPU) → adapter pass-through FAILS (format ∉ gpu_supported_pixel_formats={NV12}, adapter.cc:1085)</text>
+  <text x="640" y="132" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#c62828">→ CPU-map GMB + libyuv ConvertAndScale (adapter.cc:1123) → NV12 pool frame — GPU pixels took a CPU round-trip</text>
+
+  <!-- PROPOSED pipeline -->
+  <rect x="20" y="170" width="1240" height="330" rx="10" fill="#f4fbf4" stroke="#81c784" stroke-width="2"/>
+  <text x="35" y="194" font-size="13" font-weight="bold" fill="#2e7d32">P3-RGBA PIPELINE (all-GPU)</text>
+
+  <!-- stage 1 -->
+  <rect x="40" y="215" width="185" height="90" rx="6" fill="url(#rgbG)" stroke="#c2185b"/>
+  <text x="132" y="238" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#880e4f">RGBA SharedImage</text>
+  <text x="132" y="255" text-anchor="middle" font-size="10" fill="#37474f">canvas / WebGL / OffscreenCanvas</text>
+  <text x="132" y="269" text-anchor="middle" font-size="10" fill="#37474f">VideoFrame(canvas) / RGBA capture</text>
+  <text x="132" y="285" text-anchor="middle" font-size="10" fill="#37474f">B8G8R8A8 / R8G8B8A8, GPU-resident</text>
+
+  <!-- stage 2 -->
+  <rect x="265" y="215" width="200" height="90" rx="6" fill="url(#gpuP)" stroke="#388e3c"/>
+  <text x="365" y="238" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1b5e20">adapter pass-through</text>
+  <text x="365" y="255" text-anchor="middle" font-size="10" fill="#37474f">format now ∈ gpu_supported_</text>
+  <text x="365" y="269" text-anchor="middle" font-size="10" fill="#37474f">pixel_formats → returned as-is</text>
+  <text x="365" y="285" text-anchor="middle" font-size="10" fill="#37474f">(adapter.cc:1085 check passes)</text>
+  <circle cx="285" cy="228" r="11" fill="#c62828"/>
+  <text x="285" y="232.5" text-anchor="middle" font-size="11" font-weight="bold" fill="#ffffff">1</text>
+
+  <!-- stage 3 -->
+  <rect x="505" y="215" width="200" height="90" rx="6" fill="url(#gpuP)" stroke="#388e3c"/>
+  <text x="605" y="238" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1b5e20">ProduceVulkanVideo</text>
+  <text x="605" y="255" text-anchor="middle" font-size="10" fill="#37474f">single-plane RGBA dma-buf import</text>
+  <text x="605" y="269" text-anchor="middle" font-size="10" fill="#37474f">usage: STORAGE | SAMPLED</text>
+  <text x="605" y="285" text-anchor="middle" font-size="10" fill="#37474f">(NOT VIDEO_ENCODE_SRC — see ②)</text>
+  <circle cx="525" cy="228" r="11" fill="#c62828"/>
+  <text x="525" y="232.5" text-anchor="middle" font-size="11" font-weight="bold" fill="#ffffff">2</text>
+
+  <!-- stage 4 -->
+  <rect x="745" y="215" width="230" height="90" rx="6" fill="url(#cmpG)" stroke="#00838f"/>
+  <text x="860" y="238" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#006064">VulkanFilterYuvCompute</text>
+  <text x="860" y="255" text-anchor="middle" font-size="10" fill="#37474f">RGBA2YCBCR compute shader</text>
+  <text x="860" y="269" text-anchor="middle" font-size="10" fill="#37474f">runs on COMPUTE queue (0x08, already</text>
+  <text x="860" y="283" text-anchor="middle" font-size="10" fill="#37474f">enabled on compositor VkDevice, G-NEW-9)</text>
+  <text x="860" y="299" text-anchor="middle" font-size="10" fill="#37474f">+ 4:2:0 subsampling, BT.709 matrix</text>
+  <circle cx="765" cy="228" r="11" fill="#c62828"/>
+  <text x="765" y="232.5" text-anchor="middle" font-size="11" font-weight="bold" fill="#ffffff">3</text>
+
+  <!-- stage 5 -->
+  <rect x="1015" y="215" width="225" height="90" rx="6" fill="url(#encP)" stroke="#4527a0"/>
+  <text x="1127" y="238" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#311b92">NV12 encode-src image</text>
+  <text x="1127" y="255" text-anchor="middle" font-size="10" fill="#37474f">library-owned, VIDEO_ENCODE_SRC</text>
+  <text x="1127" y="269" text-anchor="middle" font-size="10" fill="#37474f">→ vkCmdEncodeVideoKHR</text>
+  <text x="1127" y="285" text-anchor="middle" font-size="10" font-weight="bold" fill="#311b92">zero CPU bytes end-to-end</text>
+
+  <line x1="225" y1="260" x2="265" y2="260" stroke="#37474f" stroke-width="2" marker-end="url(#a3)"/>
+  <line x1="465" y1="260" x2="505" y2="260" stroke="#37474f" stroke-width="2" marker-end="url(#a3)"/>
+  <line x1="705" y1="260" x2="745" y2="260" stroke="#37474f" stroke-width="2" marker-end="url(#a3)"/>
+  <line x1="975" y1="260" x2="1015" y2="260" stroke="#37474f" stroke-width="2" marker-end="url(#a3)"/>
+  <text x="345" y="330" font-size="10" fill="#546e7a">mailbox over Mojo — no pixel movement</text>
+
+  <!-- library API strip -->
+  <rect x="40" y="350" width="935" height="60" rx="6" fill="#e0f7fa" stroke="#00838f"/>
+  <text x="507" y="372" text-anchor="middle" font-size="11" font-weight="bold" fill="#006064">Library surface already designed for this (chromium-encode branch, vulkan_video_encoder_ext.h)</text>
+  <text x="507" y="390" text-anchor="middle" font-size="10" fill="#37474f">VkVideoEncoderConfig.inputFormat (:85) · enablePreprocessFilter — "e.g. RGBA input that needs RGBA→NV12 conversion" (:125-128)</text>
+  <text x="507" y="404" text-anchor="middle" font-size="10" fill="#37474f">SupportsFormat(VkFormat) (:453) · supportedInputFormats in G-NEW-1 caps (:540) · VkVideoEncoder::m_inputComputeFilter (VkVideoEncoder.h:944)</text>
+
+  <rect x="1015" y="350" width="225" height="60" rx="6" fill="#fffde7" stroke="#fbc02d"/>
+  <text x="1127" y="372" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#6d4c41">Sync shape</text>
+  <text x="1127" y="388" text-anchor="middle" font-size="9.5" fill="#6d4c41">acquire sems → compute (filter) → encode</text>
+  <text x="1127" y="402" text-anchor="middle" font-size="9.5" fill="#6d4c41">one extra hop; DDD §9 QFOT machinery covers it</text>
+
+  <!-- changes needed -->
+  <rect x="40" y="430" width="1200" height="56" rx="6" fill="url(#badG)" stroke="#c62828"/>
+  <text x="640" y="450" text-anchor="middle" font-size="11" font-weight="bold" fill="#b71c1c">Three Chromium-side changes</text>
+  <text x="640" y="468" text-anchor="middle" font-size="10" fill="#37474f">① advertise ARGB/ABGR in VideoEncoderInfo.gpu_supported_pixel_formats (VEA CompleteLibraryInitialize, gated on library SupportsFormat())</text>
+  <text x="640" y="481" text-anchor="middle" font-size="10" fill="#37474f">② per-format import usage in ProduceVulkanVideo (RGBA is not an encode-src format — the filter READS it; only its NV12 output is) · ③ route resolved RGBA through enablePreprocessFilter</text>
+
+  <!-- Lane C note -->
+  <rect x="20" y="520" width="1240" height="70" rx="8" fill="#eceff1" stroke="#78909c"/>
+  <text x="640" y="544" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#37474f">Related but distinct: viz tab-capture in NV12-GMB mode already converts RGBA→NV12 ON the GPU (SkiaRenderer CopyOutputRequest blit) — no libyuv either way.</text>
+  <text x="640" y="562" text-anchor="middle" font-size="10.5" fill="#546e7a">The capturer's DEFAULT is I420 CPU readback (frame_sink_video_capturer_impl.h:153) — encode consumers must opt into NV12-GMB, or capture RGBA and let the encoder filter convert.</text>
+  <text x="640" y="580" text-anchor="middle" font-size="10.5" fill="#546e7a">Benchmark once P2 lands: Skia-blit-NV12 (graphics queue) vs RGBA + encoder compute filter (compute queue) — the latter frees graphics-queue time during composition.</text>
+
+  <text x="640" y="630" text-anchor="middle" font-size="10.5" fill="#78909c">libyuv site map: adapter PrepareCpuFrame (CPU source — inherent) · RTCVideoEncoder I420→NV12 (CPU source) · VEA §6.1 staging (removed by P0–P2 tagging) ·</text>
+  <text x="640" y="646" text-anchor="middle" font-size="10.5" fill="#78909c">adapter ConvertAndScale for GPU RGBA (removed by THIS path). The §6.3.2 zero-copy path itself never touches libyuv.</text>
+</svg>

@@ -27,6 +27,7 @@ This project implements Vulkan Video hardware acceleration for video decoding in
 | [Presentation Layer](docs/CHROMIUM_PRESENTATION_LAYER.md) | Chromium graphics stack deep-dive |
 | [VA-API Comparison](docs/VAAPI_vs_VULKAN_VIDEO_DETAILED_COMPARISON.md) | Detailed comparison with existing VA-API backend |
 | [Test Infrastructure](docs/TEST_INFRASTRUCTURE_AND_FALLBACK.md) | Testing strategy and fallback mechanisms |
+| [Encoder Use Cases & Processing Graphs](docs/VULKAN_VIDEO_ENCODER_PROCESSING_GRAPHS.md) | Browser encode use cases (WebRTC/WebCodecs/MediaRecorder/Cast), per-use-case frame-flow graphs, the SharedImage zero-copy seam and plug-in order (P0–P4), window-system matrix (Wayland/X11), GPU-RGB compute-filter path, browser test recipes and caveats C1–C14 ([HTML](docs/vulkan_video_encoder_use_cases.html)) |
 
 ## Quick Start
 

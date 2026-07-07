@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 860" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="ucG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e3f2fd"/>
+      <stop offset="100%" stop-color="#bbdefb"/>
+    </linearGradient>
+    <linearGradient id="clientG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff3e0"/>
+      <stop offset="100%" stop-color="#ffe0b2"/>
+    </linearGradient>
+    <linearGradient id="gpuG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="vkG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffcdd2"/>
+      <stop offset="100%" stop-color="#ef9a9a"/>
+    </linearGradient>
+    <linearGradient id="hwG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d1c4e9"/>
+      <stop offset="100%" stop-color="#b39ddb"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+    <marker id="arrowB" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+  </defs>
+
+  <text x="640" y="28" text-anchor="middle" font-size="20" font-weight="bold" fill="#263238">
+    Browser HW-Encode Use-Case Topology — every consumer funnels into one GPU-process factory
+  </text>
+  <text x="640" y="50" text-anchor="middle" font-size="11" fill="#546e7a">
+    U1–U6 discover the Vulkan backend automatically once it registers in GpuVideoEncodeAcceleratorFactory (dev: tried FIRST when VulkanVideoEncode is on)
+  </text>
+
+  <!-- ===================== RENDERER PROCESS BAND ===================== -->
+  <rect x="15" y="70" width="1250" height="290" rx="10" fill="#f8fbff" stroke="#90caf9" stroke-width="2"/>
+  <text x="30" y="92" font-size="13" font-weight="bold" fill="#1565c0">RENDERER PROCESS</text>
+
+  <!-- Use case boxes -->
+  <rect x="30" y="105" width="185" height="66" rx="6" fill="url(#ucG)" stroke="#1976d2"/>
+  <text x="122" y="126" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">U1 WebRTC camera call</text>
+  <text x="122" y="142" text-anchor="middle" font-size="10" fill="#37474f">getUserMedia → RTCPeerConnection</text>
+  <text x="122" y="156" text-anchor="middle" font-size="10" fill="#37474f">CBR, simulcast/SVC, dyn. bitrate</text>
+
+  <rect x="230" y="105" width="185" height="66" rx="6" fill="url(#ucG)" stroke="#1976d2"/>
+  <text x="322" y="126" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">U2 Screen share</text>
+  <text x="322" y="142" text-anchor="middle" font-size="10" fill="#37474f">getDisplayMedia → RTCPeerConnection</text>
+  <text x="322" y="156" text-anchor="middle" font-size="10" fill="#37474f">screen content, GPU-native frames</text>
+
+  <rect x="430" y="105" width="185" height="66" rx="6" fill="url(#ucG)" stroke="#1976d2"/>
+  <text x="522" y="126" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">U3 WebCodecs VideoEncoder</text>
+  <text x="522" y="142" text-anchor="middle" font-size="10" fill="#37474f">prefer-hardware, latencyMode,</text>
+  <text x="522" y="156" text-anchor="middle" font-size="10" fill="#37474f">per-frame QP (quantizer mode)</text>
+
+  <rect x="630" y="105" width="185" height="66" rx="6" fill="url(#ucG)" stroke="#1976d2"/>
+  <text x="722" y="126" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">U4 MediaRecorder</text>
+  <text x="722" y="142" text-anchor="middle" font-size="10" fill="#37474f">any MediaStreamTrack, VBR,</text>
+  <text x="722" y="156" text-anchor="middle" font-size="10" fill="#37474f">Flush() drain semantics</text>
+
+  <rect x="830" y="105" width="185" height="66" rx="6" fill="url(#ucG)" stroke="#1976d2"/>
+  <text x="922" y="126" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">U5 Cast mirroring / tab cast</text>
+  <text x="922" y="142" text-anchor="middle" font-size="10" fill="#37474f">openscreen session, HW-first</text>
+  <text x="922" y="156" text-anchor="middle" font-size="10" fill="#37474f">CastStreamingOfferHardwareFirst</text>
+
+  <rect x="1030" y="105" width="220" height="66" rx="6" fill="url(#ucG)" stroke="#1976d2" stroke-dasharray="5,3"/>
+  <text x="1140" y="126" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">U6 Chrome Remote Desktop</text>
+  <text x="1140" y="142" text-anchor="middle" font-size="10" fill="#37474f">remoting host (Windows-oriented)</text>
+  <text x="1140" y="156" text-anchor="middle" font-size="10" fill="#37474f">calls factory directly, in-process</text>
+
+  <!-- Renderer client boxes -->
+  <rect x="30" y="230" width="385" height="100" rx="6" fill="url(#clientG)" stroke="#ef6c00"/>
+  <text x="222" y="252" text-anchor="middle" font-size="12" font-weight="bold" fill="#e65100">blink::RTCVideoEncoder (+Impl)</text>
+  <text x="222" y="268" text-anchor="middle" font-size="10" fill="#37474f">third_party/blink/renderer/platform/peerconnection/</text>
+  <text x="222" y="282" text-anchor="middle" font-size="10" fill="#37474f">own frame prep: CreateNV12SharedImageFrame (:2166)</text>
+  <text x="222" y="296" text-anchor="middle" font-size="10" fill="#37474f">RTCVideoEncoderFactory maps VEA profiles → SDP formats</text>
+  <text x="222" y="312" text-anchor="middle" font-size="10" font-weight="bold" fill="#c62828">SI usage NOT encode-tagged today (:682) → P1</text>
+
+  <rect x="430" y="230" width="385" height="100" rx="6" fill="url(#clientG)" stroke="#ef6c00"/>
+  <text x="622" y="252" text-anchor="middle" font-size="12" font-weight="bold" fill="#e65100">media::VideoEncodeAcceleratorAdapter</text>
+  <text x="622" y="268" text-anchor="middle" font-size="10" fill="#37474f">media/video/video_encode_accelerator_adapter.cc</text>
+  <text x="622" y="282" text-anchor="middle" font-size="10" fill="#37474f">U3: webcodecs/video_encoder.cc:648 · U4: video_track_recorder.cc:316</text>
+  <text x="622" y="296" text-anchor="middle" font-size="10" fill="#37474f">CPU frames → mappable-SI pool · GPU NV12 frames → pass-through (:1088)</text>
+  <text x="622" y="312" text-anchor="middle" font-size="10" font-weight="bold" fill="#2e7d32">pool tagged VIDEO_ENCODE_ACCELERATOR on dev (:217) ✓ P0</text>
+
+  <rect x="830" y="230" width="290" height="100" rx="6" fill="url(#clientG)" stroke="#ef6c00"/>
+  <text x="975" y="252" text-anchor="middle" font-size="12" font-weight="bold" fill="#e65100">cast ExternalVideoEncoder (VEAClientImpl)</text>
+  <text x="975" y="268" text-anchor="middle" font-size="10" fill="#37474f">media/cast/encoding/external_video_encoder.cc</text>
+  <text x="975" y="282" text-anchor="middle" font-size="10" fill="#37474f">components/mirroring OpenscreenSessionHost::</text>
+  <text x="975" y="296" text-anchor="middle" font-size="10" fill="#37474f">CreateVideoEncodeAccelerator()</text>
+  <text x="975" y="312" text-anchor="middle" font-size="10" font-weight="bold" fill="#c62828">consumes viz-capture frames → P2</text>
+
+  <!-- use case -> client arrows -->
+  <line x1="122" y1="171" x2="180" y2="230" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="322" y1="171" x2="265" y2="230" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="522" y1="171" x2="560" y2="230" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="722" y1="171" x2="685" y2="230" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="922" y1="171" x2="960" y2="230" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===================== MOJO BOUNDARY ===================== -->
+  <line x1="15" y1="385" x2="1265" y2="385" stroke="#7b1fa2" stroke-width="2.5" stroke-dasharray="10,5"/>
+  <rect x="470" y="368" width="340" height="34" rx="17" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="640" y="390" text-anchor="middle" font-size="11" font-weight="bold" fill="#6a1b9a">Mojo: media/mojo/mojom/video_encode_accelerator.mojom</text>
+  <text x="150" y="380" font-size="10" fill="#6a1b9a">frames travel as SHMEM regions or SharedImage mailboxes</text>
+  <text x="1120" y="380" text-anchor="middle" font-size="10" fill="#6a1b9a">renderer gate: render_thread_impl.cc:991</text>
+
+  <!-- ===================== GPU PROCESS BAND ===================== -->
+  <rect x="15" y="415" width="1250" height="300" rx="10" fill="#f4fbf4" stroke="#81c784" stroke-width="2"/>
+  <text x="30" y="437" font-size="13" font-weight="bold" fill="#2e7d32">GPU PROCESS</text>
+
+  <rect x="60" y="450" width="330" height="56" rx="6" fill="url(#gpuG)" stroke="#388e3c"/>
+  <text x="225" y="472" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b5e20">MojoVideoEncodeAcceleratorService</text>
+  <text x="225" y="488" text-anchor="middle" font-size="10" fill="#37474f">media/mojo/services/ · provider bound in viz GpuServiceImpl</text>
+
+  <rect x="60" y="540" width="330" height="70" rx="6" fill="url(#gpuG)" stroke="#388e3c" stroke-width="2.5"/>
+  <text x="225" y="562" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b5e20">GpuVideoEncodeAcceleratorFactory::CreateVEA</text>
+  <text x="225" y="578" text-anchor="middle" font-size="10" fill="#37474f">ordered backend list — dev pushes MaybeCreateVulkanVEA FIRST</text>
+  <text x="225" y="594" text-anchor="middle" font-size="10" fill="#37474f">then Vaapi / V4L2(CrOS) / D3D12 / MF / VT / Ndk per-platform</text>
+
+  <rect x="440" y="540" width="360" height="90" rx="6" fill="url(#vkG)" stroke="#c62828" stroke-width="2.5"/>
+  <text x="620" y="562" text-anchor="middle" font-size="13" font-weight="bold" fill="#b71c1c">VulkanVideoEncodeAccelerator</text>
+  <text x="620" y="578" text-anchor="middle" font-size="10" fill="#37474f">media/gpu/vulkan/ · feature kVulkanVideoEncode</text>
+  <text x="620" y="592" text-anchor="middle" font-size="10" fill="#37474f">per-frame dispatch: HasDirectCpuAccess() ? §6.1 staging : §6.3.2 zero-copy</text>
+  <text x="620" y="606" text-anchor="middle" font-size="10" fill="#37474f">BYO compositor VkDevice · pending_encodes_ FIFO · path counters</text>
+  <text x="620" y="622" text-anchor="middle" font-size="10" font-weight="bold" fill="#b71c1c">implementation_name = "VulkanVideoEncodeAccelerator"</text>
+
+  <rect x="850" y="540" width="300" height="90" rx="6" fill="url(#vkG)" stroke="#c62828"/>
+  <text x="1000" y="562" text-anchor="middle" font-size="12" font-weight="bold" fill="#b71c1c">Vendored NVPRO library (Model D)</text>
+  <text x="1000" y="578" text-anchor="middle" font-size="10" fill="#37474f">third_party/vulkan_video_samples/</text>
+  <text x="1000" y="592" text-anchor="middle" font-size="10" fill="#37474f">VulkanVideoEncoderExt: InitializeExt / SubmitExternalFrame</text>
+  <text x="1000" y="606" text-anchor="middle" font-size="10" fill="#37474f">GetEncodedFrame (in-memory, G-NEW-2)</text>
+  <text x="1000" y="622" text-anchor="middle" font-size="10" fill="#37474f">GOP/DPB/rate-control state machine + vkCmdEncodeVideoKHR</text>
+
+  <!-- viz compositor + capture inside GPU process -->
+  <rect x="440" y="450" width="360" height="56" rx="6" fill="#e8f5e9" stroke="#66bb6a" stroke-dasharray="5,3"/>
+  <text x="620" y="470" text-anchor="middle" font-size="11" font-weight="bold" fill="#2e7d32">viz display compositor + FrameSinkVideoCapturerImpl</text>
+  <text x="620" y="486" text-anchor="middle" font-size="10" fill="#37474f">tab/screen frames born here as NV12 SharedImages (CopyOutputRequest)</text>
+
+  <rect x="850" y="450" width="300" height="56" rx="6" fill="#e8f5e9" stroke="#66bb6a" stroke-dasharray="5,3"/>
+  <text x="1000" y="470" text-anchor="middle" font-size="11" font-weight="bold" fill="#2e7d32">compositor VkDevice (VulkanDeviceQueue)</text>
+  <text x="1000" y="486" text-anchor="middle" font-size="10" fill="#37474f">dev: +video-encode +compute queues (flags 0x04/0x08)</text>
+
+  <!-- arrows in GPU band -->
+  <line x1="640" y1="402" x2="300" y2="450" stroke="#7b1fa2" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="225" y1="506" x2="225" y2="540" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="390" y1="575" x2="440" y2="575" stroke="#37474f" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="800" y1="585" x2="850" y2="585" stroke="#37474f" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- capture frames flowing UP to renderer (dashed blue) -->
+  <path d="M 500 450 C 460 420 420 400 380 360" fill="none" stroke="#1565c0" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#arrowB)"/>
+  <text x="392" y="422" font-size="10" fill="#1565c0">tab/screen frames (mailbox only,</text>
+  <text x="392" y="435" font-size="10" fill="#1565c0">pixels stay in GPU process!)</text>
+  <!-- BYO device arrow -->
+  <line x1="1000" y1="506" x2="820" y2="545" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="935" y="528" font-size="10" fill="#2e7d32">BYO VkDevice (G-NEW-9)</text>
+
+  <!-- counters note -->
+  <rect x="60" y="650" width="740" height="46" rx="6" fill="#fffde7" stroke="#fbc02d"/>
+  <text x="430" y="669" text-anchor="middle" font-size="10.5" fill="#6d4c41">Observability: VLOG(1) "input-path summary: zero-copy=N staging=M" at Flush()/Destroy() — release-build counters;</text>
+  <text x="430" y="684" text-anchor="middle" font-size="10.5" fill="#6d4c41">webrtc-internals outbound-rtp.encoderImplementation shows the class name; chrome://gpu lists per-profile Encode rows</text>
+
+  <rect x="850" y="650" width="300" height="46" rx="6" fill="#fffde7" stroke="#fbc02d"/>
+  <text x="1000" y="669" text-anchor="middle" font-size="10.5" fill="#6d4c41">Profiles advertised (per-profile probe, G-NEW-1):</text>
+  <text x="1000" y="684" text-anchor="middle" font-size="10.5" fill="#6d4c41">H.264 B/M/H · HEVC Main · AV1 Main (8-bit, NV12)</text>
+
+  <!-- ===================== HW BAND ===================== -->
+  <rect x="15" y="735" width="1250" height="70" rx="10" fill="#f7f4fb" stroke="#9575cd" stroke-width="2"/>
+  <text x="30" y="757" font-size="13" font-weight="bold" fill="#4527a0">HARDWARE / DRIVER</text>
+  <rect x="440" y="748" width="360" height="46" rx="6" fill="url(#hwG)" stroke="#4527a0"/>
+  <text x="620" y="767" text-anchor="middle" font-size="12" font-weight="bold" fill="#311b92">NVENC via Vulkan video-encode queue</text>
+  <text x="620" y="783" text-anchor="middle" font-size="10" fill="#37474f">VK_KHR_video_encode_queue + codec ext · NVIDIA 615.06+ / RTX A4000 verified</text>
+  <line x1="620" y1="630" x2="620" y2="748" stroke="#37474f" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <text x="640" y="840" text-anchor="middle" font-size="10" fill="#78909c">
+    Sources: upstream M152 checkout + vulkan-on-chrome/dev (55 commits). U6 dashed = niche/Windows-oriented. P0–P2 = zero-copy plug-in priorities.
+  </text>
+</svg>

@@ -558,6 +558,11 @@ vaapi_wrapper_->ExecuteAndDestroyPendingBuffers(encode_job.input_surface_id());<
             <div class="callout-info">
                 <strong>No Mojo changes required.</strong> The IPC interface (<code>media/mojo/mojom/video_encode_accelerator.mojom</code>) is backend-agnostic.
             </div>
+
+            <div class="diagram">
+                <object data="diagrams/encode_use_case_topology.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">Who arrives through this factory: all six browser encode use cases (WebRTC, screen share, WebCodecs, MediaRecorder, Cast, CRD) funnel into <code>CreateVEA()</code> — registering here lights them all up. Full per-use-case detail: <a href="vulkan_video_encoder_use_cases.html">Encoder Use Cases &amp; Processing Graphs</a>.</div>
+            </div>
         </section>
 
         <!-- ================= 4. Vulkan Encode Design ================= -->
@@ -756,6 +761,11 @@ reference_slots_[i].imageViewBinding</code></pre>
                 <code>CommandBufferHelper::GetSharedImageManager()</code> &rarr; the proposed <code>ProduceVulkanVideo()</code> &rarr;
                 <code>BeginScopedReadAccess()</code>, modeled after the D3D12 path that already exists in ToT for D3D11 textures. This keeps
                 lifetime, synchronisation, and forward compatibility correct.
+            </div>
+
+            <div class="diagram">
+                <object data="diagrams/encode_zero_copy_seam.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">The seam as implemented on <code>vulkan-on-chrome/dev</code>: <code>ProduceVulkanVideo()</code> succeeds iff the producer pool tagged the SharedImage with <code>SHARED_IMAGE_USAGE_VIDEO_ENCODE_ACCELERATOR</code>; untagged frames fall back to the shmem staging ladder. Tagging is per producer pool (P0 adapter — done; P1 <code>RTCVideoEncoder</code>; P2 viz capture pool). Producer matrix and plug-in order: <a href="vulkan_video_encoder_use_cases.html">use-cases document</a>.</div>
             </div>
         </section>
 

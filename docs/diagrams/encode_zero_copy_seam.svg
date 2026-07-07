@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 820" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="okG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="noG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffcdd2"/>
+      <stop offset="100%" stop-color="#ef9a9a"/>
+    </linearGradient>
+    <linearGradient id="stG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe0b2"/>
+      <stop offset="100%" stop-color="#ffcc80"/>
+    </linearGradient>
+    <linearGradient id="qG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff9c4"/>
+      <stop offset="100%" stop-color="#fff176"/>
+    </linearGradient>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+    <marker id="arrowG" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrowR" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+  </defs>
+
+  <text x="640" y="28" text-anchor="middle" font-size="20" font-weight="bold" fill="#263238">
+    The Zero-Copy Seam — one predicate decides everything
+  </text>
+  <text x="640" y="50" text-anchor="middle" font-size="12" fill="#546e7a">
+    Was the frame's SharedImage created with SHARED_IMAGE_USAGE_VIDEO_ENCODE_ACCELERATOR (new bit 1u&lt;&lt;28)?  Decided at PRODUCER POOL CREATION, not in the encoder.
+  </text>
+
+  <!-- ===================== PRODUCERS COLUMN ===================== -->
+  <rect x="20" y="75" width="360" height="600" rx="10" fill="#f8fbff" stroke="#90caf9" stroke-width="2"/>
+  <text x="200" y="99" text-anchor="middle" font-size="14" font-weight="bold" fill="#1565c0">PRODUCER POOLS (who creates the SI)</text>
+
+  <!-- P0 -->
+  <rect x="40" y="115" width="320" height="96" rx="6" fill="url(#okG)" stroke="#2e7d32" stroke-width="2"/>
+  <text x="200" y="136" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b5e20">P0 ✓ VideoEncodeAcceleratorAdapter pool</text>
+  <text x="200" y="152" text-anchor="middle" font-size="10" fill="#37474f">video_encode_accelerator_adapter.cc:217 (dev)</text>
+  <text x="200" y="166" text-anchor="middle" font-size="10" fill="#37474f">CPU_WRITE_ONLY | DISPLAY_READ | VIDEO_ENCODE_ACCELERATOR</text>
+  <text x="200" y="180" text-anchor="middle" font-size="10" fill="#37474f">serves: U3 WebCodecs + U4 MediaRecorder (CPU sources)</text>
+  <text x="200" y="196" text-anchor="middle" font-size="10" font-weight="bold" fill="#1b5e20">TAGGED — done on vulkan-on-chrome/dev</text>
+
+  <!-- P1 -->
+  <rect x="40" y="228" width="320" height="96" rx="6" fill="url(#noG)" stroke="#c62828" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="200" y="249" text-anchor="middle" font-size="12" font-weight="bold" fill="#b71c1c">P1 RTCVideoEncoder NV12 SharedImage</text>
+  <text x="200" y="265" text-anchor="middle" font-size="10" fill="#37474f">rtc_video_encoder.cc:682 (CreateNV12SharedImageFrame)</text>
+  <text x="200" y="279" text-anchor="middle" font-size="10" fill="#37474f">CPU_WRITE_ONLY | DISPLAY_READ only</text>
+  <text x="200" y="293" text-anchor="middle" font-size="10" fill="#37474f">serves: U1 WebRTC camera + U2 screen share (CPU frames)</text>
+  <text x="200" y="309" text-anchor="middle" font-size="10" font-weight="bold" fill="#b71c1c">UNTAGGED — ~1-line fix, highest leverage next</text>
+
+  <!-- P2 -->
+  <rect x="40" y="341" width="320" height="96" rx="6" fill="url(#noG)" stroke="#c62828" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="200" y="362" text-anchor="middle" font-size="12" font-weight="bold" fill="#b71c1c">P2 RenderableGpuMemoryBufferVideoFramePool</text>
+  <text x="200" y="378" text-anchor="middle" font-size="10" fill="#37474f">renderable_gpu_memory_buffer_video_frame_pool.cc:224</text>
+  <text x="200" y="392" text-anchor="middle" font-size="10" fill="#37474f">GLES2_R/W | RASTER_R/W | DISPLAY_READ [| SCANOUT]</text>
+  <text x="200" y="406" text-anchor="middle" font-size="10" fill="#37474f">serves: U2/U5 viz tab+screen capture (GPU-native NV12!)</text>
+  <text x="200" y="422" text-anchor="middle" font-size="10" font-weight="bold" fill="#b71c1c">UNTAGGED — opt-in ctor arg; DDD Phase-4 exit criterion</text>
+
+  <!-- P3 -->
+  <rect x="40" y="454" width="320" height="96" rx="6" fill="url(#noG)" stroke="#c62828" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <text x="200" y="475" text-anchor="middle" font-size="12" font-weight="bold" fill="#b71c1c">P3 canvas / WebGL / decoder-output backings</text>
+  <text x="200" y="491" text-anchor="middle" font-size="10" fill="#37474f">various canvas + media backings, adapter passes through</text>
+  <text x="200" y="505" text-anchor="middle" font-size="10" fill="#37474f">unchanged (adapter.cc:1088) — no re-tagging happens</text>
+  <text x="200" y="519" text-anchor="middle" font-size="10" fill="#37474f">serves: U3 GPU-frame inputs (canvas capture, transcode)</text>
+  <text x="200" y="535" text-anchor="middle" font-size="10" font-weight="bold" fill="#b71c1c">DEFERRED — tag-at-source vs copy-into-tagged-pool TBD</text>
+
+  <!-- camera GMB -->
+  <rect x="40" y="567" width="320" height="60" rx="6" fill="#fafafa" stroke="#9e9e9e" stroke-dasharray="3,3"/>
+  <text x="200" y="588" text-anchor="middle" font-size="11" font-weight="bold" fill="#616161">Camera GMB tracker (media/capture)</text>
+  <text x="200" y="604" text-anchor="middle" font-size="10" fill="#616161">NV12 GMB camera path — rare on desktop Linux (V4L2=CPU)</text>
+  <text x="200" y="618" text-anchor="middle" font-size="10" fill="#616161">untagged; revisit with ChromeOS-style camera HAL</text>
+
+  <text x="200" y="655" text-anchor="middle" font-size="10.5" font-style="italic" fill="#546e7a">OzoneImageBackingFactory already ACCEPTS the bit</text>
+  <text x="200" y="669" text-anchor="middle" font-size="10.5" font-style="italic" fill="#546e7a">(factory.cc:68) — tagging a producer is sufficient.</text>
+
+  <!-- ===================== SEAM / DECISION ===================== -->
+  <line x1="380" y1="375" x2="470" y2="375" stroke="#37474f" stroke-width="2.5" marker-end="url(#arrow2)"/>
+  <text x="425" y="362" text-anchor="middle" font-size="10" fill="#546e7a">mailbox via Mojo</text>
+
+  <!-- GPU process container -->
+  <rect x="470" y="75" width="790" height="600" rx="10" fill="#f4fbf4" stroke="#81c784" stroke-width="2"/>
+  <text x="865" y="99" text-anchor="middle" font-size="14" font-weight="bold" fill="#2e7d32">GPU PROCESS — VulkanVideoEncodeAccelerator input resolve (§6.3.2)</text>
+
+  <rect x="500" y="120" width="330" height="70" rx="6" fill="#e8f5e9" stroke="#66bb6a"/>
+  <text x="665" y="141" text-anchor="middle" font-size="11" font-weight="bold" fill="#2e7d32">StartAsyncResolve (GPU-main thread)</text>
+  <text x="665" y="157" text-anchor="middle" font-size="10" fill="#37474f">SharedImageManager::ProduceVulkanVideo(mailbox)  [dev-new]</text>
+  <text x="665" y="171" text-anchor="middle" font-size="10" fill="#37474f">one resolve in flight — FIFO order preserved</text>
+
+  <!-- decision diamond -->
+  <polygon points="665,225 855,290 665,355 475,290" fill="url(#qG)" stroke="#f9a825" stroke-width="2.5"/>
+  <text x="665" y="276" text-anchor="middle" font-size="12" font-weight="bold" fill="#5d4037">OzoneImageBacking:</text>
+  <text x="665" y="293" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#5d4037">usage().Has(VIDEO_ENCODE_ACCELERATOR)?</text>
+  <text x="665" y="310" text-anchor="middle" font-size="10" fill="#5d4037">ozone_image_backing.cc:547</text>
+  <line x1="665" y1="190" x2="665" y2="225" stroke="#37474f" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <!-- YES branch -->
+  <line x1="855" y1="290" x2="940" y2="290" stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrowG)"/>
+  <text x="895" y="280" text-anchor="middle" font-size="11" font-weight="bold" fill="#2e7d32">YES</text>
+  <rect x="940" y="215" width="300" height="150" rx="6" fill="url(#okG)" stroke="#2e7d32" stroke-width="2.5"/>
+  <text x="1090" y="238" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1b5e20">ZERO-COPY PATH</text>
+  <text x="1090" y="256" text-anchor="middle" font-size="10" fill="#37474f">VulkanVideoImageRepresentation (AccessStream::</text>
+  <text x="1090" y="270" text-anchor="middle" font-size="10" fill="#37474f">kVulkanVideoEncode) → BeginScopedAccess(kRead)</text>
+  <text x="1090" y="286" text-anchor="middle" font-size="10" fill="#37474f">VkImage: dma-buf import, VIDEO_ENCODE_SRC usage,</text>
+  <text x="1090" y="300" text-anchor="middle" font-size="10" fill="#37474f">multiplanar NV12 as ONE 2-plane image (ext. sampler)</text>
+  <text x="1090" y="316" text-anchor="middle" font-size="10" fill="#37474f">acquire/release semaphores + FOREIGN→encode QFOT</text>
+  <text x="1090" y="332" text-anchor="middle" font-size="10" fill="#37474f">SubmitExternalFrame(OPTIMAL, VIDEO_ENCODE_SRC_KHR)</text>
+  <text x="1090" y="352" text-anchor="middle" font-size="11" font-weight="bold" fill="#1b5e20">zero_copy_frames_submitted_++</text>
+
+  <!-- NO branch -->
+  <line x1="665" y1="355" x2="665" y2="400" stroke="#c62828" stroke-width="2.5" marker-end="url(#arrowR)"/>
+  <text x="685" y="382" font-size="11" font-weight="bold" fill="#c62828">NO → nullptr</text>
+
+  <rect x="500" y="400" width="330" height="76" rx="6" fill="url(#stG)" stroke="#ef6c00" stroke-width="2"/>
+  <text x="665" y="421" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#e65100">HandleResolveFailure — fallback ladder</text>
+  <text x="665" y="437" text-anchor="middle" font-size="10" fill="#37474f">frame mappable as NV12?  map + CPU copy into</text>
+  <text x="665" y="451" text-anchor="middle" font-size="10" fill="#37474f">LINEAR staging VkImage (§6.1 machinery)</text>
+  <text x="665" y="467" text-anchor="middle" font-size="10" fill="#37474f">+ resolve-deadline safety net (OnResolveDeadline)</text>
+
+  <line x1="830" y1="438" x2="940" y2="438" stroke="#ef6c00" stroke-width="2" marker-end="url(#arrow2)"/>
+  <rect x="940" y="400" width="300" height="76" rx="6" fill="url(#stG)" stroke="#ef6c00"/>
+  <text x="1090" y="421" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#e65100">STAGING PATH (§6.1)</text>
+  <text x="1090" y="437" text-anchor="middle" font-size="10" fill="#37474f">LINEAR NV12 VkImage (PREINITIALIZED) → library does</text>
+  <text x="1090" y="451" text-anchor="middle" font-size="10" fill="#37474f">LINEAR→OPTIMAL copy on encode queue · G-14 pool cap 16</text>
+  <text x="1090" y="467" text-anchor="middle" font-size="11" font-weight="bold" fill="#e65100">staging_frames_submitted_++</text>
+
+  <rect x="500" y="510" width="330" height="52" rx="6" fill="url(#noG)" stroke="#c62828"/>
+  <text x="665" y="531" text-anchor="middle" font-size="11" font-weight="bold" fill="#b71c1c">neither resolvable nor mappable-NV12</text>
+  <text x="665" y="548" text-anchor="middle" font-size="10" fill="#37474f">clean kInvalidInputFrame naming the backing (no hang, G-15)</text>
+  <line x1="665" y1="476" x2="665" y2="510" stroke="#c62828" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowR)"/>
+
+  <!-- Wayland import caveats -->
+  <rect x="880" y="510" width="360" height="90" rx="6" fill="#fffde7" stroke="#fbc02d"/>
+  <text x="1060" y="530" text-anchor="middle" font-size="11" font-weight="bold" fill="#6d4c41">Wayland VulkanImplementation import rules (dev)</text>
+  <text x="1060" y="546" text-anchor="middle" font-size="9.5" fill="#6d4c41">• import-only vkAllocateMemory (export flag ⇒ zeroed alloc ⇒ black frames!)</text>
+  <text x="1060" y="560" text-anchor="middle" font-size="9.5" fill="#6d4c41">• LINEAR (modifier 0) multiplanar: VIDEO_ENCODE_SRC stripped → lib staging</text>
+  <text x="1060" y="574" text-anchor="middle" font-size="9.5" fill="#6d4c41">• no COLOR_ATTACHMENT on multiplanar YCbCr (NVIDIA)</text>
+  <text x="1060" y="588" text-anchor="middle" font-size="9.5" fill="#6d4c41">• VIDEO_PROFILE_INDEPENDENT_BIT when video_maintenance1</text>
+
+  <!-- encode sink -->
+  <rect x="940" y="620" width="300" height="42" rx="6" fill="#d1c4e9" stroke="#4527a0"/>
+  <text x="1090" y="638" text-anchor="middle" font-size="11" font-weight="bold" fill="#311b92">vkCmdEncodeVideoKHR (vendored library)</text>
+  <text x="1090" y="653" text-anchor="middle" font-size="10" fill="#37474f">same VkDevice as compositor — DCHECK'd per frame</text>
+  <line x1="1090" y1="365" x2="1090" y2="393" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrowG)"/>
+  <line x1="1090" y1="476" x2="1090" y2="620" stroke="#ef6c00" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <!-- bottom summary -->
+  <rect x="20" y="700" width="1240" height="90" rx="10" fill="#eceff1" stroke="#78909c"/>
+  <text x="640" y="724" text-anchor="middle" font-size="12" font-weight="bold" fill="#37474f">Why this architecture: the encoder never reaches into a backing directly — layered ownership (SharedImageManager keeps refs), sync correctness</text>
+  <text x="640" y="742" text-anchor="middle" font-size="12" font-weight="bold" fill="#37474f">(producer acquire/release semaphores), forward-compat with non-Vulkan backings (DDD §6.3.3). Abandoned accesses retire their semaphores via</text>
+  <text x="640" y="760" text-anchor="middle" font-size="12" font-weight="bold" fill="#37474f">empty submits (G-13/G-22a) so the producer never deadlocks. Representation create/destroy is GPU-thread-affine (OnTaskRunnerDeleter).</text>
+  <text x="640" y="782" text-anchor="middle" font-size="10" fill="#78909c">Verification: gtests cover counter plumbing only — a test process has no GPU-service SharedImages; wayland_zero_copy_check.sh (browser-level) is the authoritative gate.</text>
+</svg>

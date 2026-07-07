@@ -338,6 +338,11 @@ TEST_F(VideoEncoderTest, Vulkan_Fallback_VAAPIWhenSessionCreateFails);</code></p
         <section id="sec-tier4">
             <h2>6. Tier 4 &mdash; Browser-Level / WebRTC / Tast Tests</h2>
 
+            <div class="diagram">
+                <object data="diagrams/encode_test_environments.svg" type="image/svg+xml" width="100%"></object>
+                <div class="diagram-caption">The browser-level escalation ladder and per-use-case recipes that feed this tier — including the exact three-feature flag set (<code>AcceleratedVideoEncoder,Vulkan,VulkanVideoEncode</code>) and the zero-copy gate script. Full recipes and caveats: <a href="vulkan_video_encoder_use_cases.html">Encoder Use Cases &amp; Processing Graphs</a>.</div>
+            </div>
+
             <h3>6.1 Existing Tast tests we re-pass (REUSE)</h3>
             <p>From <code>tast-tests/cros/local/bundles/cros/video/</code>: <code>video.EncodeAccel.*</code> (wraps <code>video_encode_accelerator_tests</code>), <code>video.EncodeAccelPerf.*</code>, <code>video.ChromeStackDecoder.*</code>, <code>video.WebRTC*</code>, <code>video.Play.*</code>.</p>
 

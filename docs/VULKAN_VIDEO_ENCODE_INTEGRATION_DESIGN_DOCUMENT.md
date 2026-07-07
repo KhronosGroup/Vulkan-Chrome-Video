@@ -596,6 +596,12 @@ The new backend depends on:
 
 ### 3.4 Plug-in Surface inside the GPU process
 
+![Use-case topology — all six browser encode consumers funnel into this factory](diagrams/encode_use_case_topology.svg)
+
+*Registering here lights up every consumer at once (WebRTC, screen share, WebCodecs,
+MediaRecorder, Cast, CRD). Per-use-case detail:
+[Encoder Use Cases & Processing Graphs](VULKAN_VIDEO_ENCODER_PROCESSING_GRAPHS.md).*
+
 `media/gpu/gpu_video_encode_accelerator_factory.cc`:
 
 ```cpp
@@ -1252,6 +1258,13 @@ Use `VK_ANDROID_external_memory_android_hardware_buffer` + `VkImportAndroidHardw
 ### 6.3 Shared-image representation path (preferred GPU-backed path)
 
 > Review F6: this path does **not** reach into the shared image's `VkImage` directly. It goes through the same `CommandBufferHelper` + `SharedImageManager::ProduceVideo()` pattern that D3D12 encode uses, and binds a Vulkan-typed scoped read access. The shared image backing remains owned by `SharedImageManager`.
+
+![The zero-copy seam as implemented on vulkan-on-chrome/dev](diagrams/encode_zero_copy_seam.svg)
+
+*As-built on `vulkan-on-chrome/dev`: `ProduceVulkanVideo()` succeeds iff the producer pool
+tagged the SharedImage with `SHARED_IMAGE_USAGE_VIDEO_ENCODE_ACCELERATOR`; untagged frames
+take the §6.1 staging fallback. Producer→seam matrix and P0–P3 tagging order:
+[Encoder Use Cases & Processing Graphs](VULKAN_VIDEO_ENCODER_PROCESSING_GRAPHS.md) §2.4/§3.*
 
 #### 6.3.1 Setup
 
@@ -2121,6 +2134,9 @@ See [`VULKAN_VIDEO_INTEGRATION_DESIGN_DOCUMENT.md`](VULKAN_VIDEO_INTEGRATION_DES
 | Bitstream readback path | [`diagrams/encode_bitstream_readback.svg`](diagrams/encode_bitstream_readback.svg) |
 | Cross-queue synchronization | [`diagrams/encode_sync_timeline.svg`](diagrams/encode_sync_timeline.svg) |
 | Execution timeline (Gantt) | [`diagrams/encode_execution_timeline.svg`](diagrams/encode_execution_timeline.svg) |
+| Browser use-case topology (U1–U6 → factory) | [`diagrams/encode_use_case_topology.svg`](diagrams/encode_use_case_topology.svg) |
+| Zero-copy seam decision graph (as-built, dev) | [`diagrams/encode_zero_copy_seam.svg`](diagrams/encode_zero_copy_seam.svg) |
+| Per-use-case frame journeys / copy counts | [`diagrams/encode_use_case_lanes.svg`](diagrams/encode_use_case_lanes.svg) |
 
 ---
 

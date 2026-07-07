@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 900" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="srcL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e3f2fd"/>
+      <stop offset="100%" stop-color="#bbdefb"/>
+    </linearGradient>
+    <linearGradient id="cpuL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe0b2"/>
+      <stop offset="100%" stop-color="#ffcc80"/>
+    </linearGradient>
+    <linearGradient id="gpuL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="encL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d1c4e9"/>
+      <stop offset="100%" stop-color="#b39ddb"/>
+    </linearGradient>
+    <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="640" y="28" text-anchor="middle" font-size="20" font-weight="bold" fill="#263238">
+    Per-Use-Case Frame Journeys — where the copies happen
+  </text>
+  <text x="640" y="50" text-anchor="middle" font-size="11" fill="#546e7a">
+    Orange box = CPU touch · Green box = GPU-resident hop · Badge = copies per frame on that lane
+  </text>
+
+  <!-- =============== LANE A: U3/U4 adapter path (TODAY) =============== -->
+  <rect x="20" y="70" width="1240" height="185" rx="10" fill="#f4fbf4" stroke="#81c784" stroke-width="2"/>
+  <text x="35" y="94" font-size="13" font-weight="bold" fill="#2e7d32">LANE A — U3 WebCodecs / U4 MediaRecorder, CPU source (WORKS TODAY on dev — P0)</text>
+  <rect x="1075" y="78" width="170" height="24" rx="12" fill="#2e7d32"/>
+  <text x="1160" y="95" text-anchor="middle" font-size="11" font-weight="bold" fill="#ffffff">1 CPU write · 0 GPU copies</text>
+
+  <rect x="40" y="120" width="170" height="70" rx="6" fill="url(#srcL)" stroke="#1976d2"/>
+  <text x="125" y="145" text-anchor="middle" font-size="11" font-weight="bold" fill="#0d47a1">fake/real camera track</text>
+  <text x="125" y="161" text-anchor="middle" font-size="10" fill="#37474f">I420/NV12 shmem</text>
+  <text x="125" y="175" text-anchor="middle" font-size="10" fill="#37474f">VideoFrame STORAGE_SHMEM</text>
+
+  <rect x="250" y="120" width="240" height="70" rx="6" fill="url(#cpuL)" stroke="#ef6c00"/>
+  <text x="370" y="141" text-anchor="middle" font-size="11" font-weight="bold" fill="#e65100">adapter PrepareGpuFrame()</text>
+  <text x="370" y="157" text-anchor="middle" font-size="10" fill="#37474f">libyuv write into mappable-SI pool</text>
+  <text x="370" y="171" text-anchor="middle" font-size="10" fill="#37474f">pool TAGGED +VIDEO_ENCODE_ACCELERATOR</text>
+  <text x="370" y="185" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#e65100">[CPU write #1 — unavoidable for CPU source]</text>
+
+  <rect x="530" y="120" width="200" height="70" rx="6" fill="url(#gpuL)" stroke="#388e3c"/>
+  <text x="630" y="145" text-anchor="middle" font-size="11" font-weight="bold" fill="#1b5e20">dma-buf SharedImage</text>
+  <text x="630" y="161" text-anchor="middle" font-size="10" fill="#37474f">mailbox over Mojo</text>
+  <text x="630" y="175" text-anchor="middle" font-size="10" fill="#37474f">(no pixel movement)</text>
+
+  <rect x="770" y="120" width="220" height="70" rx="6" fill="url(#gpuL)" stroke="#388e3c"/>
+  <text x="880" y="145" text-anchor="middle" font-size="11" font-weight="bold" fill="#1b5e20">ProduceVulkanVideo → VkImage</text>
+  <text x="880" y="161" text-anchor="middle" font-size="10" fill="#37474f">tagged ⇒ zero-copy resolve,</text>
+  <text x="880" y="175" text-anchor="middle" font-size="10" fill="#37474f">semaphores + QFOT</text>
+
+  <rect x="1030" y="120" width="210" height="70" rx="6" fill="url(#encL)" stroke="#4527a0"/>
+  <text x="1135" y="145" text-anchor="middle" font-size="11" font-weight="bold" fill="#311b92">vkCmdEncodeVideoKHR</text>
+  <text x="1135" y="161" text-anchor="middle" font-size="10" fill="#37474f">NVENC, encode queue</text>
+  <text x="1135" y="175" text-anchor="middle" font-size="10" fill="#37474f">bitstream → GetEncodedFrame</text>
+
+  <line x1="210" y1="155" x2="250" y2="155" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="490" y1="155" x2="530" y2="155" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="730" y1="155" x2="770" y2="155" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="990" y1="155" x2="1030" y2="155" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="640" y="235" text-anchor="middle" font-size="10.5" fill="#546e7a">Measured: zero-copy=58 / staging=2 on a 60-frame WebCodecs run; output bit-identical to staging reference (md5), validation-layer clean.</text>
+
+  <!-- =============== LANE B: U1 WebRTC TODAY vs P1 =============== -->
+  <rect x="20" y="270" width="1240" height="240" rx="10" fill="#fff8f6" stroke="#ef9a9a" stroke-width="2"/>
+  <text x="35" y="294" font-size="13" font-weight="bold" fill="#c62828">LANE B — U1 WebRTC camera (TODAY: falls back · AFTER P1: zero-copy)</text>
+  <rect x="985" y="278" width="120" height="24" rx="12" fill="#c62828"/>
+  <text x="1045" y="295" text-anchor="middle" font-size="11" font-weight="bold" fill="#ffffff">today: 2 CPU + 1 map</text>
+  <rect x="1115" y="278" width="130" height="24" rx="12" fill="#2e7d32"/>
+  <text x="1180" y="295" text-anchor="middle" font-size="11" font-weight="bold" fill="#ffffff">after P1: 1 CPU write</text>
+
+  <rect x="40" y="320" width="170" height="70" rx="6" fill="url(#srcL)" stroke="#1976d2"/>
+  <text x="125" y="345" text-anchor="middle" font-size="11" font-weight="bold" fill="#0d47a1">V4L2 camera</text>
+  <text x="125" y="361" text-anchor="middle" font-size="10" fill="#37474f">CPU buffers, I420</text>
+  <text x="125" y="375" text-anchor="middle" font-size="10" fill="#37474f">[capture write #0]</text>
+
+  <rect x="250" y="320" width="260" height="70" rx="6" fill="url(#cpuL)" stroke="#ef6c00"/>
+  <text x="380" y="341" text-anchor="middle" font-size="11" font-weight="bold" fill="#e65100">RTCVideoEncoder::Impl</text>
+  <text x="380" y="357" text-anchor="middle" font-size="10" fill="#37474f">CreateNV12SharedImageFrame (:2166)</text>
+  <text x="380" y="371" text-anchor="middle" font-size="10" fill="#37474f">I420→NV12 copy into own SI (:682) — UNTAGGED</text>
+  <text x="380" y="385" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#e65100">[CPU write #1]</text>
+
+  <rect x="550" y="320" width="180" height="70" rx="6" fill="url(#gpuL)" stroke="#388e3c"/>
+  <text x="640" y="345" text-anchor="middle" font-size="11" font-weight="bold" fill="#1b5e20">SI mailbox → GPU proc</text>
+  <text x="640" y="361" text-anchor="middle" font-size="10" fill="#37474f">ProduceVulkanVideo:</text>
+  <text x="640" y="375" text-anchor="middle" font-size="10" font-weight="bold" fill="#c62828">nullptr (no encode bit)</text>
+
+  <rect x="770" y="320" width="220" height="70" rx="6" fill="url(#cpuL)" stroke="#ef6c00"/>
+  <text x="880" y="341" text-anchor="middle" font-size="11" font-weight="bold" fill="#e65100">fallback: map mappable-NV12</text>
+  <text x="880" y="357" text-anchor="middle" font-size="10" fill="#37474f">CPU map + copy into LINEAR staging</text>
+  <text x="880" y="371" text-anchor="middle" font-size="10" fill="#37474f">VkImage (§6.1)</text>
+  <text x="880" y="385" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#e65100">[CPU copy #2 — the waste P1 removes]</text>
+
+  <rect x="1030" y="320" width="210" height="70" rx="6" fill="url(#encL)" stroke="#4527a0"/>
+  <text x="1135" y="345" text-anchor="middle" font-size="11" font-weight="bold" fill="#311b92">encode (works, but</text>
+  <text x="1135" y="361" text-anchor="middle" font-size="11" font-weight="bold" fill="#311b92">staging counter ticks)</text>
+  <text x="1135" y="377" text-anchor="middle" font-size="10" fill="#37474f">+ lib LINEAR→OPTIMAL blit</text>
+
+  <line x1="210" y1="355" x2="250" y2="355" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="510" y1="355" x2="550" y2="355" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="730" y1="355" x2="770" y2="355" stroke="#c62828" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="990" y1="355" x2="1030" y2="355" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+
+  <rect x="250" y="420" width="990" height="66" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="745" y="443" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1b5e20">AFTER P1 (add VIDEO_ENCODE_ACCELERATOR at rtc_video_encoder.cc:682): SI resolves directly → VkImage → encode.</text>
+  <text x="745" y="461" text-anchor="middle" font-size="10.5" fill="#37474f">The CPU write #1 (capture is CPU anyway) remains; fallback copy #2 disappears. Same one-line pattern as the P0 adapter fix.</text>
+  <text x="745" y="477" text-anchor="middle" font-size="10.5" fill="#37474f">Shipping U1 additionally needs library G-NEW-3 (Reconfigure: dynamic bitrate — today a documented no-op) + G-NEW-6 (temporal layers; layerCount==1).</text>
+  <path d="M 640 390 C 640 402 620 412 600 420" fill="none" stroke="#2e7d32" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arr)"/>
+
+  <!-- =============== LANE C: U2/U5 capture =============== -->
+  <rect x="20" y="525" width="1240" height="240" rx="10" fill="#f6f9ff" stroke="#90caf9" stroke-width="2"/>
+  <text x="35" y="549" font-size="13" font-weight="bold" fill="#1565c0">LANE C — U2 screen share / U5 tab cast via viz capture (TARGET OF P2: the all-GPU graph)</text>
+  <rect x="1055" y="533" width="190" height="24" rx="12" fill="#1565c0"/>
+  <text x="1150" y="550" text-anchor="middle" font-size="11" font-weight="bold" fill="#ffffff">after P2: 0 CPU touches E2E</text>
+
+  <rect x="40" y="575" width="190" height="80" rx="6" fill="url(#gpuL)" stroke="#388e3c"/>
+  <text x="135" y="598" text-anchor="middle" font-size="11" font-weight="bold" fill="#1b5e20">viz display compositor</text>
+  <text x="135" y="614" text-anchor="middle" font-size="10" fill="#37474f">renders the tab (GPU process)</text>
+  <text x="135" y="628" text-anchor="middle" font-size="10" fill="#37474f">CompositorFrame → RenderPass</text>
+  <text x="135" y="644" text-anchor="middle" font-size="10" fill="#37474f">already on the SAME VkDevice</text>
+
+  <rect x="270" y="575" width="240" height="80" rx="6" fill="url(#gpuL)" stroke="#388e3c"/>
+  <text x="390" y="598" text-anchor="middle" font-size="11" font-weight="bold" fill="#1b5e20">FrameSinkVideoCapturerImpl</text>
+  <text x="390" y="614" text-anchor="middle" font-size="10" fill="#37474f">CopyOutputRequest → kSharedImage</text>
+  <text x="390" y="628" text-anchor="middle" font-size="10" fill="#37474f">RenderableGMBPool NV12 SI (:224)</text>
+  <text x="390" y="644" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#37474f">[1 GPU blit — inherent to capture]</text>
+
+  <rect x="550" y="575" width="180" height="80" rx="6" fill="url(#srcL)" stroke="#1976d2"/>
+  <text x="640" y="598" text-anchor="middle" font-size="11" font-weight="bold" fill="#0d47a1">renderer track hop</text>
+  <text x="640" y="614" text-anchor="middle" font-size="10" fill="#37474f">mailbox only — pixels</text>
+  <text x="640" y="628" text-anchor="middle" font-size="10" fill="#37474f">never leave GPU process</text>
+  <text x="640" y="644" text-anchor="middle" font-size="10" fill="#37474f">→ RTCVideoEncoder / cast client</text>
+
+  <rect x="770" y="575" width="220" height="80" rx="6" fill="url(#gpuL)" stroke="#388e3c" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="880" y="598" text-anchor="middle" font-size="11" font-weight="bold" fill="#1b5e20">P2: pool opt-in encode tag</text>
+  <text x="880" y="614" text-anchor="middle" font-size="10" fill="#37474f">ctor arg from the capturer when the</text>
+  <text x="880" y="628" text-anchor="middle" font-size="10" fill="#37474f">consumer is an encoder → resolve OK</text>
+  <text x="880" y="644" text-anchor="middle" font-size="10" font-weight="bold" fill="#c62828">TODAY: untagged → CPU fallback copy!</text>
+
+  <rect x="1030" y="575" width="210" height="80" rx="6" fill="url(#encL)" stroke="#4527a0"/>
+  <text x="1135" y="598" text-anchor="middle" font-size="11" font-weight="bold" fill="#311b92">encode on same VkDevice</text>
+  <text x="1135" y="614" text-anchor="middle" font-size="10" fill="#37474f">compositor → capturer → encoder</text>
+  <text x="1135" y="628" text-anchor="middle" font-size="10" fill="#37474f">never touching system RAM</text>
+  <text x="1135" y="644" text-anchor="middle" font-size="10" font-weight="bold" fill="#311b92">= DDD Phase-4 exit criterion</text>
+
+  <line x1="230" y1="615" x2="270" y2="615" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="510" y1="615" x2="550" y2="615" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="730" y1="615" x2="770" y2="615" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="990" y1="615" x2="1030" y2="615" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+
+  <text x="640" y="695" text-anchor="middle" font-size="10.5" fill="#546e7a">Acceptance for this lane is STRICT: zero-copy&gt;0 AND staging==0 — there is no legitimate CPU hop; any staging tick means a lost tag or a</text>
+  <text x="640" y="711" text-anchor="middle" font-size="10.5" fill="#546e7a">modifier-incompatible pool buffer. Watch SCANOUT|encode usage combinations on NVIDIA (DRM format modifier compatibility).</text>
+  <text x="640" y="740" text-anchor="middle" font-size="10.5" font-style="italic" fill="#546e7a">U5 uses the identical capture stages; only the client differs (cast ExternalVideoEncoder instead of RTCVideoEncoder).</text>
+
+  <!-- =============== copy-count summary table =============== -->
+  <rect x="20" y="780" width="1240" height="100" rx="10" fill="#eceff1" stroke="#78909c"/>
+  <text x="640" y="804" text-anchor="middle" font-size="12" font-weight="bold" fill="#37474f">Copy-count summary (per 1080p NV12 frame ≈ 3.1 MB)</text>
+  <text x="240" y="828" text-anchor="middle" font-size="10.5" fill="#37474f">Lane A today: 1 CPU write (3.1 MB touched)</text>
+  <text x="240" y="844" text-anchor="middle" font-size="10.5" fill="#37474f">Lane A pre-P0 was: 1 write + 1 map-copy</text>
+  <text x="640" y="828" text-anchor="middle" font-size="10.5" fill="#37474f">Lane B today: 2 CPU copies + map ≈ 9 MB/frame touched</text>
+  <text x="640" y="844" text-anchor="middle" font-size="10.5" fill="#37474f">Lane B after P1: 1 CPU write ≈ 3.1 MB/frame</text>
+  <text x="1040" y="828" text-anchor="middle" font-size="10.5" fill="#37474f">Lane C today: 1 GPU blit + full CPU round-trip (!)</text>
+  <text x="1040" y="844" text-anchor="middle" font-size="10.5" fill="#37474f">Lane C after P2: 1 GPU blit, 0 CPU bytes</text>
+  <text x="640" y="868" text-anchor="middle" font-size="10" fill="#78909c">At 4K30 the Lane C saving alone is ≈ 750 MB/s of CPU memory traffic removed.</text>
+</svg>

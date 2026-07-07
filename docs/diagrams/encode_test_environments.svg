@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 880" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="l1G" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e1f5fe"/>
+      <stop offset="100%" stop-color="#b3e5fc"/>
+    </linearGradient>
+    <linearGradient id="l2G" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="l3G" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe0b2"/>
+      <stop offset="100%" stop-color="#ffcc80"/>
+    </linearGradient>
+    <linearGradient id="l4G" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffcdd2"/>
+      <stop offset="100%" stop-color="#ef9a9a"/>
+    </linearGradient>
+    <marker id="ar" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="640" y="28" text-anchor="middle" font-size="20" font-weight="bold" fill="#263238">
+    Test Environments for the Encoder Use-Case Graphs
+  </text>
+  <text x="640" y="50" text-anchor="middle" font-size="11" fill="#546e7a">
+    Left: the escalation ladder (what each level CAN and CANNOT prove) · Right: per-use-case browser recipes · Complements TEST_PLAN Tiers 1–5
+  </text>
+
+  <!-- ============ LEFT: LADDER ============ -->
+  <rect x="20" y="70" width="600" height="640" rx="10" fill="#fafafa" stroke="#90a4ae" stroke-width="2"/>
+  <text x="320" y="94" text-anchor="middle" font-size="14" font-weight="bold" fill="#37474f">Escalation ladder (run bottom-up)</text>
+
+  <!-- L4 -->
+  <rect x="45" y="115" width="550" height="130" rx="8" fill="url(#l4G)" stroke="#c62828" stroke-width="2"/>
+  <text x="320" y="137" text-anchor="middle" font-size="13" font-weight="bold" fill="#b71c1c">L4 — Browser use-case suites (nightly, TEST_PLAN Tier-4 lane)</text>
+  <text x="320" y="156" text-anchor="middle" font-size="10.5" fill="#37474f">real pages driving U1–U5 graphs + getStats/counters assertions</text>
+  <text x="320" y="172" text-anchor="middle" font-size="10.5" fill="#37474f">PROVES: end-to-end pipelines, encoder selection, adaptation behaviour,</text>
+  <text x="320" y="188" text-anchor="middle" font-size="10.5" fill="#37474f">zero-copy on the REAL compositor device, perf vs SW baseline</text>
+  <text x="320" y="206" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#b71c1c">CANNOT: bisect codec bugs quickly (use L2 for that)</text>
+  <text x="320" y="226" text-anchor="middle" font-size="10" fill="#546e7a">env: headless Weston on NVIDIA runner (xvfb.py --use-weston pattern)</text>
+
+  <!-- L3 -->
+  <rect x="45" y="260" width="550" height="120" rx="8" fill="url(#l3G)" stroke="#ef6c00" stroke-width="2"/>
+  <text x="320" y="282" text-anchor="middle" font-size="13" font-weight="bold" fill="#e65100">L3 — Browser zero-copy gate: wayland_zero_copy_check.sh</text>
+  <text x="320" y="301" text-anchor="middle" font-size="10.5" fill="#37474f">launches chrome, drives an encode to Flush/Destroy, greps LAST</text>
+  <text x="320" y="317" text-anchor="middle" font-size="10.5" fill="#37474f">"input-path summary: zero-copy=N staging=M" (grep -a survives NUL)</text>
+  <text x="320" y="335" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#e65100">PROVES: the seam — PASS iff zero-copy&gt;0 &amp;&amp; staging==0 (--allow-staging relaxes)</text>
+  <text x="320" y="353" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#e65100">THE authoritative zero-copy proof — gtests structurally cannot do this</text>
+  <text x="320" y="371" text-anchor="middle" font-size="10" fill="#546e7a">media/gpu/vulkan/test/wayland_zero_copy_check.sh (dev)</text>
+
+  <!-- L2 -->
+  <rect x="45" y="395" width="550" height="150" rx="8" fill="url(#l2G)" stroke="#388e3c" stroke-width="2"/>
+  <text x="320" y="417" text-anchor="middle" font-size="13" font-weight="bold" fill="#1b5e20">L2 — video_encode_accelerator_tests --implementation=vulkan (per-CL)</text>
+  <text x="320" y="436" text-anchor="middle" font-size="10.5" fill="#37474f">TEST_PLAN Tier-2 · doc: docs/media/gpu/video_encoder_test_usage.md</text>
+  <text x="320" y="452" text-anchor="middle" font-size="10.5" fill="#37474f">library-device path (SetAllowLibraryDeviceForTesting — TEST-ONLY; no</text>
+  <text x="320" y="468" text-anchor="middle" font-size="10.5" fill="#37474f">compositor VkDevice in a gtest process) · SKIPs w/o Vulkan encode HW</text>
+  <text x="320" y="486" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1b5e20">PROVES: codec correctness + PSNR gate Vulkan_EncodePsnr_H264Baseline</text>
+  <text x="320" y="502" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1b5e20">(--vulkan_psnr_floor, default 38 dB; measured 51.07 dB on A4000, CQP=26)</text>
+  <text x="320" y="520" text-anchor="middle" font-size="10.5" fill="#37474f">also: FlushAtEndOfStream, bitrate modes, R-1 backpressure behaviour</text>
+  <text x="320" y="536" text-anchor="middle" font-size="10" fill="#546e7a">args.gn keeps use_vaapi=false so the factory has exactly one backend</text>
+
+  <!-- L1 -->
+  <rect x="45" y="560" width="550" height="130" rx="8" fill="url(#l1G)" stroke="#0288d1" stroke-width="2"/>
+  <text x="320" y="582" text-anchor="middle" font-size="13" font-weight="bold" fill="#01579b">L1 — media_unittests --gtest_filter=*Vulkan* (pre-submit, no GPU)</text>
+  <text x="320" y="601" text-anchor="middle" font-size="10.5" fill="#37474f">fake_vulkan_video_encoder_ext (scripted library fake) + test peer seams</text>
+  <text x="320" y="617" text-anchor="middle" font-size="10.5" fill="#37474f">30/30 green at dev tip: async-init deferral, Model-D fail-fast, queued</text>
+  <text x="320" y="633" text-anchor="middle" font-size="10.5" fill="#37474f">Encode+Flush across init, UnresolvableGpuFrameFailsCleanly, F7 sticky fallback</text>
+  <text x="320" y="651" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#01579b">PROVES: state machine + counter plumbing</text>
+  <text x="320" y="667" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#c62828">CANNOT: prove zero-copy (no GPU-service SharedImages in the process)</text>
+
+  <line x1="320" y1="560" x2="320" y2="545" stroke="#37474f" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="320" y1="395" x2="320" y2="380" stroke="#37474f" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="320" y1="260" x2="320" y2="245" stroke="#37474f" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- ============ RIGHT: RECIPES ============ -->
+  <rect x="640" y="70" width="620" height="640" rx="10" fill="#f8fbff" stroke="#90caf9" stroke-width="2"/>
+  <text x="950" y="94" text-anchor="middle" font-size="14" font-weight="bold" fill="#1565c0">Per-use-case browser recipes (all at L3/L4)</text>
+
+  <rect x="660" y="110" width="580" height="108" rx="6" fill="#ffffff" stroke="#1976d2"/>
+  <text x="950" y="130" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">U3 WebCodecs — available NOW (P0 regression harness)</text>
+  <text x="950" y="148" text-anchor="middle" font-size="10" fill="#37474f">page: w3c encode-decode-worker sample (codec/HW/latencyMode/SVC knobs,</text>
+  <text x="950" y="162" text-anchor="middle" font-size="10" fill="#37474f">built-in per-frame encode-delay via frame.timestamp) or minimal canvas page</text>
+  <text x="950" y="178" text-anchor="middle" font-size="10" fill="#37474f">verify: NO web API reports the impl used (w3c/webcodecs#604) → chrome://gpu</text>
+  <text x="950" y="192" text-anchor="middle" font-size="10" fill="#37474f">Encode rows + vmodule logs + zero-copy gate script are ground truth</text>
+  <text x="950" y="208" text-anchor="middle" font-size="10" font-weight="bold" fill="#1b5e20">assert: gate PASS · isConfigSupported(prefer-hardware).supported === true</text>
+
+  <rect x="660" y="228" width="580" height="108" rx="6" fill="#ffffff" stroke="#1976d2"/>
+  <text x="950" y="248" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">U4 MediaRecorder — cheap E2E win (closes a TEST_PLAN gap)</text>
+  <text x="950" y="266" text-anchor="middle" font-size="10" fill="#37474f">MediaRecorder(stream, {mimeType:'video/mp4; codecs=avc1'}) over fake camera</text>
+  <text x="950" y="280" text-anchor="middle" font-size="10" fill="#37474f">exercises VBR + Flush() drain semantics that WebCodecs CQ mode does not</text>
+  <text x="950" y="296" text-anchor="middle" font-size="10" fill="#37474f">verify: chrome://media-internals encoder selection + zero-copy counters</text>
+  <text x="950" y="312" text-anchor="middle" font-size="10" font-weight="bold" fill="#1b5e20">assert: produced file demuxes + decodes (ffprobe/ffmpeg), PSNR vs source</text>
+  <text x="950" y="328" text-anchor="middle" font-size="10" fill="#546e7a">sample: webrtc.github.io/samples getusermedia/record</text>
+
+  <rect x="660" y="346" width="580" height="128" rx="6" fill="#ffffff" stroke="#1976d2"/>
+  <text x="950" y="366" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">U1 WebRTC loopback — target of P1</text>
+  <text x="950" y="384" text-anchor="middle" font-size="10" fill="#37474f">pages: pc1 (pc1/pc2 page globals → getStats()) · change-codecs (setCodec-</text>
+  <text x="950" y="398" text-anchor="middle" font-size="10" fill="#37474f">Preferences H.264/AV1) · extensions/svc (scalabilityMode; needs G-NEW-6)</text>
+  <text x="950" y="414" text-anchor="middle" font-size="10" fill="#37474f">NO simulcast sample upstream → fippo simulcast-playground</text>
+  <text x="950" y="430" text-anchor="middle" font-size="10" font-weight="bold" fill="#1b5e20">assert: encoderImplementation==="VulkanVideoEncodeAccelerator" ·</text>
+  <text x="950" y="446" text-anchor="middle" font-size="10" font-weight="bold" fill="#1b5e20">totalEncodeTime/framesEncoded &lt; 33ms · qualityLimitationReason ∉ {cpu}</text>
+  <text x="950" y="462" text-anchor="middle" font-size="10" fill="#c62828">expected-FAIL until G-NEW-3: bitrate tracking of setParameters ramps</text>
+
+  <rect x="660" y="484" width="580" height="118" rx="6" fill="#ffffff" stroke="#1976d2"/>
+  <text x="950" y="504" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">U2 screen share / U5 cast — target of P2 (strict staging==0)</text>
+  <text x="950" y="522" text-anchor="middle" font-size="10" fill="#37474f">getDisplayMedia + --auto-select-tab-capture-source-by-title feeding a loopback</text>
+  <text x="950" y="536" text-anchor="middle" font-size="10" fill="#37474f">PC (upstream getdisplaymedia sample only captures — combine w/ capture/video-pc)</text>
+  <text x="950" y="552" text-anchor="middle" font-size="10" fill="#37474f">U5: CastStreamingOfferHardwareFirst default-on; pin codec via</text>
+  <text x="950" y="566" text-anchor="middle" font-size="10" fill="#37474f">--cast-streaming-force-enable-hardware-h264; sink = openscreen cast_receiver</text>
+  <text x="950" y="584" text-anchor="middle" font-size="10" font-weight="bold" fill="#1b5e20">perf: nvidia-smi --query-gpu=utilization.encoder,encoder.stats.averageFps,</text>
+  <text x="950" y="598" text-anchor="middle" font-size="10" font-weight="bold" fill="#1b5e20">encoder.stats.averageLatency + pidstat GPU-process CPU% vs SW control run</text>
+
+  <rect x="660" y="612" width="580" height="84" rx="6" fill="#fffde7" stroke="#fbc02d"/>
+  <text x="950" y="632" text-anchor="middle" font-size="11" font-weight="bold" fill="#6d4c41">Reproducible input for ALL recipes</text>
+  <text x="950" y="650" text-anchor="middle" font-size="10" fill="#6d4c41">--use-fake-device-for-media-stream (fps=60,device-count=2 params ok)</text>
+  <text x="950" y="664" text-anchor="middle" font-size="10" fill="#6d4c41">--use-file-for-fake-video-capture=/path/1080p.y4m (.mjpeg ok too)</text>
+  <text x="950" y="678" text-anchor="middle" font-size="10" fill="#6d4c41">--use-fake-ui-for-media-stream · --auto-accept-camera-and-microphone-capture</text>
+
+  <!-- ============ BOTTOM: FLAGS BAR ============ -->
+  <rect x="20" y="730" width="1240" height="130" rx="10" fill="#0f172a"/>
+  <text x="640" y="756" text-anchor="middle" font-size="13" font-weight="bold" fill="#93c5fd">The browser-run flag set is THREE features, not one (renderer gate: content/renderer/render_thread_impl.cc:991 — unpatched on dev)</text>
+  <text x="640" y="782" text-anchor="middle" font-family="JetBrains Mono, Consolas, monospace" font-size="12.5" fill="#a5f3a5">chrome --enable-features=AcceleratedVideoEncoder,Vulkan,VulkanVideoEncode --ozone-platform=wayland \</text>
+  <text x="640" y="800" text-anchor="middle" font-family="JetBrains Mono, Consolas, monospace" font-size="12.5" fill="#a5f3a5">--enable-logging=stderr --vmodule='*vulkan_video_encode_accelerator*=1' [--ignore-gpu-blocklist]</text>
+  <text x="640" y="826" text-anchor="middle" font-size="10.5" fill="#cbd5e1">AcceleratedVideoEncoder = Linux renderer gate (renamed from VaapiVideoEncoder at M131; NO chrome://flags UI) · Vulkan = Skia-on-Vulkan → creates the BYO compositor VkDevice</text>
+  <text x="640" y="842" text-anchor="middle" font-size="10.5" fill="#cbd5e1">VulkanVideoEncode = backend selection in GpuVideoEncodeAcceleratorFactory · --use-angle=vulkan is WebGL-only, unrelated · Ozone "headless" platform is software-only — use Weston</text>
+</svg>
