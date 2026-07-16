@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 620" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="doneR" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="devR" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff9c4"/>
+      <stop offset="100%" stop-color="#fff176"/>
+    </linearGradient>
+    <linearGradient id="nextR" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/>
+      <stop offset="100%" stop-color="#90caf9"/>
+    </linearGradient>
+    <marker id="ra" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="640" y="30" text-anchor="middle" font-size="21" font-weight="bold" fill="#263238">
+    Chromium: Decode Now, Vulkan Encode Next
+  </text>
+  <text x="640" y="53" text-anchor="middle" font-size="12" fill="#546e7a">
+    Plan-first: the NVIDIA VA-API bridge port closes today's decode gap while the Vulkan-native backends mature — upstream pushes begin end of July 2026.
+  </text>
+
+  <!-- Lane 1: VA-API port -->
+  <rect x="30" y="80" width="1220" height="120" rx="10" fill="#f4fbf4" stroke="#81c784" stroke-width="2"/>
+  <rect x="45" y="95" width="130" height="30" rx="15" fill="#2e7d32"/>
+  <text x="110" y="115" text-anchor="middle" font-size="12" font-weight="bold" fill="#ffffff">DELIVERED</text>
+  <text x="200" y="116" font-size="14" font-weight="bold" fill="#1b5e20">Track 1 — VA-API decode port for NVIDIA (the temporary bridge)</text>
+  <text x="200" y="140" font-size="11" fill="#37474f">Chromium's existing VA-API backend already served Intel and AMD GPUs with their codecs — NVIDIA was the gap. NVIDIA</text>
+  <text x="200" y="158" font-size="11" fill="#37474f">delivered a VA-API port to fill it temporarily: users get HW-accelerated decode today, with zero new API plumbing.</text>
+  <text x="200" y="182" font-size="11" font-weight="bold" fill="#1b5e20">A bridge to the future Vulkan Video work: decode is accelerated now; Vulkan replaces it underneath, for every vendor.</text>
+
+  <!-- Lane 2: Vulkan decode -->
+  <rect x="30" y="215" width="1220" height="110" rx="10" fill="#fffdf2" stroke="#fbc02d" stroke-width="2"/>
+  <rect x="45" y="230" width="130" height="30" rx="15" fill="#f9a825"/>
+  <text x="110" y="250" text-anchor="middle" font-size="12" font-weight="bold" fill="#ffffff">IN DEVELOPMENT</text>
+  <text x="200" y="251" font-size="14" font-weight="bold" fill="#8d6e00">Track 2 — Vulkan Video decoder</text>
+  <text x="200" y="275" font-size="11" fill="#37474f">Per-codec accelerator delegates (H.264/H.265/AV1/VP9) converting Chromium's parsed headers into Vulkan Std structures;</text>
+  <text x="200" y="293" font-size="11" fill="#37474f">DMA-buf export with DRM format modifiers for zero-copy VideoFrames into the compositor (gfx::NativePixmapDmaBuf).</text>
+  <text x="200" y="313" font-size="11" font-weight="bold" fill="#8d6e00">Replaces per-platform VA-API/V4L2/DXVA with one cross-vendor backend.</text>
+
+  <!-- Lane 3: Vulkan encode -->
+  <rect x="30" y="340" width="1220" height="150" rx="10" fill="#f6f9ff" stroke="#64b5f6" stroke-width="2.5"/>
+  <rect x="45" y="355" width="130" height="30" rx="15" fill="#1565c0"/>
+  <text x="110" y="375" text-anchor="middle" font-size="12" font-weight="bold" fill="#ffffff">UPSTREAMING</text>
+  <text x="200" y="376" font-size="14" font-weight="bold" fill="#0d47a1">Track 3 — Vulkan Video encoder (the strategic decision)</text>
+  <text x="200" y="400" font-size="11" fill="#37474f">Built on the Vulkan Video Samples library, vendored and statically linked into Chromium (the libvpx/libaom pattern) and driven</text>
+  <text x="200" y="418" font-size="11" fill="#37474f">through a codec-neutral VideoEncodeAccelerator backend on the compositor's own VkDevice. Working H.264 encode with the</text>
+  <text x="200" y="436" font-size="11" fill="#37474f">SharedImage zero-copy input path verified on NVIDIA hardware (bit-identical to the staging reference, PSNR-gated in CI);</text>
+  <text x="200" y="454" font-size="11" fill="#37474f">lights up WebRTC, WebCodecs, MediaRecorder, and Cast through the one GPU-process encoder factory.</text>
+  <text x="200" y="478" font-size="12" font-weight="bold" fill="#0d47a1">⭢ Upstream CLs to chromium.org begin end of July 2026</text>
+
+  <!-- collaboration bar -->
+  <rect x="30" y="510" width="1220" height="80" rx="10" fill="#eceff1" stroke="#78909c" stroke-width="2"/>
+  <text x="640" y="536" text-anchor="middle" font-size="13" font-weight="bold" fill="#37474f">How the work is shared</text>
+  <text x="640" y="558" text-anchor="middle" font-size="11" fill="#37474f">NVIDIA — the port itself: backends, library, drivers, conformance · AMD &amp; Intel — HW acceleration bring-up and validation on their GPUs (Mesa RADV/ANV)</text>
+  <text x="640" y="576" text-anchor="middle" font-size="11" fill="#37474f">Google — Chromium change reviews and browser-framework improvements (notably GPU zero-copy plumbing) · Khronos Vulkan Video TSG — API stewardship &amp; CTS</text>
+</svg>

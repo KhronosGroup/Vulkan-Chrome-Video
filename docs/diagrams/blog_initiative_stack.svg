@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 700" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="khrG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffcdd2"/>
+      <stop offset="100%" stop-color="#ef9a9a"/>
+    </linearGradient>
+    <linearGradient id="enbG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="brwG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/>
+      <stop offset="100%" stop-color="#90caf9"/>
+    </linearGradient>
+    <linearGradient id="pltG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d1c4e9"/>
+      <stop offset="100%" stop-color="#b39ddb"/>
+    </linearGradient>
+    <marker id="up" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="640" y="30" text-anchor="middle" font-size="21" font-weight="bold" fill="#263238">
+    One API, Every Browser: the Vulkan Video Initiative
+  </text>
+  <text x="640" y="53" text-anchor="middle" font-size="12" fill="#546e7a">
+    The Khronos Vulkan Video TSG defines the API; NVIDIA and partners carry it through the media frameworks into the browsers — on Linux, Windows, and Vulkan-capable embedded systems.
+  </text>
+
+  <!-- ============ TOP: BROWSERS ============ -->
+  <rect x="30" y="80" width="1220" height="160" rx="10" fill="#f6f9ff" stroke="#64b5f6" stroke-width="2"/>
+  <text x="50" y="104" font-size="13" font-weight="bold" fill="#1565c0">BROWSERS</text>
+
+  <rect x="60" y="118" width="560" height="105" rx="8" fill="url(#brwG)" stroke="#1976d2" stroke-width="2"/>
+  <text x="340" y="141" text-anchor="middle" font-size="14" font-weight="bold" fill="#0d47a1">Firefox — Vulkan Video decode (shipping the stack now)</text>
+  <text x="340" y="160" text-anchor="middle" font-size="10.5" fill="#37474f">FFmpeg-Vulkan decode in the RDD process · DMA-buf + DRM format modifiers out of the decoder</text>
+  <text x="340" y="176" text-anchor="middle" font-size="10.5" fill="#37474f">zero-copy into the GL/EGL compositor (WebRender) · RDD sandbox policy for Vulkan</text>
+  <text x="340" y="192" text-anchor="middle" font-size="10.5" fill="#37474f">Bugzilla 2021722 · 5 of 7 patches merged, decode + sandbox in final review</text>
+  <text x="340" y="211" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#0d47a1">multi-tab-stable: shared VkDevice + per-decoder fences (D306576)</text>
+
+  <rect x="650" y="118" width="560" height="105" rx="8" fill="url(#brwG)" stroke="#1976d2" stroke-width="2"/>
+  <text x="930" y="141" text-anchor="middle" font-size="14" font-weight="bold" fill="#0d47a1">Chromium — decode bridged via VA-API, Vulkan encode next</text>
+  <text x="930" y="160" text-anchor="middle" font-size="10.5" fill="#37474f">NVIDIA VA-API port fills the gap Intel/AMD never had (temporary bridge) · Vulkan decoder in development</text>
+  <text x="930" y="176" text-anchor="middle" font-size="10.5" fill="#37474f">Vulkan encode backend built on the Vulkan Video Samples library (vendored, static-link)</text>
+  <text x="930" y="192" text-anchor="middle" font-size="10.5" fill="#37474f">SharedImage zero-copy seam · compositor-VkDevice BYO integration</text>
+  <text x="930" y="211" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#0d47a1">upstream pushes begin end of July 2026</text>
+
+  <!-- ============ MIDDLE: ENABLEMENT ============ -->
+  <rect x="30" y="280" width="1220" height="150" rx="10" fill="#f4fbf4" stroke="#81c784" stroke-width="2"/>
+  <text x="50" y="304" font-size="13" font-weight="bold" fill="#2e7d32">MEDIA FRAMEWORKS &amp; ENABLEMENT (upstream, cross-vendor)</text>
+
+  <rect x="60" y="318" width="560" height="95" rx="8" fill="url(#enbG)" stroke="#388e3c" stroke-width="2"/>
+  <text x="340" y="341" text-anchor="middle" font-size="14" font-weight="bold" fill="#1b5e20">FFmpeg — Vulkan hwcontext &amp; decode hardening</text>
+  <text x="340" y="360" text-anchor="middle" font-size="10.5" fill="#37474f">PR #22566 (merged): DRM map, decode barriers, frame setup for modifier output</text>
+  <text x="340" y="376" text-anchor="middle" font-size="10.5" fill="#37474f">PR #22785 (merged): decode-init/DRM-log cleanups</text>
+  <text x="340" y="392" text-anchor="middle" font-size="10.5" fill="#37474f">semaphore ownership semantics for exported DMA-bufs settled upstream —</text>
+  <text x="340" y="408" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1b5e20">correct sync for every DMA-buf consumer, not just Firefox</text>
+
+  <rect x="650" y="318" width="560" height="95" rx="8" fill="url(#enbG)" stroke="#388e3c" stroke-width="2"/>
+  <text x="930" y="341" text-anchor="middle" font-size="14" font-weight="bold" fill="#1b5e20">Vulkan Video Samples (NVPRO / Khronos)</text>
+  <text x="930" y="360" text-anchor="middle" font-size="10.5" fill="#37474f">Reference encoder + decoder library: sessions, DPB, rate control, GOP,</text>
+  <text x="930" y="376" text-anchor="middle" font-size="10.5" fill="#37474f">bitstream handling, YCbCr compute filters (incl. RGBA→YCbCr on GPU)</text>
+  <text x="930" y="392" text-anchor="middle" font-size="10.5" fill="#37474f">Extended for embedding: BYO VkDevice, in-memory bitstream, DMA-buf import,</text>
+  <text x="930" y="408" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1b5e20">capability probing, sandbox-quiet operation — the Chromium encode engine</text>
+
+  <!-- ============ BASE: TSG ============ -->
+  <rect x="30" y="470" width="1220" height="120" rx="10" fill="#fff8f6" stroke="#e57373" stroke-width="2.5"/>
+  <text x="50" y="494" font-size="13" font-weight="bold" fill="#c62828">THE FOUNDATION — KHRONOS VULKAN VIDEO TSG + NVIDIA</text>
+  <rect x="60" y="506" width="1150" height="70" rx="8" fill="url(#khrG)" stroke="#c62828" stroke-width="2"/>
+  <text x="635" y="529" text-anchor="middle" font-size="13" font-weight="bold" fill="#b71c1c">The cross-vendor, cross-platform HW video API</text>
+  <text x="635" y="548" text-anchor="middle" font-size="10.5" fill="#37474f">VK_KHR_video_queue · decode/encode queues · H.264 / H.265 / AV1 decode+encode, VP9 decode · video_maintenance · quantization-map / intra-refresh extensions</text>
+  <text x="635" y="566" text-anchor="middle" font-size="10.5" fill="#37474f">Conformance tests (VK-GL-CTS dEQP-VK.video.*) · reference samples · driver implementations from NVIDIA, AMD, Intel (+ Mesa RADV/ANV/NVK)</text>
+
+  <!-- arrows up -->
+  <line x1="340" y1="318" x2="340" y2="223" stroke="#37474f" stroke-width="2.5" marker-end="url(#up)"/>
+  <line x1="930" y1="318" x2="930" y2="223" stroke="#37474f" stroke-width="2.5" marker-end="url(#up)"/>
+  <line x1="340" y1="506" x2="340" y2="413" stroke="#37474f" stroke-width="2.5" marker-end="url(#up)"/>
+  <line x1="930" y1="506" x2="930" y2="413" stroke="#37474f" stroke-width="2.5" marker-end="url(#up)"/>
+
+  <!-- ============ PARTNERS/PLATFORMS BAR ============ -->
+  <rect x="30" y="615" width="750" height="60" rx="8" fill="url(#pltG)" stroke="#4527a0"/>
+  <text x="405" y="638" text-anchor="middle" font-size="12" font-weight="bold" fill="#311b92">Target platforms: Linux (Wayland &amp; X11) · Windows · Vulkan-capable embedded &amp; automotive systems</text>
+  <text x="405" y="658" text-anchor="middle" font-size="10.5" fill="#37474f">One backend per browser instead of VA-API + V4L2 + DXVA/MF + vendor SDKs per platform</text>
+
+  <rect x="800" y="615" width="450" height="60" rx="8" fill="#eceff1" stroke="#78909c"/>
+  <text x="1025" y="638" text-anchor="middle" font-size="12" font-weight="bold" fill="#37474f">Collaborators</text>
+  <text x="1025" y="658" text-anchor="middle" font-size="10.5" fill="#37474f">NVIDIA · AMD · Intel · Google · Mozilla · FFmpeg community · Khronos</text>
+</svg>

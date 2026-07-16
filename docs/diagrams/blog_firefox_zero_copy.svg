@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 780" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="rddG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="dmaB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff9c4"/>
+      <stop offset="100%" stop-color="#fff176"/>
+    </linearGradient>
+    <linearGradient id="cmpB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/>
+      <stop offset="100%" stop-color="#90caf9"/>
+    </linearGradient>
+    <linearGradient id="fixB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe0b2"/>
+      <stop offset="100%" stop-color="#ffcc80"/>
+    </linearGradient>
+    <marker id="fa" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="640" y="30" text-anchor="middle" font-size="21" font-weight="bold" fill="#263238">
+    Firefox: Zero-Copy Vulkan Video Decode, End to End
+  </text>
+  <text x="640" y="53" text-anchor="middle" font-size="12" fill="#546e7a">
+    Decoded frames never touch system memory: VkImage → DRM-modifier DMA-buf → sandbox IPC → EGL/OpenGL import → WebRender composite.
+  </text>
+
+  <!-- ============ RDD PROCESS ============ -->
+  <rect x="30" y="80" width="560" height="380" rx="10" fill="#f4fbf4" stroke="#81c784" stroke-width="2"/>
+  <text x="50" y="104" font-size="13" font-weight="bold" fill="#2e7d32">RDD PROCESS (sandboxed media decoder)</text>
+
+  <rect x="60" y="120" width="500" height="80" rx="8" fill="url(#rddG)" stroke="#388e3c"/>
+  <text x="310" y="142" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1b5e20">FFmpeg Vulkan Video decoder (D290522)</text>
+  <text x="310" y="160" text-anchor="middle" font-size="10.5" fill="#37474f">hwcontext_vulkan · VK_KHR_video_decode_h264/h265/av1</text>
+  <text x="310" y="176" text-anchor="middle" font-size="10.5" fill="#37474f">decode barriers + frame setup fixed for modifier output (FFmpeg #22566)</text>
+  <text x="310" y="192" text-anchor="middle" font-size="10.5" fill="#37474f">output: VkImage, DPB-managed, tiled with an explicit DRM format modifier</text>
+
+  <rect x="60" y="220" width="500" height="86" rx="8" fill="url(#dmaB)" stroke="#f9a825" stroke-width="2"/>
+  <text x="310" y="242" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#5d4037">vulkan_map_to_drm — export as DMA-buf</text>
+  <text x="310" y="260" text-anchor="middle" font-size="10.5" fill="#37474f">per-plane FDs + strides/offsets + DRM format modifier</text>
+  <text x="310" y="276" text-anchor="middle" font-size="10.5" fill="#37474f">synchronization ownership settled in upstream review: export semaphore</text>
+  <text x="310" y="292" text-anchor="middle" font-size="10.5" fill="#37474f">with copy-transference semantics so the consumer waits on decode completion</text>
+
+  <rect x="60" y="326" width="500" height="118" rx="8" fill="url(#fixB)" stroke="#ef6c00" stroke-width="2"/>
+  <text x="310" y="348" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#e65100">Multi-stream hardening (D306576) — many tabs, one GPU</text>
+  <text x="310" y="368" text-anchor="middle" font-size="10.5" fill="#37474f">BUG: vkDeviceWaitIdle on decoder teardown stalled EVERY queue on the device,</text>
+  <text x="310" y="383" text-anchor="middle" font-size="10.5" fill="#37474f">freezing all other tabs' decoders → FIX: vkWaitForFences on per-decoder copy fences</text>
+  <text x="310" y="401" text-anchor="middle" font-size="10.5" fill="#37474f">BUG: vkCreateDevice per decoder — simultaneous streams blocked/timed out/hung</text>
+  <text x="310" y="416" text-anchor="middle" font-size="10.5" fill="#37474f">→ FIX: one shared, ref-counted VkDevice across all decoders (singleton)</text>
+  <text x="310" y="434" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#e65100">result: multiple YouTube tabs decode flawlessly in parallel</text>
+
+  <!-- ============ SANDBOX BOUNDARY ============ -->
+  <rect x="620" y="80" width="60" height="380" rx="8" fill="#fce4ec" stroke="#c2185b" stroke-width="2.5" stroke-dasharray="8,5"/>
+  <text x="650" y="270" text-anchor="middle" font-size="12" font-weight="bold" fill="#880e4f" transform="rotate(-90 650 270)">SANDBOX BOUNDARY — FD passing over IPC</text>
+
+  <!-- ============ COMPOSITOR ============ -->
+  <rect x="710" y="80" width="540" height="380" rx="10" fill="#f6f9ff" stroke="#64b5f6" stroke-width="2"/>
+  <text x="730" y="104" font-size="13" font-weight="bold" fill="#1565c0">GPU / COMPOSITOR PROCESS</text>
+
+  <rect x="740" y="120" width="480" height="86" rx="8" fill="url(#cmpB)" stroke="#1976d2"/>
+  <text x="980" y="142" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#0d47a1">GL/EGL import (D290521 — merged)</text>
+  <text x="980" y="160" text-anchor="middle" font-size="10.5" fill="#37474f">EGL_EXT_image_dma_buf_import(_modifiers): DMA-buf FDs → EGLImage → GL texture</text>
+  <text x="980" y="176" text-anchor="middle" font-size="10.5" fill="#37474f">OpenGL samples the DECODED surface directly — no readback, no upload</text>
+  <text x="980" y="192" text-anchor="middle" font-size="10.5" fill="#37474f">layers + compositor IPC plumbing for Vulkan-video-backed images</text>
+
+  <rect x="740" y="226" width="480" height="86" rx="8" fill="url(#fixB)" stroke="#ef6c00"/>
+  <text x="980" y="248" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#e65100">Plane-format correctness (D309953)</text>
+  <text x="980" y="266" text-anchor="middle" font-size="10.5" fill="#37474f">NV12 plane 1 must import as GR88 on NVIDIA — wrong fourcc ⇒ EGL_BAD_MATCH</text>
+  <text x="980" y="282" text-anchor="middle" font-size="10.5" fill="#37474f">follow-up kept older AMD parts (e.g. RX 570) working; new AMD/Intel accept both</text>
+  <text x="980" y="298" text-anchor="middle" font-size="10.5" fill="#37474f">per-vendor dma-buf plane-format matrix now handled in DMABufFormats</text>
+
+  <rect x="740" y="332" width="480" height="70" rx="8" fill="url(#cmpB)" stroke="#1976d2"/>
+  <text x="980" y="354" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#0d47a1">WebRender composite → display</text>
+  <text x="980" y="372" text-anchor="middle" font-size="10.5" fill="#37474f">YCbCr sampled and color-converted at composite time</text>
+  <text x="980" y="388" text-anchor="middle" font-size="10.5" fill="#37474f">correct cross-process sync via the exported semaphore/fence chain</text>
+
+  <line x1="310" y1="200" x2="310" y2="220" stroke="#37474f" stroke-width="2" marker-end="url(#fa)"/>
+  <line x1="560" y1="263" x2="740" y2="163" stroke="#37474f" stroke-width="2.5" marker-end="url(#fa)"/>
+  <line x1="980" y1="206" x2="980" y2="226" stroke="#37474f" stroke-width="2" marker-end="url(#fa)"/>
+  <line x1="980" y1="312" x2="980" y2="332" stroke="#37474f" stroke-width="2" marker-end="url(#fa)"/>
+
+  <!-- ============ LANDING TABLE ============ -->
+  <rect x="30" y="485" width="1220" height="205" rx="10" fill="#fafafa" stroke="#90a4ae" stroke-width="2"/>
+  <text x="50" y="509" font-size="13" font-weight="bold" fill="#37474f">THE PATCH TRAIN — Bugzilla 2021722 (+ FFmpeg upstream)</text>
+
+  <text x="60" y="534" font-size="11" font-weight="bold" fill="#2e7d32">✔ merged</text>
+  <text x="145" y="534" font-size="11" fill="#37474f">D290317 — vendored Khronos Vulkan-Headers (vulkan-sdk-1.4.341.0) under third_party</text>
+  <text x="60" y="554" font-size="11" font-weight="bold" fill="#2e7d32">✔ merged</text>
+  <text x="145" y="554" font-size="11" fill="#37474f">D288577 — FFmpeg hwcontext_vulkan.h + version.h header updates</text>
+  <text x="60" y="574" font-size="11" font-weight="bold" fill="#2e7d32">✔ merged</text>
+  <text x="145" y="574" font-size="11" fill="#37474f">D290520 — prefs, packaging, configure, and GTK platform hooks for Vulkan video</text>
+  <text x="60" y="594" font-size="11" font-weight="bold" fill="#2e7d32">✔ merged</text>
+  <text x="145" y="594" font-size="11" fill="#37474f">D296451 — fix DRM_FORMAT_MOD_INVALID redefinition in DMABufFormats.cpp</text>
+  <text x="60" y="614" font-size="11" font-weight="bold" fill="#2e7d32">✔ merged</text>
+  <text x="145" y="614" font-size="11" fill="#37474f">D290521 — GL/EGL, layers, and compositor IPC for Vulkan video</text>
+  <text x="60" y="634" font-size="11" font-weight="bold" fill="#ef6c00">◌ review</text>
+  <text x="145" y="634" font-size="11" fill="#37474f">D290522 — DOM Media: FFmpeg Vulkan Video decode in the RDD process (all comments addressed)</text>
+  <text x="60" y="654" font-size="11" font-weight="bold" fill="#ef6c00">◌ review</text>
+  <text x="145" y="654" font-size="11" fill="#37474f">D290523 — Sandbox: RDD sandbox policy for Vulkan video (all comments addressed)</text>
+
+  <text x="700" y="534" font-size="11" font-weight="bold" fill="#2e7d32">✔ merged</text>
+  <text x="785" y="534" font-size="11" fill="#37474f">FFmpeg #22566 — vulkan: fix DRM map, decode barriers, frame setup for modifier output</text>
+  <text x="700" y="554" font-size="11" font-weight="bold" fill="#2e7d32">✔ merged</text>
+  <text x="785" y="554" font-size="11" fill="#37474f">FFmpeg #22785 — vulkan: fix -Wdiscarded-qualifiers in ff_vk_decode_init + drm log</text>
+  <text x="700" y="574" font-size="11" font-weight="bold" fill="#2e7d32">✔ landed</text>
+  <text x="785" y="574" font-size="11" fill="#37474f">D306576 — shared VkDevice + per-decoder fences (multi-stream stability)</text>
+  <text x="700" y="594" font-size="11" font-weight="bold" fill="#2e7d32">✔ landed</text>
+  <text x="785" y="594" font-size="11" fill="#37474f">D309953 — EGL dma-buf plane-format fixes (NVIDIA GR88 / legacy AMD)</text>
+
+  <rect x="695" y="612" width="530" height="60" rx="8" fill="#fce4ec" stroke="#c2185b" stroke-width="1.5"/>
+  <text x="960" y="633" text-anchor="middle" font-size="11" font-weight="bold" fill="#880e4f">The long pole: opening sandbox APIs — review latency, not engineering</text>
+  <text x="960" y="650" text-anchor="middle" font-size="10" fill="#37474f">The RDD policy patch (D290523) is compact and every review round was answered within hours;</text>
+  <text x="960" y="664" text-anchor="middle" font-size="10" fill="#37474f">the calendar cost was waiting on reviewer availability — weeks of idle time between rounds.</text>
+
+  <text x="640" y="725" text-anchor="middle" font-size="11" fill="#78909c">
+    All framework groundwork (headers, GTK hooks, GL/EGL + compositor IPC, dma-buf format fixes) is merged; the decoder and its sandbox policy are in final review.
+  </text>
+</svg>
