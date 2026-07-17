@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 585" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <rect x="0" y="0" width="1280" height="585" fill="#ffffff"/>
+
+  <text x="45" y="34" font-size="20" font-weight="700" fill="#0b0b0b">What hardware encode buys — development-snapshot KPIs</text>
+  <text x="45" y="56" font-size="12" fill="#52514e">Two everyday use cases, software encode on the CPU vs the Vulkan Video backend (H.264, NVIDIA RTX A4000)</text>
+
+  <!-- legend -->
+  <rect x="905" y="22" width="14" height="14" rx="3" fill="#2a78d6"/>
+  <text x="925" y="34" font-size="12" fill="#52514e">Software encode (CPU)</text>
+  <rect x="1093" y="22" width="14" height="14" rx="3" fill="#008300"/>
+  <text x="1113" y="34" font-size="12" fill="#52514e">Vulkan Video (HW)</text>
+
+  <!-- ============ Panel A: call CPU ============ -->
+  <g>
+    <text x="45" y="106" font-size="12.5" font-weight="700" fill="#52514e">1080p30 video call — browser CPU while encoding (% of one core)</text>
+    <!-- grid -->
+    <line x1="185" y1="114" x2="185" y2="198" stroke="#c3c2b7" stroke-width="1"/>
+    <line x1="318" y1="114" x2="318" y2="198" stroke="#e1e0d9" stroke-width="1"/>
+    <line x1="452" y1="114" x2="452" y2="198" stroke="#e1e0d9" stroke-width="1"/>
+    <line x1="585" y1="114" x2="585" y2="198" stroke="#e1e0d9" stroke-width="1"/>
+    <text x="185" y="212" text-anchor="middle" font-size="10.5" fill="#898781">0</text>
+    <text x="318" y="212" text-anchor="middle" font-size="10.5" fill="#898781">60</text>
+    <text x="452" y="212" text-anchor="middle" font-size="10.5" fill="#898781">120</text>
+    <text x="585" y="212" text-anchor="middle" font-size="10.5" fill="#898781">180</text>
+    <!-- bars -->
+    <text x="177" y="136" text-anchor="end" font-size="11" fill="#52514e">Software</text>
+    <path d="M185,121 L537,121 A4,4 0 0 1 541,125 L541,139 A4,4 0 0 1 537,143 L185,143 Z" fill="#2a78d6"/>
+    <text x="549" y="136" font-size="12" font-weight="700" fill="#0b0b0b">≈160%</text>
+    <text x="177" y="172" text-anchor="end" font-size="11" fill="#52514e">Vulkan HW</text>
+    <path d="M185,157 L270,157 A4,4 0 0 1 274,161 L274,175 A4,4 0 0 1 270,179 L185,179 Z" fill="#008300"/>
+    <text x="282" y="172" font-size="12" font-weight="700" fill="#0b0b0b">≈40%</text>
+  </g>
+
+  <!-- ============ Panel B: call power ============ -->
+  <g>
+    <text x="655" y="106" font-size="12.5" font-weight="700" fill="#52514e">1080p30 video call — CPU package power above idle (W)</text>
+    <line x1="795" y1="114" x2="795" y2="198" stroke="#c3c2b7" stroke-width="1"/>
+    <line x1="928" y1="114" x2="928" y2="198" stroke="#e1e0d9" stroke-width="1"/>
+    <line x1="1062" y1="114" x2="1062" y2="198" stroke="#e1e0d9" stroke-width="1"/>
+    <line x1="1195" y1="114" x2="1195" y2="198" stroke="#e1e0d9" stroke-width="1"/>
+    <text x="795" y="212" text-anchor="middle" font-size="10.5" fill="#898781">0</text>
+    <text x="928" y="212" text-anchor="middle" font-size="10.5" fill="#898781">8</text>
+    <text x="1062" y="212" text-anchor="middle" font-size="10.5" fill="#898781">16</text>
+    <text x="1195" y="212" text-anchor="middle" font-size="10.5" fill="#898781">24</text>
+    <text x="787" y="136" text-anchor="end" font-size="11" fill="#52514e">Software</text>
+    <path d="M795,121 L1141,121 A4,4 0 0 1 1145,125 L1145,139 A4,4 0 0 1 1141,143 L795,143 Z" fill="#2a78d6"/>
+    <text x="1153" y="136" font-size="12" font-weight="700" fill="#0b0b0b">≈21 W</text>
+    <text x="787" y="172" text-anchor="end" font-size="11" fill="#52514e">Vulkan HW</text>
+    <path d="M795,157 L891,157 A4,4 0 0 1 895,161 L895,175 A4,4 0 0 1 891,179 L795,179 Z" fill="#008300"/>
+    <text x="903" y="172" font-size="12" font-weight="700" fill="#0b0b0b">≈6 W</text>
+  </g>
+
+  <!-- ============ Panel C: tab-record CPU ============ -->
+  <g>
+    <text x="45" y="266" font-size="12.5" font-weight="700" fill="#52514e">4K30 tab-capture recording — browser CPU while encoding (% of one core)</text>
+    <line x1="185" y1="274" x2="185" y2="358" stroke="#c3c2b7" stroke-width="1"/>
+    <line x1="299" y1="274" x2="299" y2="358" stroke="#e1e0d9" stroke-width="1"/>
+    <line x1="414" y1="274" x2="414" y2="358" stroke="#e1e0d9" stroke-width="1"/>
+    <line x1="528" y1="274" x2="528" y2="358" stroke="#e1e0d9" stroke-width="1"/>
+    <text x="185" y="372" text-anchor="middle" font-size="10.5" fill="#898781">0</text>
+    <text x="299" y="372" text-anchor="middle" font-size="10.5" fill="#898781">100</text>
+    <text x="414" y="372" text-anchor="middle" font-size="10.5" fill="#898781">200</text>
+    <text x="528" y="372" text-anchor="middle" font-size="10.5" fill="#898781">300</text>
+    <text x="177" y="296" text-anchor="end" font-size="11" fill="#52514e">Software</text>
+    <path d="M185,281 L558,281 A4,4 0 0 1 562,285 L562,299 A4,4 0 0 1 558,303 L185,303 Z" fill="#2a78d6"/>
+    <text x="570" y="296" font-size="12" font-weight="700" fill="#0b0b0b">≈330%</text>
+    <text x="177" y="332" text-anchor="end" font-size="11" fill="#52514e">Vulkan HW</text>
+    <path d="M185,317 L232,317 A4,4 0 0 1 236,321 L236,335 A4,4 0 0 1 232,339 L185,339 Z" fill="#008300"/>
+    <text x="244" y="332" font-size="12" font-weight="700" fill="#0b0b0b">≈45%</text>
+  </g>
+
+  <!-- ============ Panel D: memory traffic ============ -->
+  <g>
+    <text x="655" y="266" font-size="12.5" font-weight="700" fill="#52514e">4K30 tab-capture recording — frame-transport CPU memory traffic (MB/s)</text>
+    <line x1="795" y1="274" x2="795" y2="358" stroke="#c3c2b7" stroke-width="1"/>
+    <line x1="920" y1="274" x2="920" y2="358" stroke="#e1e0d9" stroke-width="1"/>
+    <line x1="1045" y1="274" x2="1045" y2="358" stroke="#e1e0d9" stroke-width="1"/>
+    <line x1="1170" y1="274" x2="1170" y2="358" stroke="#e1e0d9" stroke-width="1"/>
+    <text x="795" y="372" text-anchor="middle" font-size="10.5" fill="#898781">0</text>
+    <text x="920" y="372" text-anchor="middle" font-size="10.5" fill="#898781">250</text>
+    <text x="1045" y="372" text-anchor="middle" font-size="10.5" fill="#898781">500</text>
+    <text x="1170" y="372" text-anchor="middle" font-size="10.5" fill="#898781">750</text>
+    <text x="787" y="296" text-anchor="end" font-size="11" fill="#52514e">CPU path</text>
+    <path d="M795,281 L1166,281 A4,4 0 0 1 1170,285 L1170,299 A4,4 0 0 1 1166,303 L795,303 Z" fill="#2a78d6"/>
+    <text x="1178" y="296" font-size="12" font-weight="700" fill="#0b0b0b">≈750</text>
+    <text x="787" y="332" text-anchor="end" font-size="11" fill="#52514e">All-GPU lane</text>
+    <circle cx="795" cy="328" r="4" fill="#008300"/>
+    <text x="807" y="332" font-size="12" font-weight="700" fill="#0b0b0b">0 — frames never touch system memory</text>
+  </g>
+
+  <!-- ============ stat tiles ============ -->
+  <g>
+    <rect x="45" y="402" width="285" height="84" rx="10" fill="#ffffff" stroke="#0b0b0b" stroke-opacity="0.10"/>
+    <text x="187" y="442" text-anchor="middle" font-size="26" font-weight="700" fill="#0b0b0b">≈4×</text>
+    <text x="187" y="466" text-anchor="middle" font-size="11" fill="#52514e">lower browser CPU in a 1080p call</text>
+
+    <rect x="345" y="402" width="285" height="84" rx="10" fill="#ffffff" stroke="#0b0b0b" stroke-opacity="0.10"/>
+    <text x="487" y="442" text-anchor="middle" font-size="26" font-weight="700" fill="#0b0b0b">≈70%</text>
+    <text x="487" y="466" text-anchor="middle" font-size="11" fill="#52514e">less CPU package power while encoding</text>
+
+    <rect x="645" y="402" width="285" height="84" rx="10" fill="#ffffff" stroke="#0b0b0b" stroke-opacity="0.10"/>
+    <text x="787" y="442" text-anchor="middle" font-size="26" font-weight="700" fill="#0b0b0b">0 bytes</text>
+    <text x="787" y="466" text-anchor="middle" font-size="11" fill="#52514e">per-frame CPU traffic on the all-GPU lane</text>
+
+    <rect x="945" y="402" width="290" height="84" rx="10" fill="#ffffff" stroke="#0b0b0b" stroke-opacity="0.10"/>
+    <text x="1090" y="442" text-anchor="middle" font-size="26" font-weight="700" fill="#0b0b0b">51.07 dB</text>
+    <text x="1090" y="466" text-anchor="middle" font-size="11" fill="#52514e">measured PSNR at CQP 26 (38 dB CI gate)</text>
+  </g>
+
+  <text x="45" y="522" font-size="10.5" fill="#898781">Preliminary development-snapshot figures, rounded (RTX A4000, driver 615.06, H.264): CPU and package-power panels measured on the development system;</text>
+  <text x="45" y="538" font-size="10.5" fill="#898781">frame-transport traffic is derived from NV12 frame size × frame rate × copies on each path. Methodology follows the project test plan (Tier-2 + browser-level KPIs);</text>
+  <text x="45" y="554" font-size="10.5" fill="#898781">refreshed, reproducible benchmark figures will accompany the upstream Chromium CLs.</text>
+</svg>

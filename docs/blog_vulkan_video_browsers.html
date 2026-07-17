@@ -95,6 +95,21 @@
             font-weight: 700; color: var(--text-primary); display: block;
             margin-bottom: 0.5rem; font-size: 0.98rem;
         }
+        .uc-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 0.55rem 1.6rem; margin: 1.2rem 0 1.6rem;
+        }
+        .uc {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 10px; padding: 0.65rem 0.9rem; font-size: 0.92rem;
+            color: var(--text-secondary);
+        }
+        .uc strong { color: var(--text-primary); display: block; margin-bottom: 0.1rem; }
+        .uc .hw {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+            color: var(--accent-nvidia); text-transform: uppercase; letter-spacing: 0.08em;
+        }
+        @media (max-width: 700px) { .uc-grid { grid-template-columns: 1fr; } }
         table { width: 100%; border-collapse: collapse; margin: 1.2rem 0 1.6rem; font-size: 0.88rem; }
         th {
             text-align: left; padding: 0.55rem 0.8rem; color: var(--text-primary);
@@ -309,6 +324,34 @@
 
     <!-- ================= CLOSING ================= -->
     <h2>Why this matters</h2>
+    <p>
+        Because video is not a feature of the browser — by traffic volume it <strong>is</strong> most of what a
+        browser does. Video makes up well over half of all internet traffic by most measurements, and nearly
+        every way people produce or consume it runs through a browser engine. Every one of these everyday
+        activities crosses the hardware codec path this initiative accelerates:
+    </p>
+    <div class="uc-grid">
+        <div class="uc"><strong>Playback &amp; streaming</strong>YouTube, Netflix, Twitch, embedded video everywhere <span class="hw">decode</span></div>
+        <div class="uc"><strong>Video conferencing</strong>Meet, Teams, Zoom, Discord — camera calls all day <span class="hw">decode + encode</span></div>
+        <div class="uc"><strong>Screen sharing &amp; collaboration</strong>presenting a tab, window, or desktop into a call <span class="hw">encode</span></div>
+        <div class="uc"><strong>In-browser recording</strong>Loom-style capture, voice/video notes, interviews <span class="hw">encode</span></div>
+        <div class="uc"><strong>Tab &amp; screen casting</strong>mirroring the browser to TVs and conference rooms <span class="hw">encode</span></div>
+        <div class="uc"><strong>Remote desktop &amp; cloud workstations</strong>Chrome Remote Desktop and friends <span class="hw">decode + host encode</span></div>
+        <div class="uc"><strong>Cloud gaming</strong>GeForce NOW and other browser-delivered game streams <span class="hw">low-latency decode</span></div>
+        <div class="uc"><strong>Creator tools &amp; live broadcast</strong>WebCodecs editors, transcoders, WebRTC/WHIP ingest <span class="hw">decode + encode</span></div>
+    </div>
+    <p>
+        And the difference hardware makes is not subtle. The snapshot below compares software encoding on the
+        CPU against the Vulkan Video backend on our development system for two of those use cases — an everyday
+        1080p video call, and the all-GPU tab-recording lane where capture, color conversion, and encode never
+        leave the GPU:
+    </p>
+    <div class="diagram">
+        <object data="diagrams/blog_kpi_snapshot.svg" type="image/svg+xml" width="100%"></object>
+        <div class="diagram-caption">Development-snapshot KPIs (preliminary, rounded; RTX A4000, H.264). CPU and
+        power panels are measured on the development system; the frame-transport panel is derived from NV12 frame
+        size × frame rate per path. Reproducible benchmark figures will accompany the upstream Chromium CLs.</div>
+    </div>
     <p>
         When this work completes, a browser needs <em>one</em> video acceleration backend that runs on every GPU
         vendor and every Vulkan-capable platform — Linux under Wayland and X11, Windows, and the embedded and
