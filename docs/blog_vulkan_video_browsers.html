@@ -282,19 +282,23 @@
     </div>
 
     <!-- ================= CHROMIUM ================= -->
-    <h2 class="cr">Chromium: decode today via VA-API, a Vulkan-native encoder next</h2>
+    <h2 class="cr">Chromium: Vulkan encode first, decode next</h2>
     <p>
         For Chromium we deliberately sequenced the work so users get value at every stage. The project began with
         detailed planning — integration design documents, a gap analysis of the Vulkan Video Samples library
         against Chromium's encoder interface, and a five-tier test plan. On the decode side, Chromium's existing
         VA-API backend already served Intel and AMD GPUs — <strong>NVIDIA GPUs were the gap</strong>. So NVIDIA
         delivered a <strong>VA-API port as a temporary bridge</strong>: it fills that gap and gives Chromium
-        users on NVIDIA hardware accelerated decode today, through the browser's existing backend, while the
-        Vulkan-native decoder — the real destination for all vendors — is developed in parallel.
+        users on NVIDIA hardware accelerated decode today, through the browser's existing backend.
     </p>
     <p>
-        For <strong>encode</strong>, the decision was strategic: build the browser's hardware encoder plug-in
-        directly on the <strong>Vulkan API and the Vulkan Video Samples library</strong>. The library — extended
+        With decode covered by the bridge, the ordering of the Vulkan-native work follows directly:
+        <strong>encode goes first, decode next</strong>. Encode is where the real gap is — stock Linux Chromium
+        has <em>no</em> hardware encode path at all today — while decode already works. So the first
+        Vulkan-native backend to head upstream is the encoder; the Vulkan decoder follows it and, when it lands,
+        retires the VA-API bridge and unifies decode across vendors. And the encode decision was strategic:
+        build the browser's hardware encoder plug-in directly on the <strong>Vulkan API and the Vulkan Video
+        Samples library</strong>. The library — extended
         with embedding-grade capabilities (caller-provided <code>VkDevice</code>, in-memory bitstream return,
         DMA-buf-imported input frames, capability probing before initialization, sandbox-quiet operation) — is
         vendored and statically linked into Chromium the same way libvpx and libaom are, and driven by a
@@ -318,8 +322,8 @@
 
     <div class="diagram">
         <object data="diagrams/blog_chromium_roadmap.svg" type="image/svg+xml" width="100%"></object>
-        <div class="diagram-caption">Three Chromium tracks: the delivered VA-API decode port, the in-development
-        Vulkan decoder, and the Vulkan encoder now heading upstream.</div>
+        <div class="diagram-caption">Three Chromium tracks in order: the delivered VA-API decode bridge, the
+        Vulkan encoder heading upstream first, and the Vulkan decoder that follows and retires the bridge.</div>
     </div>
 
     <!-- ================= CLOSING ================= -->

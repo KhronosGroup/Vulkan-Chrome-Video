@@ -41,8 +41,8 @@
   <text x="340" y="211" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#0d47a1">multi-tab-stable: shared VkDevice + per-decoder fences (D306576)</text>
 
   <rect x="650" y="118" width="560" height="105" rx="8" fill="url(#brwG)" stroke="#1976d2" stroke-width="2"/>
-  <text x="930" y="141" text-anchor="middle" font-size="14" font-weight="bold" fill="#0d47a1">Chromium — decode bridged via VA-API, Vulkan encode next</text>
-  <text x="930" y="160" text-anchor="middle" font-size="10.5" fill="#37474f">NVIDIA VA-API port fills the gap Intel/AMD never had (temporary bridge) · Vulkan decoder in development</text>
+  <text x="930" y="141" text-anchor="middle" font-size="14" font-weight="bold" fill="#0d47a1">Chromium — Vulkan encode first, decode next</text>
+  <text x="930" y="160" text-anchor="middle" font-size="10.5" fill="#37474f">decode already accelerated via the NVIDIA VA-API bridge port · Vulkan decoder follows the encoder</text>
   <text x="930" y="176" text-anchor="middle" font-size="10.5" fill="#37474f">Vulkan encode backend built on the Vulkan Video Samples library (vendored, static-link)</text>
   <text x="930" y="192" text-anchor="middle" font-size="10.5" fill="#37474f">SharedImage zero-copy seam · compositor-VkDevice BYO integration</text>
   <text x="930" y="211" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#0d47a1">upstream pushes begin end of July 2026</text>
