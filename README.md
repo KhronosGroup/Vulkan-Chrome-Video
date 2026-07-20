@@ -1,3 +1,20 @@
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: Copyright (c) 2026 The Khronos Group, Inc.
+SPDX-License-Identifier: Apache-2.0
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
 # Chrome Vulkan Video Integration
 
 Hardware-accelerated video decoding using Vulkan Video extensions for the Chromium browser.
@@ -213,7 +230,12 @@ autoninja -C out/Debug chrome
 
 ## License
 
-This project follows Chromium's BSD-style license. See [LICENSE](chromium/src/LICENSE) in the Chromium source.
+Project-owned integration components and documentation are licensed under
+the [Apache License 2.0](LICENSE).
+
+The Chromium source checkout remains governed by Chromium's BSD-style license
+and applicable third-party licenses. See
+[`chromium/src/LICENSE`](chromium/src/LICENSE).
 
 ---
 
