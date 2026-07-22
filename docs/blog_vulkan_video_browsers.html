@@ -362,16 +362,19 @@ limitations under the License.
         <div class="uc"><strong>Creator tools &amp; live broadcast</strong>WebCodecs editors, transcoders, WebRTC/WHIP ingest <span class="hw">decode + encode</span></div>
     </div>
     <p>
-        And the difference hardware makes is not subtle. The snapshot below compares software encoding on the
-        CPU against the Vulkan Video backend on our development system for two of those use cases — an everyday
-        1080p video call, and the all-GPU tab-recording lane where capture, color conversion, and encode never
-        leave the GPU:
+        Moving encode off the CPU and onto dedicated silicon should show up on every axis that matters to a
+        laptop or a fanless device — processor load, power draw, latency, and the memory traffic of shuttling
+        frames around. We are measuring exactly those KPIs, for an everyday 1080p video call and for the all-GPU
+        tab-recording lane where capture, color conversion, and encode never leave the GPU. Rather than quote
+        numbers before they are measured, here is the scorecard we will fill in — with reproducible figures
+        published alongside the upstream Chromium change lists:
     </p>
     <div class="diagram">
         <object data="diagrams/blog_kpi_snapshot.svg" type="image/svg+xml" width="100%"></object>
-        <div class="diagram-caption">Development-snapshot KPIs (preliminary, rounded; RTX A4000, H.264). CPU and
-        power panels are measured on the development system; the frame-transport panel is derived from NV12 frame
-        size × frame rate per path. Reproducible benchmark figures will accompany the upstream Chromium CLs.</div>
+        <div class="diagram-caption">The KPI scorecard (numbers to be measured and published with the upstream
+        CLs). The only entries filled in today are architectural facts, not benchmarks: the zero-copy path is
+        verified bit-identical to the software reference, and the all-GPU lane moves zero frame bytes through
+        system memory by construction.</div>
     </div>
     <p>
         When this work completes, a browser needs <em>one</em> video acceleration backend that runs on every GPU

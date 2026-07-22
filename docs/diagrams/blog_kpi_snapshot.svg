@@ -16,116 +16,86 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 585" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
-  <rect x="0" y="0" width="1280" height="585" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 560" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <rect x="0" y="0" width="1280" height="560" fill="#ffffff"/>
 
-  <text x="45" y="34" font-size="20" font-weight="700" fill="#0b0b0b">What hardware encode buys — development-snapshot KPIs</text>
-  <text x="45" y="56" font-size="12" fill="#52514e">Two everyday use cases, software encode on the CPU vs the Vulkan Video backend (H.264, NVIDIA RTX A4000)</text>
+  <text x="45" y="34" font-size="20" font-weight="700" fill="#0b0b0b">What hardware encode buys — benchmarks coming soon</text>
+  <text x="45" y="56" font-size="12" fill="#52514e">The KPIs we are measuring across everyday use cases: software encode on the CPU vs the Vulkan Video backend. Figures publish with the upstream Chromium CLs.</text>
 
-  <!-- legend -->
-  <rect x="905" y="22" width="14" height="14" rx="3" fill="#2a78d6"/>
-  <text x="925" y="34" font-size="12" fill="#52514e">Software encode (CPU)</text>
-  <rect x="1093" y="22" width="14" height="14" rx="3" fill="#008300"/>
-  <text x="1113" y="34" font-size="12" fill="#52514e">Vulkan Video (HW)</text>
+  <!-- column headers -->
+  <text x="620" y="98" text-anchor="middle" font-size="12" font-weight="700" fill="#52514e">Software encode (CPU)</text>
+  <text x="620" y="112" text-anchor="middle" font-size="10" fill="#898781">reference baseline</text>
+  <text x="880" y="98" text-anchor="middle" font-size="12" font-weight="700" fill="#008300">Vulkan Video (HW)</text>
+  <text x="880" y="112" text-anchor="middle" font-size="10" fill="#898781">this initiative</text>
+  <text x="1075" y="98" font-size="12" font-weight="700" fill="#52514e">Why it matters</text>
+  <line x1="45" y1="122" x2="1235" y2="122" stroke="#c3c2b7" stroke-width="1"/>
 
-  <!-- ============ Panel A: call CPU ============ -->
+  <!-- metric rows: each has a "measuring" pill in both condition columns -->
+  <!-- Row 1 -->
   <g>
-    <text x="45" y="106" font-size="12.5" font-weight="700" fill="#52514e">1080p30 video call — browser CPU while encoding (% of one core)</text>
-    <!-- grid -->
-    <line x1="185" y1="114" x2="185" y2="198" stroke="#c3c2b7" stroke-width="1"/>
-    <line x1="318" y1="114" x2="318" y2="198" stroke="#e1e0d9" stroke-width="1"/>
-    <line x1="452" y1="114" x2="452" y2="198" stroke="#e1e0d9" stroke-width="1"/>
-    <line x1="585" y1="114" x2="585" y2="198" stroke="#e1e0d9" stroke-width="1"/>
-    <text x="185" y="212" text-anchor="middle" font-size="10.5" fill="#898781">0</text>
-    <text x="318" y="212" text-anchor="middle" font-size="10.5" fill="#898781">60</text>
-    <text x="452" y="212" text-anchor="middle" font-size="10.5" fill="#898781">120</text>
-    <text x="585" y="212" text-anchor="middle" font-size="10.5" fill="#898781">180</text>
-    <!-- bars -->
-    <text x="177" y="136" text-anchor="end" font-size="11" fill="#52514e">Software</text>
-    <path d="M185,121 L537,121 A4,4 0 0 1 541,125 L541,139 A4,4 0 0 1 537,143 L185,143 Z" fill="#2a78d6"/>
-    <text x="549" y="136" font-size="12" font-weight="700" fill="#0b0b0b">≈160%</text>
-    <text x="177" y="172" text-anchor="end" font-size="11" fill="#52514e">Vulkan HW</text>
-    <path d="M185,157 L270,157 A4,4 0 0 1 274,161 L274,175 A4,4 0 0 1 270,179 L185,179 Z" fill="#008300"/>
-    <text x="282" y="172" font-size="12" font-weight="700" fill="#0b0b0b">≈40%</text>
+    <text x="45" y="152" font-size="12.5" font-weight="700" fill="#0b0b0b">Browser CPU while encoding</text>
+    <text x="45" y="169" font-size="10.5" fill="#898781">% of a core, 1080p30 video call &amp; 4K30 tab recording</text>
+    <rect x="530" y="142" width="180" height="26" rx="13" fill="#f2f1ee" stroke="#c3c2b7"/>
+    <text x="620" y="159" text-anchor="middle" font-size="11" fill="#898781">measurement pending</text>
+    <rect x="790" y="142" width="180" height="26" rx="13" fill="#f2f1ee" stroke="#c3c2b7"/>
+    <text x="880" y="159" text-anchor="middle" font-size="11" fill="#898781">measurement pending</text>
+    <text x="1000" y="159" font-size="11" fill="#52514e">Frees CPU cores that software codecs peg during every call</text>
+  </g>
+  <line x1="45" y1="184" x2="1235" y2="184" stroke="#e1e0d9" stroke-width="1"/>
+
+  <!-- Row 2 -->
+  <g>
+    <text x="45" y="214" font-size="12.5" font-weight="700" fill="#0b0b0b">CPU package power above idle</text>
+    <text x="45" y="231" font-size="10.5" fill="#898781">watts (RAPL), sustained encode</text>
+    <rect x="530" y="204" width="180" height="26" rx="13" fill="#f2f1ee" stroke="#c3c2b7"/>
+    <text x="620" y="221" text-anchor="middle" font-size="11" fill="#898781">measurement pending</text>
+    <rect x="790" y="204" width="180" height="26" rx="13" fill="#f2f1ee" stroke="#c3c2b7"/>
+    <text x="880" y="221" text-anchor="middle" font-size="11" fill="#898781">measurement pending</text>
+    <text x="1000" y="221" font-size="11" fill="#52514e">Battery life and thermal headroom on laptops and fanless devices</text>
+  </g>
+  <line x1="45" y1="246" x2="1235" y2="246" stroke="#e1e0d9" stroke-width="1"/>
+
+  <!-- Row 3 -->
+  <g>
+    <text x="45" y="276" font-size="12.5" font-weight="700" fill="#0b0b0b">Frame-transport memory traffic</text>
+    <text x="45" y="293" font-size="10.5" fill="#898781">CPU bytes moved per frame, capture → encoder</text>
+    <rect x="530" y="266" width="180" height="26" rx="13" fill="#f2f1ee" stroke="#c3c2b7"/>
+    <text x="620" y="283" text-anchor="middle" font-size="11" fill="#898781">measurement pending</text>
+    <rect x="790" y="266" width="180" height="26" rx="13" fill="#e6f4e6" stroke="#008300"/>
+    <text x="880" y="283" text-anchor="middle" font-size="11" font-weight="700" fill="#008300">0 by design (zero-copy)</text>
+    <text x="1000" y="283" font-size="11" fill="#52514e">All-GPU lane never copies frames through system memory</text>
+  </g>
+  <line x1="45" y1="308" x2="1235" y2="308" stroke="#e1e0d9" stroke-width="1"/>
+
+  <!-- Row 4 -->
+  <g>
+    <text x="45" y="338" font-size="12.5" font-weight="700" fill="#0b0b0b">Encode latency (p50 / p99)</text>
+    <text x="45" y="355" font-size="10.5" fill="#898781">milliseconds per frame, real-time modes</text>
+    <rect x="530" y="328" width="180" height="26" rx="13" fill="#f2f1ee" stroke="#c3c2b7"/>
+    <text x="620" y="345" text-anchor="middle" font-size="11" fill="#898781">measurement pending</text>
+    <rect x="790" y="328" width="180" height="26" rx="13" fill="#f2f1ee" stroke="#c3c2b7"/>
+    <text x="880" y="345" text-anchor="middle" font-size="11" fill="#898781">measurement pending</text>
+    <text x="1000" y="345" font-size="11" fill="#52514e">Call responsiveness and glass-to-glass delay</text>
+  </g>
+  <line x1="45" y1="368" x2="1235" y2="368" stroke="#e1e0d9" stroke-width="1"/>
+
+  <!-- Row 5 -->
+  <g>
+    <text x="45" y="398" font-size="12.5" font-weight="700" fill="#0b0b0b">Output quality at target bitrate</text>
+    <text x="45" y="415" font-size="10.5" fill="#898781">PSNR / SSIM / BD-rate vs reference</text>
+    <rect x="530" y="388" width="180" height="26" rx="13" fill="#f2f1ee" stroke="#c3c2b7"/>
+    <text x="620" y="405" text-anchor="middle" font-size="11" fill="#898781">measurement pending</text>
+    <rect x="790" y="388" width="180" height="26" rx="13" fill="#f2f1ee" stroke="#c3c2b7"/>
+    <text x="880" y="405" text-anchor="middle" font-size="11" fill="#898781">measurement pending</text>
+    <text x="1000" y="405" font-size="11" fill="#52514e">Parity or better against the software encoder</text>
   </g>
 
-  <!-- ============ Panel B: call power ============ -->
-  <g>
-    <text x="655" y="106" font-size="12.5" font-weight="700" fill="#52514e">1080p30 video call — CPU package power above idle (W)</text>
-    <line x1="795" y1="114" x2="795" y2="198" stroke="#c3c2b7" stroke-width="1"/>
-    <line x1="928" y1="114" x2="928" y2="198" stroke="#e1e0d9" stroke-width="1"/>
-    <line x1="1062" y1="114" x2="1062" y2="198" stroke="#e1e0d9" stroke-width="1"/>
-    <line x1="1195" y1="114" x2="1195" y2="198" stroke="#e1e0d9" stroke-width="1"/>
-    <text x="795" y="212" text-anchor="middle" font-size="10.5" fill="#898781">0</text>
-    <text x="928" y="212" text-anchor="middle" font-size="10.5" fill="#898781">8</text>
-    <text x="1062" y="212" text-anchor="middle" font-size="10.5" fill="#898781">16</text>
-    <text x="1195" y="212" text-anchor="middle" font-size="10.5" fill="#898781">24</text>
-    <text x="787" y="136" text-anchor="end" font-size="11" fill="#52514e">Software</text>
-    <path d="M795,121 L1141,121 A4,4 0 0 1 1145,125 L1145,139 A4,4 0 0 1 1141,143 L795,143 Z" fill="#2a78d6"/>
-    <text x="1153" y="136" font-size="12" font-weight="700" fill="#0b0b0b">≈21 W</text>
-    <text x="787" y="172" text-anchor="end" font-size="11" fill="#52514e">Vulkan HW</text>
-    <path d="M795,157 L891,157 A4,4 0 0 1 895,161 L895,175 A4,4 0 0 1 891,179 L795,179 Z" fill="#008300"/>
-    <text x="903" y="172" font-size="12" font-weight="700" fill="#0b0b0b">≈6 W</text>
-  </g>
+  <!-- Established-today strip (functional facts, not performance) -->
+  <rect x="45" y="438" width="1190" height="60" rx="10" fill="#f0fdf4" stroke="#008300" stroke-opacity="0.35"/>
+  <text x="62" y="461" font-size="12" font-weight="700" fill="#1b5e20">Established on the dev branch today (functional, not performance):</text>
+  <text x="62" y="481" font-size="11" fill="#37474f">• the zero-copy input path is verified bit-identical to the software staging reference (md5), validation-layer clean · • the all-GPU</text>
+  <text x="62" y="495" font-size="11" fill="#37474f">capture → color-convert → encode lane moves zero frame bytes through system memory by construction — the KPIs above quantify what that saves.</text>
 
-  <!-- ============ Panel C: tab-record CPU ============ -->
-  <g>
-    <text x="45" y="266" font-size="12.5" font-weight="700" fill="#52514e">4K30 tab-capture recording — browser CPU while encoding (% of one core)</text>
-    <line x1="185" y1="274" x2="185" y2="358" stroke="#c3c2b7" stroke-width="1"/>
-    <line x1="299" y1="274" x2="299" y2="358" stroke="#e1e0d9" stroke-width="1"/>
-    <line x1="414" y1="274" x2="414" y2="358" stroke="#e1e0d9" stroke-width="1"/>
-    <line x1="528" y1="274" x2="528" y2="358" stroke="#e1e0d9" stroke-width="1"/>
-    <text x="185" y="372" text-anchor="middle" font-size="10.5" fill="#898781">0</text>
-    <text x="299" y="372" text-anchor="middle" font-size="10.5" fill="#898781">100</text>
-    <text x="414" y="372" text-anchor="middle" font-size="10.5" fill="#898781">200</text>
-    <text x="528" y="372" text-anchor="middle" font-size="10.5" fill="#898781">300</text>
-    <text x="177" y="296" text-anchor="end" font-size="11" fill="#52514e">Software</text>
-    <path d="M185,281 L558,281 A4,4 0 0 1 562,285 L562,299 A4,4 0 0 1 558,303 L185,303 Z" fill="#2a78d6"/>
-    <text x="570" y="296" font-size="12" font-weight="700" fill="#0b0b0b">≈330%</text>
-    <text x="177" y="332" text-anchor="end" font-size="11" fill="#52514e">Vulkan HW</text>
-    <path d="M185,317 L232,317 A4,4 0 0 1 236,321 L236,335 A4,4 0 0 1 232,339 L185,339 Z" fill="#008300"/>
-    <text x="244" y="332" font-size="12" font-weight="700" fill="#0b0b0b">≈45%</text>
-  </g>
-
-  <!-- ============ Panel D: memory traffic ============ -->
-  <g>
-    <text x="655" y="266" font-size="12.5" font-weight="700" fill="#52514e">4K30 tab-capture recording — frame-transport CPU memory traffic (MB/s)</text>
-    <line x1="795" y1="274" x2="795" y2="358" stroke="#c3c2b7" stroke-width="1"/>
-    <line x1="920" y1="274" x2="920" y2="358" stroke="#e1e0d9" stroke-width="1"/>
-    <line x1="1045" y1="274" x2="1045" y2="358" stroke="#e1e0d9" stroke-width="1"/>
-    <line x1="1170" y1="274" x2="1170" y2="358" stroke="#e1e0d9" stroke-width="1"/>
-    <text x="795" y="372" text-anchor="middle" font-size="10.5" fill="#898781">0</text>
-    <text x="920" y="372" text-anchor="middle" font-size="10.5" fill="#898781">250</text>
-    <text x="1045" y="372" text-anchor="middle" font-size="10.5" fill="#898781">500</text>
-    <text x="1170" y="372" text-anchor="middle" font-size="10.5" fill="#898781">750</text>
-    <text x="787" y="296" text-anchor="end" font-size="11" fill="#52514e">CPU path</text>
-    <path d="M795,281 L1166,281 A4,4 0 0 1 1170,285 L1170,299 A4,4 0 0 1 1166,303 L795,303 Z" fill="#2a78d6"/>
-    <text x="1178" y="296" font-size="12" font-weight="700" fill="#0b0b0b">≈750</text>
-    <text x="787" y="332" text-anchor="end" font-size="11" fill="#52514e">All-GPU lane</text>
-    <circle cx="795" cy="328" r="4" fill="#008300"/>
-    <text x="807" y="332" font-size="12" font-weight="700" fill="#0b0b0b">0 — frames never touch system memory</text>
-  </g>
-
-  <!-- ============ stat tiles ============ -->
-  <g>
-    <rect x="45" y="402" width="285" height="84" rx="10" fill="#ffffff" stroke="#0b0b0b" stroke-opacity="0.10"/>
-    <text x="187" y="442" text-anchor="middle" font-size="26" font-weight="700" fill="#0b0b0b">≈4×</text>
-    <text x="187" y="466" text-anchor="middle" font-size="11" fill="#52514e">lower browser CPU in a 1080p call</text>
-
-    <rect x="345" y="402" width="285" height="84" rx="10" fill="#ffffff" stroke="#0b0b0b" stroke-opacity="0.10"/>
-    <text x="487" y="442" text-anchor="middle" font-size="26" font-weight="700" fill="#0b0b0b">≈70%</text>
-    <text x="487" y="466" text-anchor="middle" font-size="11" fill="#52514e">less CPU package power while encoding</text>
-
-    <rect x="645" y="402" width="285" height="84" rx="10" fill="#ffffff" stroke="#0b0b0b" stroke-opacity="0.10"/>
-    <text x="787" y="442" text-anchor="middle" font-size="26" font-weight="700" fill="#0b0b0b">0 bytes</text>
-    <text x="787" y="466" text-anchor="middle" font-size="11" fill="#52514e">per-frame CPU traffic on the all-GPU lane</text>
-
-    <rect x="945" y="402" width="290" height="84" rx="10" fill="#ffffff" stroke="#0b0b0b" stroke-opacity="0.10"/>
-    <text x="1090" y="442" text-anchor="middle" font-size="26" font-weight="700" fill="#0b0b0b">51.07 dB</text>
-    <text x="1090" y="466" text-anchor="middle" font-size="11" fill="#52514e">measured PSNR at CQP 26 (38 dB CI gate)</text>
-  </g>
-
-  <text x="45" y="522" font-size="10.5" fill="#898781">Preliminary development-snapshot figures, rounded (RTX A4000, driver 615.06, H.264): CPU and package-power panels measured on the development system;</text>
-  <text x="45" y="538" font-size="10.5" fill="#898781">frame-transport traffic is derived from NV12 frame size × frame rate × copies on each path. Methodology follows the project test plan (Tier-2 + browser-level KPIs);</text>
-  <text x="45" y="554" font-size="10.5" fill="#898781">refreshed, reproducible benchmark figures will accompany the upstream Chromium CLs.</text>
+  <text x="45" y="524" font-size="10.5" fill="#898781">Benchmarks will be measured with the project test plan's methodology (Tier-2 gtests + browser-level KPIs) on multiple GPUs and published,</text>
+  <text x="45" y="540" font-size="10.5" fill="#898781">reproducibly, alongside the upstream Chromium change lists. No performance figures are claimed here until then.</text>
 </svg>
