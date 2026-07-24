@@ -4,46 +4,36 @@ SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All 
 SPDX-FileCopyrightText: 2026 The Khronos Group, Inc.
 SPDX-License-Identifier: Apache-2.0
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Generated from the Markdown source by build_blog.py — edit the .md, not this file.
 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bringing Vulkan Video to the Browser — Khronos Vulkan Video TSG &amp; NVIDIA</title>
+    <title>Bringing Vulkan Video to the Browser</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-primary: #0a0e17;
-            --bg-secondary: #111827;
             --bg-card: #1a2332;
             --accent-vulkan: #ac2d2d;
             --accent-vulkan-bright: #e05252;
-            --accent-chrome: #4285f4;
-            --accent-nvidia: #76b900;
-            --accent-firefox: #ff9500;
-            --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
+            --accent-chrome: #5b9bff;
+            --accent-nvidia: #8bd90a;
+            --accent-firefox: #ff9d3d;
+            --text-primary: #eef2f8;
+            --text-body: #d3dce8;
+            --text-secondary: #b3c0d1;
+            --text-muted: #8a97a8;
             --border: #2d3a4f;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Outfit', system-ui, sans-serif;
-            background: var(--bg-primary); color: var(--text-primary);
-            line-height: 1.75; font-size: 16.5px;
+            font-family: 'Outfit', system-ui, sans-serif; font-weight: 400;
+            background: var(--bg-primary); color: var(--text-body);
+            line-height: 1.75; font-size: 17px;
         }
         .bg-pattern {
             position: fixed; inset: 0; z-index: -1;
@@ -66,77 +56,45 @@ limitations under the License.
         .logo-strip .chrome { color: var(--accent-chrome); border-color: var(--accent-chrome); }
         h1 {
             font-size: 2.7rem; font-weight: 700; line-height: 1.15; margin-bottom: 1rem;
-            background: linear-gradient(120deg, #e2e8f0 20%, #94a3b8 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            color: var(--text-primary);
         }
         .hero .dek { font-size: 1.2rem; color: var(--text-secondary); max-width: 760px; margin: 0 auto; }
         .byline { margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
         article { padding-bottom: 5rem; }
         h2 {
-            font-size: 1.7rem; font-weight: 700; margin: 3.2rem 0 1.1rem;
+            font-size: 1.7rem; font-weight: 700; margin: 3.2rem 0 1.1rem; color: var(--text-primary);
             padding-left: 0.9rem; border-left: 4px solid var(--accent-nvidia);
         }
         h2.ff { border-left-color: var(--accent-firefox); }
         h2.cr { border-left-color: var(--accent-chrome); }
         h2.vk { border-left-color: var(--accent-vulkan-bright); }
-        h3 { font-size: 1.18rem; font-weight: 600; margin: 2rem 0 0.7rem; color: var(--text-primary); }
-        p { margin-bottom: 1.1rem; color: var(--text-secondary); }
+        h3 { font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.7rem; color: var(--text-primary); }
+        p { margin-bottom: 1.1rem; color: var(--text-body); }
         p strong, li strong { color: var(--text-primary); }
-        ul, ol { margin: 0 0 1.1rem 1.5rem; color: var(--text-secondary); }
-        li { margin-bottom: 0.45rem; }
+        em { color: var(--text-primary); font-style: italic; }
+        ul, ol { margin: 0 0 1.1rem 1.5rem; color: var(--text-body); }
+        li { margin-bottom: 0.5rem; }
         a { color: var(--accent-chrome); text-decoration: none; }
         a:hover { text-decoration: underline; }
         code {
             font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
             background: var(--bg-card); border: 1px solid var(--border);
-            padding: 0.1rem 0.35rem; border-radius: 4px; color: #9ee6a8;
+            padding: 0.1rem 0.35rem; border-radius: 4px; color: #a8ecb2;
         }
-        .diagram {
+        figure.diagram {
             margin: 1.8rem 0; padding: 1rem; background: #ffffff;
             border: 1px solid var(--border); border-radius: 12px; text-align: center;
         }
-        .diagram object { max-width: 100%; height: auto; }
-        .diagram-caption { margin-top: 0.6rem; font-size: 0.85rem; color: #475569; font-style: italic; }
-        .pull {
+        figure.diagram img, figure.diagram object { max-width: 100%; height: auto; }
+        figure.diagram figcaption { margin-top: 0.6rem; font-size: 0.85rem; color: #475569; font-style: italic; }
+        blockquote.pull {
             border-left: 4px solid var(--accent-vulkan-bright);
             background: var(--bg-card); border-radius: 0 10px 10px 0;
             padding: 1.1rem 1.4rem; margin: 1.6rem 0;
-            font-size: 1.05rem; color: var(--text-primary);
+            font-size: 1.03rem; color: var(--text-primary);
         }
-        .factbox {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 1.2rem 1.4rem; margin: 1.6rem 0;
-            font-size: 0.93rem;
-        }
-        .factbox .fb-title {
-            font-weight: 700; color: var(--text-primary); display: block;
-            margin-bottom: 0.5rem; font-size: 0.98rem;
-        }
-        .uc-grid {
-            display: grid; grid-template-columns: repeat(2, 1fr);
-            gap: 0.55rem 1.6rem; margin: 1.2rem 0 1.6rem;
-        }
-        .uc {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 10px; padding: 0.65rem 0.9rem; font-size: 0.92rem;
-            color: var(--text-secondary);
-        }
-        .uc strong { color: var(--text-primary); display: block; margin-bottom: 0.1rem; }
-        .uc .hw {
-            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-            color: var(--accent-nvidia); text-transform: uppercase; letter-spacing: 0.08em;
-        }
-        @media (max-width: 700px) { .uc-grid { grid-template-columns: 1fr; } }
-        table { width: 100%; border-collapse: collapse; margin: 1.2rem 0 1.6rem; font-size: 0.88rem; }
-        th {
-            text-align: left; padding: 0.55rem 0.8rem; color: var(--text-primary);
-            border-bottom: 2px solid var(--border); font-weight: 600;
-        }
-        td { padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; }
-        .st { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; padding: 0.12rem 0.5rem; border-radius: 999px; white-space: nowrap; }
-        .st.done { background: rgba(118,185,0,0.15); color: var(--accent-nvidia); }
-        .st.rev { background: rgba(255,149,0,0.15); color: var(--accent-firefox); }
-        .st.prop { background: rgba(66,133,244,0.15); color: var(--accent-chrome); }
+        blockquote.pull p { color: var(--text-primary); margin: 0; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
         footer {
             border-top: 1px solid var(--border); padding: 2rem 0 3.5rem;
             color: var(--text-muted); font-size: 0.88rem; text-align: center;
@@ -156,9 +114,7 @@ limitations under the License.
             <span class="chrome">Chromium</span>
         </div>
         <h1>Bringing Vulkan Video to the Browser</h1>
-        <p class="dek">How the Khronos Vulkan Video TSG and NVIDIA are rebuilding browser hardware video acceleration
-        around one cross-vendor API — with zero-copy pipelines shipping in Firefox and a Vulkan-native encoder headed
-        for Chromium.</p>
+        <p class="dek">How the Khronos Vulkan Video TSG and NVIDIA are rebuilding browser hardware video acceleration around one cross-vendor API — with zero-copy pipelines shipping in Firefox and a Vulkan-native encoder headed for Chromium.</p>
         <div class="byline">NVIDIA Multimedia · Khronos Vulkan Video TSG · July 2026</div>
     </div>
 </header>
@@ -166,243 +122,83 @@ limitations under the License.
 <article>
 <div class="container">
 
-    <p>
-        Hardware video acceleration in browsers has always been a patchwork. On Linux it means VA-API on some
-        stacks and V4L2 on others; Windows brings DXVA and Media Foundation; embedded platforms add their own
-        vendor SDKs. Every browser carries a backend per API per platform, every vendor maintains a different
-        integration, and entire classes of hardware — NVIDIA GPUs on Linux desktops most visibly — end up with
-        <em>no</em> accelerated path at all, burning CPU on software codecs during every video call.
-    </p>
-    <p>
-        <strong>Vulkan Video</strong> changes that equation: one explicit, cross-vendor, cross-platform API for
-        hardware decode <em>and</em> encode, defined by the Khronos Vulkan Video Technical Sub-Group and
-        implemented by NVIDIA, AMD, and Intel drivers (with Mesa's RADV, ANV, and NVK following). The TSG and
-        NVIDIA are not just behind the API — we are carrying it through the media frameworks and into the
-        browsers ourselves, and this post is a tour of that work: what has already merged, what it took, and
-        what lands next.
-    </p>
+<p>Hardware video acceleration in browsers has always been a patchwork. On Linux it means VA-API on some stacks and V4L2 on others; Windows brings DXVA and Media Foundation; embedded platforms add their own vendor SDKs. Every browser carries a backend per API per platform, every vendor maintains a different integration, and entire classes of hardware — NVIDIA GPUs on Linux desktops most visibly — end up with <em>no</em> accelerated path at all, burning CPU on software codecs during every video call.</p>
 
-    <div class="diagram">
-        <object data="diagrams/blog_initiative_stack.svg" type="image/svg+xml" width="100%"></object>
-        <div class="diagram-caption">The initiative at a glance: the TSG-defined API at the base, hardened media
-        frameworks in the middle, and two browser integrations on top.</div>
-    </div>
+<p><strong>Vulkan Video</strong> changes that equation: one explicit, cross-vendor, cross-platform API for hardware decode <em>and</em> encode, defined by the Khronos Vulkan Video Technical Sub-Group and implemented by NVIDIA, AMD, and Intel drivers (with Mesa's RADV, ANV, and NVK following). The TSG and NVIDIA are not just behind the API — we are carrying it through the media frameworks and into the browsers ourselves, and this post is a tour of that work: what has already merged, what it took, and what lands next.</p>
 
-    <!-- ================= FOUNDATION ================= -->
-    <h2 class="vk">The foundation: an API built for exactly this</h2>
-    <p>
-        Vulkan Video extends the same explicit-GPU philosophy of Vulkan to codec hardware:
-        <code>VK_KHR_video_queue</code> plus decode and encode queue extensions, codec operation extensions for
-        H.264, H.265, and AV1 (decode and encode, with VP9 decode alongside), maintenance extensions, and a
-        growing set of encode-quality features — quantization maps, intra-refresh, tuning profiles. It comes with
-        Khronos conformance tests (<code>dEQP-VK.video.*</code>) and a reference implementation: the
-        <strong>Vulkan Video Samples</strong> library, which implements the hard parts — session management, DPB
-        tracking, rate control, GOP structure, bitstream assembly, and GPU compute filters for YCbCr conversion.
-    </p>
-    <p>
-        For applications, the payoff is that video decode, encode, graphics, and compute all live in one API with
-        shared images, shared synchronization primitives, and interop with every window system Vulkan reaches.
-        For browsers specifically, that means a decoded frame can be exported as a DMA-buf with an explicit DRM
-        format modifier, imported by the compositor, and displayed — <strong>without ever touching system
-        memory</strong>. That zero-copy, correctly-synchronized path is the heart of everything below.
-    </p>
+<figure class="diagram">
+  <img src="diagrams/blog_initiative_stack.svg" alt="The initiative at a glance: the TSG-defined API at the base, hardened media frameworks in the middle, and two browser integrations on top." loading="lazy">
+  <figcaption>The initiative at a glance: the TSG-defined API at the base, hardened media frameworks in the middle, and two browser integrations on top.</figcaption>
+</figure>
 
-    <!-- ================= FIREFOX ================= -->
-    <h2 class="ff">Firefox: shipping the zero-copy decode stack</h2>
-    <p>
-        Firefox decodes media in a dedicated sandboxed process (RDD) using FFmpeg. Making Vulkan Video work there
-        meant advancing <em>both</em> layers: FFmpeg had to produce correctly-synchronized, modifier-aware
-        DMA-buf output from its Vulkan decoder, and the Firefox framework had to carry those buffers across the
-        sandbox into its GL/EGL compositor. Neither existed in shippable form when we started.
-    </p>
+<h2 class="vk">The foundation: an API built for exactly this</h2>
 
-    <h3>Advancing FFmpeg first</h3>
-    <p>
-        The FFmpeg Vulkan decode path could render to a swapchain, but exporting decoder output for an external
-        consumer exposed real gaps: the DRM mapping path (<code>vulkan_map_to_drm</code>) mishandled tiled
-        images with explicit format modifiers, decode barriers were incomplete, and frame setup didn't account
-        for modifier output at all. Our upstream fix —
-        <a href="https://code.ffmpeg.org/FFmpeg/FFmpeg/pulls/22566">FFmpeg #22566, <em>"vulkan: fix DRM map,
-        decode barriers, and video frame setup for modifier output"</em></a> (merged, with a follow-up cleanup in
-        <a href="https://code.ffmpeg.org/FFmpeg/FFmpeg/pulls/22785">#22785</a>) — closed those gaps.
-    </p>
-    <p>
-        The most interesting part of that review was <strong>synchronization ownership</strong>: when a
-        <code>VkImage</code> becomes a DMA-buf, who owns the semaphore that tells the consumer decoding is
-        finished? We iterated with the FFmpeg maintainers across several designs — creating a dedicated semaphore
-        inside <code>vulkan_map_to_drm</code> versus reusing the export semaphore with copy-transference
-        semantics — and converged on an approach that keeps the exported buffer's implicit/explicit sync story
-        correct for every consumer, not just Firefox. It's a good example of what upstreaming buys: the review
-        pressure produced semantics that are right for the whole ecosystem.
-    </p>
+<p>Vulkan Video extends the same explicit-GPU philosophy of Vulkan to codec hardware: <code>VK_KHR_video_queue</code> plus decode and encode queue extensions, codec operation extensions for H.264, H.265, and AV1 (decode and encode, with VP9 decode alongside), maintenance extensions, and a growing set of encode-quality features — quantization maps, intra-refresh, tuning profiles. It comes with Khronos conformance tests (<code>dEQP-VK.video.*</code>) and a reference implementation: the <strong>Vulkan Video Samples</strong> library, which implements the hard parts — session management, DPB tracking, rate control, GOP structure, bitstream assembly, and GPU compute filters for YCbCr conversion.</p>
 
-    <h3>Opening the browser framework — and the sandbox</h3>
-    <p>
-        On the Firefox side the work landed as a patch train under
-        <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=2021722">Bug 2021722</a>, deliberately split so the
-        framework groundwork could merge ahead of the decoder itself:
-    </p>
-    <table>
-        <tr><th>Revision</th><th>Status</th><th>What it does</th></tr>
-        <tr><td><a href="https://phabricator.services.mozilla.com/D290317">D290317</a></td><td><span class="st done">merged</span></td><td>Vendors the Khronos Vulkan-Headers (vulkan-sdk-1.4.341.0) under <code>third_party</code></td></tr>
-        <tr><td><a href="https://phabricator.services.mozilla.com/D288577">D288577</a></td><td><span class="st done">merged</span></td><td>FFmpeg <code>hwcontext_vulkan.h</code> + <code>version.h</code> header updates</td></tr>
-        <tr><td><a href="https://phabricator.services.mozilla.com/D290520">D290520</a></td><td><span class="st done">merged</span></td><td>Prefs, packaging, configure, and GTK platform hooks for Vulkan video</td></tr>
-        <tr><td><a href="https://phabricator.services.mozilla.com/D296451">D296451</a></td><td><span class="st done">merged</span></td><td>Fixes <code>DRM_FORMAT_MOD_INVALID</code> redefinition in <code>DMABufFormats.cpp</code></td></tr>
-        <tr><td><a href="https://phabricator.services.mozilla.com/D290521">D290521</a></td><td><span class="st done">merged</span></td><td>GL/EGL, layers, and compositor IPC for Vulkan video — OpenGL imports the decoded DMA-buf surfaces directly</td></tr>
-        <tr><td><a href="https://phabricator.services.mozilla.com/D290522">D290522</a></td><td><span class="st rev">final review</span></td><td>DOM Media: the FFmpeg Vulkan Video decoder in the RDD process (all review comments addressed)</td></tr>
-        <tr><td><a href="https://phabricator.services.mozilla.com/D290523">D290523</a></td><td><span class="st rev">final review</span></td><td>Sandbox: RDD sandbox policy for Vulkan video (all review comments addressed)</td></tr>
-    </table>
+<p>For applications, the payoff is that video decode, encode, graphics, and compute all live in one API with shared images, shared synchronization primitives, and interop with every window system Vulkan reaches. For browsers specifically, that means a decoded frame can be exported as a DMA-buf with an explicit DRM format modifier, imported by the compositor, and displayed — <strong>without ever touching system memory</strong>. That zero-copy, correctly-synchronized path is the heart of everything below.</p>
 
-    <div class="pull">
-        The schedule's longest lead-time item wasn't the decoder — it was <strong>opening the sandbox
-        APIs</strong>. Not because the change is large (the RDD policy patch is compact) or because the
-        engineering lagged — every round of review feedback was addressed within hours. What consumed the
-        calendar was <strong>review latency</strong>: sandbox-facing patches repeatedly sat idle waiting for
-        reviewer attention, sometimes for weeks between rounds. If you are planning a similar integration,
-        budget for that reality — the pacing of sandbox reviews is outside your control, so get those patches
-        on reviewers' desks as early as possible and keep the rest of the train decoupled so it can land
-        independently, as we did.
-    </div>
+<h2 class="ff">Firefox: shipping the zero-copy decode stack</h2>
 
-    <p>
-        The compositor side is where zero-copy becomes real. With D290521, decoded frames cross the sandbox as
-        DMA-buf file descriptors and enter WebRender through
-        <code>EGL_EXT_image_dma_buf_import_modifiers</code>: <strong>OpenGL samples the decoded surface
-        directly</strong> — no readback, no texture upload, YCbCr conversion at composite time. Getting that
-        robust across GPU generations surfaced its own class of bugs — NV12's second plane must import as
-        <code>GR88</code> on NVIDIA or EGL returns <code>EGL_BAD_MATCH</code>, while some older AMD parts (like
-        the RX 570) only accept the legacy fourcc — resolved with a per-vendor plane-format matrix in
-        <a href="https://phabricator.services.mozilla.com/D309953">D309953</a>.
-    </p>
+<p>Firefox decodes media in a dedicated sandboxed process using FFmpeg. To make Vulkan Video work there, we advanced <em>both</em> layers of the stack: FFmpeg's Vulkan decoder now exports its output as a DMA-buf with an explicit DRM format modifier and correct cross-process synchronization, and the Firefox graphics framework imports those buffers directly into its GL/EGL compositor. A decoded frame is produced on the GPU, handed across the sandbox as a file descriptor, and sampled straight into the compositor — <strong>the pixels never touch system memory</strong>.</p>
 
-    <h3>Engineering for real browsing: many tabs, one GPU</h3>
-    <p>
-        A browser is not a media player: users open five video tabs at once. Making that flawless produced two
-        instructive fixes (<a href="https://phabricator.services.mozilla.com/D306576">D306576</a>):
-    </p>
-    <ul>
-        <li><strong>Teardown must not stall the device.</strong> The decoder called
-            <code>vkDeviceWaitIdle</code> on shutdown — which stalls <em>every queue on the device</em>, freezing
-            all other tabs' decoders sharing it. Replaced with <code>vkWaitForFences</code> on that decoder's own
-            copy fences only.</li>
-        <li><strong>One <code>VkDevice</code>, shared and ref-counted.</strong> Each decoder was creating its own
-            device; two streams starting simultaneously made the second <code>vkCreateDevice</code> block behind
-            the first, time out, and hang playback in other tabs. Now the first decoder creates the device, the
-            rest take references, and the last one destroys it.</li>
-    </ul>
+<figure class="diagram">
+  <img src="diagrams/blog_firefox_zero_copy.svg" alt="The Firefox pipeline: FFmpeg Vulkan decode in the sandboxed RDD process, DMA-buf export with a DRM format modifier, EGL/OpenGL direct import, and WebRender composite." loading="lazy">
+  <figcaption>The Firefox pipeline: FFmpeg Vulkan decode in the sandboxed RDD process, DMA-buf export with a DRM format modifier, EGL/OpenGL direct import, and WebRender composite.</figcaption>
+</figure>
 
-    <div class="diagram">
-        <object data="diagrams/blog_firefox_zero_copy.svg" type="image/svg+xml" width="100%"></object>
-        <div class="diagram-caption">The Firefox pipeline and its patch train: FFmpeg Vulkan decode in the sandboxed
-        RDD process, DMA-buf + DRM-modifier export with correct semaphore semantics, EGL/OpenGL direct import,
-        WebRender composite.</div>
-    </div>
+<p>Getting there took real work in both projects. On the FFmpeg side, modifier-aware DMA-buf export and decode-barrier fixes merged upstream (<a href="https://code.ffmpeg.org/FFmpeg/FFmpeg/pulls/22566">#22566</a> and <a href="https://code.ffmpeg.org/FFmpeg/FFmpeg/pulls/22785">#22785</a>). On the Firefox side, a train of patches under <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=2021722">Bug 2021722</a> brought in the vendored Vulkan headers, the GTK and packaging hooks, the GL/EGL and compositor IPC path so OpenGL can import the decoded surfaces directly, and per-vendor DMA-buf plane-format handling that keeps the import robust across NVIDIA, AMD, and Intel. We also hardened it for real browsing — a single shared GPU device across decoders so many video tabs play in parallel. The framework groundwork is merged; the decoder itself and its sandbox-access policy are in final review.</p>
 
-    <!-- ================= CHROMIUM ================= -->
-    <h2 class="cr">Chromium: Vulkan encode first, decode next</h2>
-    <p>
-        For Chromium we deliberately sequenced the work so users get value at every stage. The project began with
-        detailed planning — integration design documents, a gap analysis of the Vulkan Video Samples library
-        against Chromium's encoder interface, and a five-tier test plan. On the decode side, Chromium's existing
-        VA-API backend already served Intel and AMD GPUs — <strong>NVIDIA GPUs were the gap</strong>. So NVIDIA
-        delivered a <strong>VA-API port as a temporary bridge</strong>: it fills that gap and gives Chromium
-        users on NVIDIA hardware accelerated decode today, through the browser's existing backend.
-    </p>
-    <p>
-        With decode covered by the bridge, the ordering of the Vulkan-native work follows directly:
-        <strong>encode goes first, decode next</strong>. Encode is where the real gap is — stock Linux Chromium
-        has <em>no</em> hardware encode path at all today — while decode already works. So the first
-        Vulkan-native backend to head upstream is the encoder; the Vulkan decoder follows it and, when it lands,
-        retires the VA-API bridge and unifies decode across vendors. And the encode decision was strategic:
-        build the browser's hardware encoder plug-in directly on the <strong>Vulkan API and the Vulkan Video
-        Samples library</strong>. The library — extended
-        with embedding-grade capabilities (caller-provided <code>VkDevice</code>, in-memory bitstream return,
-        DMA-buf-imported input frames, capability probing before initialization, sandbox-quiet operation) — is
-        vendored and statically linked into Chromium the same way libvpx and libaom are, and driven by a
-        codec-neutral <code>VideoEncodeAccelerator</code> backend that runs on the compositor's own Vulkan
-        device. A SharedImage-based zero-copy input seam lets frames from the capture and rendering pipelines
-        reach the encoder without CPU copies; working H.264 encode with the zero-copy path has been verified on
-        NVIDIA hardware, bit-identical to the staging reference and PSNR-gated in the test harness. One backend
-        registration lights up every browser encode consumer: WebRTC calls, screen sharing, WebCodecs,
-        MediaRecorder, and Cast.
-    </p>
+<h2 class="cr">Chromium: Vulkan encode first, decode next</h2>
 
-    <div class="factbox">
-        <span class="fb-title">The Chromium timeline and the division of labor</span>
-        <strong>Now:</strong> NVIDIA is completing the port — the vendored library, the encode backend, the
-        zero-copy plumbing, and the test tiers.<br>
-        <strong>End of July 2026:</strong> we begin pushing the changes upstream to the Chromium project.<br>
-        <strong>Alongside:</strong> AMD and Intel join on the hardware-acceleration bring-up for their GPUs, and
-        Google supports the effort with change reviews and browser-framework improvements — most importantly the
-        GPU zero-copy infrastructure the encoder plugs into.
-    </div>
+<p>For Chromium we deliberately sequenced the work so users get value at every stage. The project began with detailed planning — integration design documents, a gap analysis of the Vulkan Video Samples library against Chromium's encoder interface, and a five-tier test plan. On the decode side, Chromium's existing VA-API backend already served Intel and AMD GPUs — <strong>NVIDIA GPUs were the gap</strong>. So NVIDIA delivered a <strong>VA-API port as a temporary bridge</strong>: it fills that gap and gives Chromium users on NVIDIA hardware accelerated decode today, through the browser's existing backend.</p>
 
-    <div class="diagram">
-        <object data="diagrams/blog_chromium_roadmap.svg" type="image/svg+xml" width="100%"></object>
-        <div class="diagram-caption">Three Chromium tracks in order: the delivered VA-API decode bridge, the
-        Vulkan encoder heading upstream first, and the Vulkan decoder that follows and retires the bridge.</div>
-    </div>
+<p>With decode covered by the bridge, the ordering of the Vulkan-native work follows directly: <strong>encode goes first, decode next</strong>. Encode is where the real gap is — stock Linux Chromium has <em>no</em> hardware encode path at all today — while decode already works. So the first Vulkan-native backend to head upstream is the encoder; the Vulkan decoder follows it and, when it lands, retires the VA-API bridge and unifies decode across vendors. The encoder is built directly on the <strong>Vulkan API and the Vulkan Video Samples library</strong> — vendored and statically linked into Chromium the same way libvpx and libaom are, and driven by a codec-neutral <code>VideoEncodeAccelerator</code> backend that runs on the compositor's own Vulkan device. A SharedImage-based zero-copy input seam lets frames from the capture and rendering pipelines reach the encoder without CPU copies, and one backend registration lights up every browser encode consumer: WebRTC calls, screen sharing, WebCodecs, MediaRecorder, and Cast.</p>
 
-    <!-- ================= CLOSING ================= -->
-    <h2>Why this matters</h2>
-    <p>
-        Because video is not a feature of the browser — by traffic volume it <strong>is</strong> most of what a
-        browser does. Video makes up well over half of all internet traffic by most measurements, and nearly
-        every way people produce or consume it runs through a browser engine. Every one of these everyday
-        activities crosses the hardware codec path this initiative accelerates:
-    </p>
-    <div class="uc-grid">
-        <div class="uc"><strong>Playback &amp; streaming</strong>YouTube, Netflix, Twitch, embedded video everywhere <span class="hw">decode</span></div>
-        <div class="uc"><strong>Video conferencing</strong>Meet, Teams, Zoom, Discord — camera calls all day <span class="hw">decode + encode</span></div>
-        <div class="uc"><strong>Screen sharing &amp; collaboration</strong>presenting a tab, window, or desktop into a call <span class="hw">encode</span></div>
-        <div class="uc"><strong>In-browser recording</strong>Loom-style capture, voice/video notes, interviews <span class="hw">encode</span></div>
-        <div class="uc"><strong>Tab &amp; screen casting</strong>mirroring the browser to TVs and conference rooms <span class="hw">encode</span></div>
-        <div class="uc"><strong>Remote desktop &amp; cloud workstations</strong>Chrome Remote Desktop and friends <span class="hw">decode + host encode</span></div>
-        <div class="uc"><strong>Cloud gaming</strong>GeForce NOW and other browser-delivered game streams <span class="hw">low-latency decode</span></div>
-        <div class="uc"><strong>Creator tools &amp; live broadcast</strong>WebCodecs editors, transcoders, WebRTC/WHIP ingest <span class="hw">decode + encode</span></div>
-    </div>
-    <p>
-        Moving encode off the CPU and onto dedicated silicon should show up on every axis that matters to a
-        laptop or a fanless device — processor load, power draw, latency, and the memory traffic of shuttling
-        frames around. We are measuring exactly those KPIs, for an everyday 1080p video call and for the all-GPU
-        tab-recording lane where capture, color conversion, and encode never leave the GPU. Rather than quote
-        numbers before they are measured, here is the scorecard we will fill in — with reproducible figures
-        published alongside the upstream Chromium change lists:
-    </p>
-    <div class="diagram">
-        <object data="diagrams/blog_kpi_snapshot.svg" type="image/svg+xml" width="100%"></object>
-        <div class="diagram-caption">The KPI scorecard (numbers to be measured and published with the upstream
-        CLs). The only entries filled in today are architectural facts, not benchmarks: the zero-copy path is
-        verified bit-identical to the software reference, and the all-GPU lane moves zero frame bytes through
-        system memory by construction.</div>
-    </div>
-    <p>
-        When this work completes, a browser needs <em>one</em> video acceleration backend that runs on every GPU
-        vendor and every Vulkan-capable platform — Linux under Wayland and X11, Windows, and the embedded and
-        automotive systems where Vulkan is already the standard graphics API. Video calls stop pegging CPU cores
-        on machines that have dedicated silicon for exactly this job. And because the path from decoder to screen
-        (and from capture to encoder) is zero-copy with explicit synchronization, it is not just accelerated —
-        it is efficient in the way battery-powered and thermally-constrained devices need.
-    </p>
-    <p>
-        The Khronos Vulkan Video TSG and NVIDIA are committed to this across the stack: the API and conformance
-        tests, the drivers, FFmpeg, the Vulkan Video Samples library, and the browser integrations themselves —
-        with AMD, Intel, Google, Mozilla, and the FFmpeg community as partners in review and bring-up. Watch for
-        the Chromium encoder CLs starting to land upstream at the end of this month.
-    </p>
+<blockquote class="pull"><p><strong>The Chromium timeline and the division of labor.</strong> <em>Now:</em> NVIDIA is completing the port — the vendored library, the encode backend, the zero-copy plumbing, and the test tiers. <em>End of July 2026:</em> we begin pushing the changes upstream to the Chromium project. <em>Alongside:</em> AMD and Intel join on the hardware-acceleration bring-up for their GPUs, and Google supports the effort with change reviews and browser-framework improvements — most importantly the GPU zero-copy infrastructure the encoder plugs into.</p></blockquote>
 
-    <h3>References</h3>
-    <ul>
-        <li>Firefox integration: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=2021722">Bugzilla 2021722</a> and the Phabricator revisions listed above</li>
-        <li>FFmpeg: <a href="https://code.ffmpeg.org/FFmpeg/FFmpeg/pulls/22566">#22566</a> (DRM map / decode barriers / modifier output),
-            <a href="https://code.ffmpeg.org/FFmpeg/FFmpeg/pulls/22785">#22785</a> (cleanups)</li>
-        <li>Chromium design &amp; analysis: <a href="vulkan_video_integration.html">decode design</a>,
-            <a href="vulkan_video_encode_integration.html">encode design</a>,
-            <a href="vulkan_video_encoder_use_cases.html">encoder use cases &amp; zero-copy processing graphs</a>,
-            <a href="vulkan_video_test_plan.html">test plan</a></li>
-        <li>Khronos Vulkan Video: <a href="https://www.khronos.org/vulkan/">khronos.org/vulkan</a> ·
-            Vulkan Video Samples: <a href="https://github.com/KhronosGroup/Vulkan-Video-Samples">github.com/KhronosGroup/Vulkan-Video-Samples</a></li>
-    </ul>
+<figure class="diagram">
+  <img src="diagrams/blog_chromium_roadmap.svg" alt="Three Chromium tracks in order: the delivered VA-API decode bridge, the Vulkan encoder heading upstream first, and the Vulkan decoder that follows and retires the bridge." loading="lazy">
+  <figcaption>Three Chromium tracks in order: the delivered VA-API decode bridge, the Vulkan encoder heading upstream first, and the Vulkan decoder that follows and retires the bridge.</figcaption>
+</figure>
+
+<h2 class="vk">Beyond the browser: one API across the ecosystem</h2>
+
+<p>The browser is the most visible target, but it is one front in a broader effort. The same Vulkan Video API, drivers, conformance tests, and reference library that power these browser integrations are the foundation for hardware video across the entire Vulkan ecosystem — from desktops out to embedded and automotive systems, the way Vulkan graphics already spans that whole range. One conformance-tested API and one set of drivers, reused from an in-vehicle display or a set-top box to a desktop browser, instead of a different codec stack for every platform. The browser work is the leading edge of expanding Vulkan Video the way Vulkan graphics was expanded before it.</p>
+
+<h2>Why this matters</h2>
+
+<p>Because video is not a feature of the browser — by traffic volume it <strong>is</strong> most of what a browser does. Video makes up well over half of all internet traffic by most measurements, and nearly every way people produce or consume it runs through a browser engine. Every one of these everyday activities crosses the hardware codec path this initiative accelerates:</p>
+
+<ul>
+  <li><strong>Playback &amp; streaming</strong> — YouTube, Netflix, Twitch, embedded video everywhere <em>(decode)</em></li>
+  <li><strong>Video conferencing</strong> — Meet, Teams, Zoom, Discord, camera calls all day <em>(decode + encode)</em></li>
+  <li><strong>Screen sharing &amp; collaboration</strong> — presenting a tab, window, or desktop into a call <em>(encode)</em></li>
+  <li><strong>In-browser recording</strong> — Loom-style capture, voice/video notes, interviews <em>(encode)</em></li>
+  <li><strong>Tab &amp; screen casting</strong> — mirroring the browser to TVs and conference rooms <em>(encode)</em></li>
+  <li><strong>Remote desktop &amp; cloud workstations</strong> — Chrome Remote Desktop and friends <em>(decode + host encode)</em></li>
+  <li><strong>Cloud gaming</strong> — GeForce NOW and other browser-delivered game streams <em>(low-latency decode)</em></li>
+  <li><strong>Creator tools &amp; live broadcast</strong> — WebCodecs editors, transcoders, WebRTC/WHIP ingest <em>(decode + encode)</em></li>
+</ul>
+
+<p>Moving encode off the CPU and onto dedicated silicon should show up on every axis that matters to a laptop or a fanless device — processor load, power draw, latency, and the memory traffic of shuttling frames around. We are measuring exactly those KPIs, for an everyday 1080p video call and for the all-GPU tab-recording lane where capture, color conversion, and encode never leave the GPU. Rather than quote numbers before they are measured, here is the scorecard we will fill in — with reproducible figures published alongside the upstream Chromium change lists:</p>
+
+<figure class="diagram">
+  <img src="diagrams/blog_kpi_snapshot.svg" alt="The KPI scorecard (numbers to be measured and published with the upstream CLs). The only entries filled in today are architectural facts, not benchmarks: the zero-copy path is verified bit-identical to the software reference, and the all-GPU lane moves zero frame bytes through system memory by construction." loading="lazy">
+  <figcaption>The KPI scorecard (numbers to be measured and published with the upstream CLs). The only entries filled in today are architectural facts, not benchmarks: the zero-copy path is verified bit-identical to the software reference, and the all-GPU lane moves zero frame bytes through system memory by construction.</figcaption>
+</figure>
+
+<p>When this work completes, a browser needs <em>one</em> video acceleration backend that runs on every GPU vendor and every Vulkan-capable platform — Linux under Wayland and X11, Windows, and the embedded and automotive systems where Vulkan is already the standard graphics API. Video calls stop pegging CPU cores on machines that have dedicated silicon for exactly this job. And because the path from decoder to screen (and from capture to encoder) is zero-copy with explicit synchronization, it is not just accelerated — it is efficient in the way battery-powered and thermally-constrained devices need.</p>
+
+<p>The Khronos Vulkan Video TSG and NVIDIA are committed to this across the stack: the API and conformance tests, the drivers, FFmpeg, the Vulkan Video Samples library, and the browser integrations themselves — with AMD, Intel, Google, Mozilla, and the FFmpeg community as partners in review and bring-up. Watch for the Chromium encoder CLs starting to land upstream at the end of this month.</p>
+
+<h3>References</h3>
+
+<ul>
+  <li>Firefox integration: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=2021722">Bugzilla 2021722</a></li>
+  <li>FFmpeg: <a href="https://code.ffmpeg.org/FFmpeg/FFmpeg/pulls/22566">#22566</a> (DRM map / decode barriers / modifier output), <a href="https://code.ffmpeg.org/FFmpeg/FFmpeg/pulls/22785">#22785</a> (cleanups)</li>
+  <li>Chromium design &amp; analysis: <a href="vulkan_video_integration.html">decode design</a>, <a href="vulkan_video_encode_integration.html">encode design</a>, <a href="vulkan_video_encoder_use_cases.html">encoder use cases &amp; zero-copy processing graphs</a>, <a href="vulkan_video_test_plan.html">test plan</a></li>
+  <li>Khronos Vulkan Video: <a href="https://www.khronos.org/vulkan/">khronos.org/vulkan</a> · Vulkan Video Samples: <a href="https://github.com/KhronosGroup/Vulkan-Video-Samples">github.com/KhronosGroup/Vulkan-Video-Samples</a></li>
+</ul>
 
 </div>
 </article>

@@ -37,6 +37,15 @@ This project implements Vulkan Video hardware acceleration for video decoding in
 
 📚 **[View Full Documentation](https://vulkan-video-external.gitlab-master.nvidia.com/chrome-vulkan-video-hw-accelerated/)**
 
+### Documentation site (HTML)
+
+The docs render as a browsable site, published from `docs/` on both GitHub Pages and GitLab Pages:
+
+- **Documentation portal (HTML index):** [GitHub Pages](https://khronosgroup.github.io/Vulkan-Chrome-Video/) · [GitLab Pages](https://vulkan-video-external.gitlab-master.nvidia.com/chrome-vulkan-video-hw-accelerated/)
+- **Blog — _Bringing Vulkan Video to the Browser_:** [read on GitHub Pages](https://khronosgroup.github.io/Vulkan-Chrome-Video/blog_vulkan_video_browsers.html) · Markdown source: [`docs/blog_vulkan_video_browsers.md`](docs/blog_vulkan_video_browsers.md)
+
+The blog is authored in Markdown; regenerate its HTML with `python3 docs/build_blog.py` (Python 3 standard library only — no dependencies).
+
 | Document | Description |
 |----------|-------------|
 | [Integration Design](docs/VULKAN_VIDEO_INTEGRATION_DESIGN_DOCUMENT.md) | Complete architecture and implementation details |
