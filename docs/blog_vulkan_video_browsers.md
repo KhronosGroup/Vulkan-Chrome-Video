@@ -18,13 +18,15 @@ limitations under the License.
 This Markdown file is the SOURCE for the blog. Regenerate the styled HTML with:
     python3 build_blog.py blog_vulkan_video_browsers.md blog_vulkan_video_browsers.html
 -->
----
-title: Bringing Vulkan Video to the Browser
-subtitle: How the Khronos Vulkan Video TSG and NVIDIA are rebuilding browser hardware video acceleration around one cross-vendor API — with zero-copy pipelines shipping in Firefox and a Vulkan-native encoder headed for Chromium.
+<!--meta
 badges: Vulkan Video TSG:vulkan, NVIDIA:nvidia, Firefox:ff, Chromium:chrome
 byline: NVIDIA Multimedia · Khronos Vulkan Video TSG · July 2026
 footer: Khronos Vulkan Video TSG & NVIDIA · Browser Hardware Video Acceleration Initiative · July 2026
----
+-->
+
+# Bringing Vulkan Video to the Browser
+
+_How the Khronos Vulkan Video TSG and NVIDIA are rebuilding browser hardware video acceleration around one cross-vendor API — with zero-copy pipelines shipping in Firefox and a Vulkan-native encoder headed for Chromium._
 
 Hardware video acceleration in browsers has always been a patchwork. On Linux it means VA-API on some stacks and V4L2 on others; Windows brings DXVA and Media Foundation; embedded platforms add their own vendor SDKs. Every browser carries a backend per API per platform, every vendor maintains a different integration, and entire classes of hardware — NVIDIA GPUs on Linux desktops most visibly — end up with *no* accelerated path at all, burning CPU on software codecs during every video call.
 

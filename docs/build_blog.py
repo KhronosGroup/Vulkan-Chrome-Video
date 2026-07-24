@@ -25,9 +25,10 @@ Defaults: blog_vulkan_video_browsers.md -> blog_vulkan_video_browsers.html
 Zero external dependencies (Python 3 standard library only) so it runs
 anywhere — CI, a fresh checkout, or a reviewer's laptop.
 
-Supported Markdown: a `---` front-matter block (title, subtitle, badges,
-byline, footer), `##`/`###` headings (with an optional `<!--accent:xx-->`
-marker on `##`), paragraphs, `-`/`*` and `1.` lists, `>` block-quotes
+Supported Markdown: a leading `<!--meta ... -->` comment (badges, byline,
+footer) plus a `# Title` and a subtitle paragraph for the hero, then
+`##`/`###` headings (with an optional `<!--accent:xx-->` marker on `##`),
+paragraphs, `-`/`*` and `1.` lists, `>` block-quotes
 (rendered as a callout), `![caption](src)` images (rendered as a captioned
 figure), horizontal rules, and inline `**bold**`, `*italic*`/`_italic_`,
 `` `code` ``, and `[text](url)`. Lines beginning with `<` pass through as
@@ -156,24 +157,54 @@ def inline(text):
     return text
 
 
-def parse_front_matter(src):
-    """Strip leading HTML comments, then read a --- key: value --- block."""
+def parse_meta(src):
+    """Read a leading `<!--meta ... -->` comment (key: value lines) for badges,
+    byline, and footer; discard any other leading HTML comment (the license
+    header). Keeping metadata in a hidden comment — rather than a YAML front
+    matter block — lets the file render cleanly when viewed directly on GitHub."""
+    meta = {}
     src = src.lstrip()
     while src.startswith("<!--"):
         end = src.find("-->")
         if end == -1:
             break
+        comment = src[4:end].strip()
         src = src[end + 3:].lstrip()
-    meta = {}
-    if src.startswith("---"):
-        end = src.find("\n---", 3)
-        block = src[3:end]
-        src = src[end + 4:]
-        for line in block.splitlines():
-            if ":" in line:
-                k, v = line.split(":", 1)
-                meta[k.strip()] = v.strip()
-    return meta, src.lstrip("\n")
+        if comment.startswith("meta"):
+            for line in comment[4:].splitlines():
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    meta[k.strip()] = v.strip()
+    return meta, src
+
+
+def split_lead(body_md, meta):
+    """Pull the leading `# Title` and the subtitle paragraph out of the body so
+    the hero renders them and the article does not repeat them. Title/subtitle
+    fall back to `meta` values if the body has none."""
+    lines = body_md.split("\n")
+
+    def skip_blank(i):
+        while i < len(lines) and not lines[i].strip():
+            i += 1
+        return i
+
+    i = skip_blank(0)
+    title = meta.get("title")
+    if i < len(lines) and lines[i].startswith("# "):
+        title = lines[i][2:].strip()
+        i += 1
+    i = skip_blank(i)
+    subtitle = meta.get("subtitle")
+    if i < len(lines) and lines[i].strip() and not _is_block_start(lines[i]):
+        buf = []
+        while i < len(lines) and lines[i].strip() and not _is_block_start(lines[i]):
+            buf.append(lines[i].strip())
+            i += 1
+        sub = " ".join(buf).strip()
+        m = re.match(r"^[_*]+(.+?)[_*]+$", sub)
+        subtitle = m.group(1).strip() if m else sub
+    return title, subtitle, "\n".join(lines[i:])
 
 
 def render_body(md):
@@ -284,9 +315,10 @@ def render_badges(spec):
 
 
 def build(md_path, html_path):
-    meta, body_md = parse_front_matter(Path(md_path).read_text(encoding="utf-8"))
-    title = meta.get("title", "Untitled")
-    subtitle = meta.get("subtitle", "")
+    meta, body_md = parse_meta(Path(md_path).read_text(encoding="utf-8"))
+    title, subtitle, body_md = split_lead(body_md, meta)
+    title = title or "Untitled"
+    subtitle = subtitle or ""
     byline = meta.get("byline", "")
     footer = meta.get("footer", "")
     badges = render_badges(meta.get("badges", ""))
