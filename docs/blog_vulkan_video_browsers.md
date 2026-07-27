@@ -19,20 +19,20 @@ This Markdown file is the SOURCE for the blog. Regenerate the styled HTML with:
     python3 build_blog.py blog_vulkan_video_browsers.md blog_vulkan_video_browsers.html
 -->
 <!--meta
-badges: Vulkan Video TSG:vulkan, NVIDIA:nvidia, Firefox:ff, Chromium:chrome
-byline: NVIDIA Multimedia · Khronos Vulkan Video TSG · July 2026
-footer: Khronos Vulkan Video TSG & NVIDIA · Browser Hardware Video Acceleration Initiative · July 2026
+badges: Vulkan Video Subgroup:vulkan, NVIDIA:nvidia, Firefox:ff, Chromium:chrome
+byline: NVIDIA Multimedia · Khronos Vulkan Video Subgroup · July 2026
+footer: Khronos Vulkan Video Subgroup & NVIDIA · Browser Hardware Video Acceleration Initiative · July 2026
 -->
 
 # Bringing Vulkan Video to the Browser
 
-_How the Khronos Vulkan Video TSG and NVIDIA are rebuilding browser hardware video acceleration around one cross-vendor API — with zero-copy pipelines shipping in Firefox and a Vulkan-native encoder headed for Chromium._
+_How the Khronos Vulkan Video Subgroup and NVIDIA are rebuilding browser hardware video acceleration around one cross-vendor API — with zero-copy pipelines shipping in Firefox and a Vulkan-native encoder headed for Chromium._
 
 Hardware video acceleration in browsers has always been a patchwork. On Linux it means VA-API on some stacks and V4L2 on others; Windows brings DXVA and Media Foundation; embedded platforms add their own vendor SDKs. Every browser carries a backend per API per platform, every vendor maintains a different integration, and entire classes of hardware — NVIDIA GPUs on Linux desktops most visibly — end up with *no* accelerated path at all, burning CPU on software codecs during every video call.
 
-**Vulkan Video** changes that equation: one explicit, cross-vendor, cross-platform API for hardware decode *and* encode, defined by the Khronos Vulkan Video Technical Sub-Group and implemented by NVIDIA, AMD, and Intel drivers (with Mesa's RADV, ANV, and NVK following). The TSG and NVIDIA are not just behind the API — we are carrying it through the media frameworks and into the browsers ourselves, and this post is a tour of that work: what has already merged, what it took, and what lands next.
+**Vulkan® Video** changes that equation: one explicit, cross-vendor, cross-platform API for hardware decode *and* encode, defined by the Khronos® Vulkan Video Technical Subgroup and implemented by NVIDIA, AMD, and Intel drivers (with Mesa's RADV, ANV, and NVK following). The Subgroup and NVIDIA are not just behind the API — we are carrying it through the media frameworks and into the browsers ourselves, and this post is a tour of that work: what has already merged, what it took, and what lands next.
 
-![The initiative at a glance: the TSG-defined API at the base, hardened media frameworks in the middle, and two browser integrations on top.](diagrams/blog_initiative_stack.svg)
+![The initiative at a glance: the Subgroup-defined API at the base, hardened media frameworks in the middle, and two browser integrations on top.](diagrams/blog_initiative_stack.svg)
 
 ## The foundation: an API built for exactly this <!--accent:vk-->
 
@@ -46,7 +46,7 @@ Firefox decodes media in a dedicated sandboxed process using FFmpeg. To make Vul
 
 ![The Firefox pipeline: FFmpeg Vulkan decode in the sandboxed RDD process, DMA-buf export with a DRM format modifier, EGL/OpenGL direct import, and WebRender composite.](diagrams/blog_firefox_zero_copy.svg)
 
-Getting there took real work in both projects. On the FFmpeg side, modifier-aware DMA-buf export and decode-barrier fixes merged upstream ([#22566](https://code.ffmpeg.org/FFmpeg/FFmpeg/pulls/22566) and [#22785](https://code.ffmpeg.org/FFmpeg/FFmpeg/pulls/22785)). On the Firefox side, a train of patches under [Bug 2021722](https://bugzilla.mozilla.org/show_bug.cgi?id=2021722) brought in the vendored Vulkan headers, the GTK and packaging hooks, the GL/EGL and compositor IPC path so OpenGL can import the decoded surfaces directly, and per-vendor DMA-buf plane-format handling that keeps the import robust across NVIDIA, AMD, and Intel. We also hardened it for real browsing — a single shared GPU device across decoders so many video tabs play in parallel. The framework groundwork is merged; the decoder itself and its sandbox-access policy are in final review.
+Getting there took real work in both projects. On the FFmpeg side, modifier-aware DMA-buf export and decode-barrier fixes merged upstream ([#22566](https://code.ffmpeg.org/FFmpeg/FFmpeg/pulls/22566) and [#22785](https://code.ffmpeg.org/FFmpeg/FFmpeg/pulls/22785)). On the Firefox side, a train of patches under [Bug 2021722](https://bugzilla.mozilla.org/show_bug.cgi?id=2021722) brought in the vendored Vulkan headers, the GTK and packaging hooks, the GL/EGL and compositor IPC path so OpenGL® can import the decoded surfaces directly, and per-vendor DMA-buf plane-format handling that keeps the import robust across NVIDIA, AMD, and Intel. We also hardened it for real browsing — a single shared GPU device across decoders so many video tabs play in parallel. The framework groundwork is merged; the decoder itself and its sandbox-access policy are in final review.
 
 ## Chromium: Vulkan encode first, decode next <!--accent:cr-->
 
@@ -81,7 +81,7 @@ Moving encode off the CPU and onto dedicated silicon should show up on every axi
 
 When this work completes, a browser needs *one* video acceleration backend that runs on every GPU vendor and every Vulkan-capable platform — Linux under Wayland and X11, Windows, and the embedded and automotive systems where Vulkan is already the standard graphics API. Video calls stop pegging CPU cores on machines that have dedicated silicon for exactly this job. And because the path from decoder to screen (and from capture to encoder) is zero-copy with explicit synchronization, it is not just accelerated — it is efficient in the way battery-powered and thermally-constrained devices need.
 
-The Khronos Vulkan Video TSG and NVIDIA are committed to this across the stack: the API and conformance tests, the drivers, FFmpeg, the Vulkan Video Samples library, and the browser integrations themselves — with AMD, Intel, Google, Mozilla, and the FFmpeg community as partners in review and bring-up. Watch for the Chromium encoder CLs starting to land upstream at the end of this month.
+The Khronos Vulkan Video Subgroup and NVIDIA are committed to this across the stack: the API and conformance tests, the drivers, FFmpeg, the Vulkan Video Samples library, and the browser integrations themselves — with AMD, Intel, Google, Mozilla, and the FFmpeg community as partners in review and bring-up. Watch for the Chromium encoder CLs starting to land upstream at the end of this month.
 
 ### References
 

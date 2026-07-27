@@ -43,7 +43,7 @@ limitations under the License.
     One API, Every Browser: the Vulkan Video Initiative
   </text>
   <text x="640" y="53" text-anchor="middle" font-size="12" fill="#546e7a">
-    The Khronos Vulkan Video TSG defines the API; NVIDIA and partners carry it through the media frameworks into the browsers — on Linux, Windows, and Vulkan-capable embedded systems.
+    The Khronos Vulkan Video Subgroup defines the API; NVIDIA and partners carry it through the media frameworks into the browsers — on Linux, Windows, and Vulkan-capable embedded systems.
   </text>
 
   <!-- ============ TOP: BROWSERS ============ -->
@@ -82,9 +82,9 @@ limitations under the License.
   <text x="930" y="392" text-anchor="middle" font-size="10.5" fill="#37474f">Extended for embedding: BYO VkDevice, in-memory bitstream, DMA-buf import,</text>
   <text x="930" y="408" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1b5e20">capability probing, sandbox-quiet operation — the Chromium encode engine</text>
 
-  <!-- ============ BASE: TSG ============ -->
+  <!-- ============ BASE: SUBGROUP ============ -->
   <rect x="30" y="470" width="1220" height="120" rx="10" fill="#fff8f6" stroke="#e57373" stroke-width="2.5"/>
-  <text x="50" y="494" font-size="13" font-weight="bold" fill="#c62828">THE FOUNDATION — KHRONOS VULKAN VIDEO TSG + NVIDIA</text>
+  <text x="50" y="494" font-size="13" font-weight="bold" fill="#c62828">THE FOUNDATION — KHRONOS VULKAN VIDEO SUBGROUP + NVIDIA</text>
   <rect x="60" y="506" width="1150" height="70" rx="8" fill="url(#khrG)" stroke="#c62828" stroke-width="2"/>
   <text x="635" y="529" text-anchor="middle" font-size="13" font-weight="bold" fill="#b71c1c">The cross-vendor, cross-platform HW video API</text>
   <text x="635" y="548" text-anchor="middle" font-size="10.5" fill="#37474f">VK_KHR_video_queue · decode/encode queues · H.264 / H.265 / AV1 decode+encode, VP9 decode · video_maintenance · quantization-map / intra-refresh extensions</text>
