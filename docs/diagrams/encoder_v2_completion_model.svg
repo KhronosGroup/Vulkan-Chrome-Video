@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+Internal engineering design artifact.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 880" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="1320" height="880" fill="#ffffff"/>
+  <defs>
+    <linearGradient id="cbadG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffcdd2"/><stop offset="100%" stop-color="#ef9a9a"/>
+    </linearGradient>
+    <linearGradient id="cokG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/><stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="cliG2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e3f2fd"/><stop offset="100%" stop-color="#bbdefb"/>
+    </linearGradient>
+    <marker id="ca" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+    <marker id="caR" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+    <marker id="caG" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <text x="660" y="34" text-anchor="middle" font-size="21" font-weight="bold" fill="#263238">
+    A3 — Completion Model: Polling (broken) vs. One Edge, Three Currencies
+  </text>
+  <text x="660" y="57" text-anchor="middle" font-size="12" fill="#546e7a">
+    Root cause: readiness is materialized by the CONSUMER'S POLL. Nothing in the library knows a frame became retrievable — so there is no event to signal.
+  </text>
+
+  <!-- ============ CURRENT ============ -->
+  <rect x="20" y="76" width="1280" height="316" rx="12" fill="#fff8f6" stroke="#e57373" stroke-width="2.5"/>
+  <rect x="20" y="76" width="150" height="28" rx="12" fill="#c62828"/>
+  <text x="95" y="95" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">CURRENT (v1)</text>
+
+  <rect x="50" y="120" width="250" height="72" rx="8" fill="#e8f5e9" stroke="#66bb6a"/>
+  <text x="175" y="142" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#2e7d32">assembly worker thread</text>
+  <text x="175" y="160" text-anchor="middle" font-size="9.5" fill="#37474f">fence wait → query results → byte copy</text>
+  <text x="175" y="176" text-anchor="middle" font-size="9.5" fill="#37474f">push onto m_capturedBitstreams</text>
+
+  <rect x="50" y="212" width="250" height="60" rx="8" fill="url(#cbadG)" stroke="#c62828" stroke-width="2"/>
+  <text x="175" y="232" text-anchor="middle" font-size="11" font-weight="bold" fill="#b71c1c">…then Reset(true) the frame node</text>
+  <text x="175" y="249" text-anchor="middle" font-size="9.5" fill="#37474f">SyncHostOnCmdBuffComplete() nulls</text>
+  <text x="175" y="263" text-anchor="middle" font-size="9.5" fill="#37474f">encodeCmdBuffer on the SHARED node</text>
+
+  <text x="175" y="296" text-anchor="middle" font-size="10" font-weight="bold" fill="#c62828">no signal is raised — nobody is told</text>
+  <text x="175" y="313" text-anchor="middle" font-size="9.5" fill="#546e7a">m_capturedBitstreams is an UNBOUNDED</text>
+  <text x="175" y="327" text-anchor="middle" font-size="9.5" fill="#546e7a">deque of full encoded frames (A13)</text>
+
+  <!-- consumer polls -->
+  <rect x="360" y="120" width="300" height="152" rx="8" fill="url(#cliG2)" stroke="#1976d2" stroke-width="2"/>
+  <text x="510" y="142" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#0d47a1">consumer polls, blind</text>
+  <text x="510" y="163" text-anchor="middle" font-size="9.5" fill="#37474f">GetEncodedFrame() is what CALLS</text>
+  <text x="510" y="177" text-anchor="middle" font-size="9.5" fill="#37474f">TryPopCapturedBitstream — the poll is</text>
+  <text x="510" y="191" text-anchor="middle" font-size="9.5" fill="#37474f">what DISCOVERS readiness</text>
+  <text x="510" y="213" text-anchor="middle" font-size="9.5" fill="#37474f">Chromium drives it from a watchdog +</text>
+  <text x="510" y="227" text-anchor="middle" font-size="9.5" fill="#37474f">UseOutputBitstreamBuffer re-entry</text>
+  <text x="510" y="249" text-anchor="middle" font-size="10" font-weight="bold" fill="#c62828">strict FIFO on m_pendingFrames.front()</text>
+  <text x="510" y="264" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#c62828">one stuck frame ⇒ everything behind it</text>
+
+  <!-- dead methods -->
+  <rect x="700" y="120" width="570" height="152" rx="8" fill="url(#cbadG)" stroke="#c62828" stroke-width="2.5"/>
+  <text x="985" y="142" text-anchor="middle" font-size="12" font-weight="bold" fill="#b71c1c">The two dead entry points — broken by the SAME null</text>
+  <text x="985" y="164" text-anchor="middle" font-size="10" fill="#37474f">PollEncodeComplete(frameId) — gates on encodeCmdBuffer (ext.cpp:720)</text>
+  <text x="985" y="180" text-anchor="middle" font-size="10" font-weight="bold" fill="#b71c1c">⇒ returns VK_NOT_READY FOREVER once the frame is ready</text>
+  <text x="985" y="202" text-anchor="middle" font-size="10" fill="#37474f">GetEncodeFence(frameId) — gates on encodeCmdBuffer (ext.cpp:820)</text>
+  <text x="985" y="218" text-anchor="middle" font-size="10" font-weight="bold" fill="#b71c1c">⇒ returns VK_NULL_HANDLE once ready; the header's "wait on this</text>
+  <text x="985" y="232" text-anchor="middle" font-size="10" font-weight="bold" fill="#b71c1c">fence in a thread pool" workflow cannot be built at all</text>
+  <text x="985" y="256" text-anchor="middle" font-size="9.5" font-style="italic" fill="#546e7a">Undetected because NEITHER consumer calls them. Unused API is unvalidated API.</text>
+
+  <rect x="700" y="286" width="570" height="44" rx="8" fill="#ffffff" stroke="#c62828" stroke-dasharray="4,3"/>
+  <text x="985" y="305" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#b71c1c">GetEncodedFrame was worked around (gates on captured BYTES instead).</text>
+  <text x="985" y="321" text-anchor="middle" font-size="10.5" fill="#37474f">The other two were never updated — the fix was applied at one of three call sites.</text>
+
+  <line x1="175" y1="192" x2="175" y2="212" stroke="#c62828" stroke-width="2" marker-end="url(#caR)"/>
+  <path d="M 360 196 L 320 196" fill="none" stroke="#1976d2" stroke-width="2" marker-end="url(#ca)"/>
+  <text x="338" y="188" text-anchor="middle" font-size="9" fill="#1976d2">pull</text>
+
+  <text x="660" y="366" text-anchor="middle" font-size="11" font-weight="bold" fill="#b71c1c">You cannot signal an event you never observe. Repairing the poll functions would only yield correct polling.</text>
+
+  <!-- ============ PROPOSED ============ -->
+  <rect x="20" y="412" width="1280" height="448" rx="12" fill="#f4fbf4" stroke="#2e7d32" stroke-width="2.5"/>
+  <rect x="20" y="412" width="170" height="28" rx="12" fill="#2e7d32"/>
+  <text x="105" y="431" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">PROPOSED (v2)</text>
+  <text x="700" y="431" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1b5e20">Readiness is materialized by the PRODUCER and merely reported.</text>
+
+  <!-- the one edge -->
+  <rect x="50" y="456" width="330" height="120" rx="8" fill="url(#cokG)" stroke="#2e7d32" stroke-width="2.5"/>
+  <text x="215" y="478" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1b5e20">THE ONE EDGE</text>
+  <text x="215" y="497" text-anchor="middle" font-size="10" fill="#37474f">PushCapturedBitstream() — ONE private,</text>
+  <text x="215" y="511" text-anchor="middle" font-size="10" fill="#37474f">NON-VIRTUAL funnel replacing 3 call sites</text>
+  <text x="215" y="525" text-anchor="middle" font-size="10" fill="#37474f">(H.264/265 + readback-failure + AV1 override)</text>
+  <text x="215" y="545" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#1b5e20">non-virtual ⇒ no future codec can drop the signal</text>
+  <text x="215" y="562" text-anchor="middle" font-size="9.5" fill="#37474f">moved OUTSIDE the disableFileOutput gate</text>
+
+  <rect x="50" y="592" width="330" height="58" rx="8" fill="#fffde7" stroke="#f9a825" stroke-width="2"/>
+  <text x="215" y="613" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#6d4c41">NOT the encode vkQueueSubmit2 signal</text>
+  <text x="215" y="631" text-anchor="middle" font-size="9.5" fill="#6d4c41">that fires long before readback + byte copy —</text>
+  <text x="215" y="645" text-anchor="middle" font-size="9.5" fill="#6d4c41">the obvious wrong answer, stated so it is not retried</text>
+
+  <!-- three currencies -->
+  <rect x="415" y="456" width="290" height="86" rx="8" fill="url(#cokG)" stroke="#2e7d32" stroke-width="2.5"/>
+  <text x="560" y="477" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1b5e20">① CALLBACK — default, in-process</text>
+  <text x="560" y="495" text-anchor="middle" font-size="9.5" fill="#37474f">PFN_…CompletionCallback, noexcept</text>
+  <text x="560" y="510" text-anchor="middle" font-size="9.5" fill="#37474f">fired on the library notifier thread</text>
+  <text x="560" y="528" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#1b5e20">zero OS-specific code in the library core</text>
+
+  <rect x="415" y="556" width="290" height="86" rx="8" fill="#e1f5fe" stroke="#0288d1" stroke-width="2"/>
+  <text x="560" y="577" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#01579b">② OS HANDLE — cross-process only</text>
+  <text x="560" y="595" text-anchor="middle" font-size="9.5" fill="#37474f">eventfd / Win32 Event, opt-in adapter</text>
+  <text x="560" y="610" text-anchor="middle" font-size="9.5" fill="#37474f">sendable over Mojo; drives an event loop</text>
+  <text x="560" y="628" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#c62828">readiness ≠ liveness: no POLLHUP, no EOF</text>
+
+  <rect x="415" y="656" width="290" height="86" rx="8" fill="#ede7f6" stroke="#4527a0" stroke-width="2"/>
+  <text x="560" y="677" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#311b92">③ TIMELINE SEM — GPU ordering ONLY</text>
+  <text x="560" y="695" text-anchor="middle" font-size="9.5" fill="#37474f">never a wakeup: OPAQUE_FD's legal ops are</text>
+  <text x="560" y="710" text-anchor="middle" font-size="9.5" fill="#37474f">dup / dup2 / close — NOT poll</text>
+  <text x="560" y="728" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#311b92">cannot drive an event loop; do not try</text>
+
+  <!-- chromium -->
+  <rect x="740" y="456" width="530" height="140" rx="8" fill="url(#cliG2)" stroke="#1976d2" stroke-width="2.5"/>
+  <text x="1005" y="478" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">Chromium delivery — ONE code path, no fd, no blocking</text>
+  <text x="1005" y="500" text-anchor="middle" font-family="JetBrains Mono, Consolas, monospace" font-size="9.5" fill="#37474f">library notifier thread</text>
+  <text x="1005" y="515" text-anchor="middle" font-family="JetBrains Mono, Consolas, monospace" font-size="9.5" fill="#37474f">└─ pfnFrameReady → refcounted trampoline</text>
+  <text x="1005" y="530" text-anchor="middle" font-family="JetBrains Mono, Consolas, monospace" font-size="9.5" fill="#37474f">     └─ base::BindPostTask(encoder_task_runner_, WeakPtr)</text>
+  <text x="1005" y="545" text-anchor="middle" font-family="JetBrains Mono, Consolas, monospace" font-size="9.5" fill="#37474f">          └─ OnLibraryFrameReady() [encoder sequence]</text>
+  <text x="1005" y="560" text-anchor="middle" font-family="JetBrains Mono, Consolas, monospace" font-size="9.5" fill="#37474f">               └─ DrainReadyOutput()  ← unchanged</text>
+  <text x="1005" y="582" text-anchor="middle" font-size="9.5" font-style="italic" fill="#546e7a">No FileDescriptorWatcher on the default path: it works on that sequence, but would force a MainThreadType::IO migration for all 44 tests.</text>
+
+  <rect x="740" y="610" width="530" height="132" rx="8" fill="#ffffff" stroke="#90a4ae" stroke-width="1.5"/>
+  <text x="1005" y="631" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#37474f">Retrieval: keyed AND ordered — head-of-line fixed</text>
+  <text x="1005" y="651" text-anchor="middle" font-size="9.5" fill="#37474f">AcquireNextEncodedFrame() — completion order, drain in a loop</text>
+  <text x="1005" y="666" text-anchor="middle" font-size="9.5" fill="#37474f">AcquireEncodedFrame(frameId) — targeted, skips a stuck head</text>
+  <text x="1005" y="681" text-anchor="middle" font-size="9.5" fill="#37474f">GetFrameStatus(frameId) → 4-state enum that CANNOT fail</text>
+  <text x="1005" y="701" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#2e7d32">+ per-frame deadline: 8 s, strictly ABOVE the internal 5 s fence cap</text>
+  <text x="1005" y="716" text-anchor="middle" font-size="9.5" fill="#37474f">(equal or below converts a slow-but-good frame into a lost one)</text>
+  <text x="1005" y="734" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#c62828">DELETED: PollEncodeComplete · GetEncodeFence</text>
+
+  <line x1="380" y1="500" x2="415" y2="500" stroke="#2e7d32" stroke-width="2.5" marker-end="url(#caG)"/>
+  <line x1="380" y1="516" x2="415" y2="590" stroke="#2e7d32" stroke-width="2" marker-end="url(#caG)"/>
+  <line x1="380" y1="530" x2="415" y2="690" stroke="#2e7d32" stroke-width="2" marker-end="url(#caG)"/>
+  <line x1="705" y1="500" x2="740" y2="510" stroke="#1976d2" stroke-width="2.5" marker-end="url(#ca)"/>
+
+  <rect x="50" y="768" width="1220" height="76" rx="8" fill="#eceff1" stroke="#78909c" stroke-width="2"/>
+  <text x="660" y="790" text-anchor="middle" font-size="12" font-weight="bold" fill="#37474f">Why "push-completion" won: it was the Condorcet choice across three lenses that ranked the candidates in CONFLICTING orders</text>
+  <text x="660" y="810" text-anchor="middle" font-size="10" fill="#546e7a">portability lens: callback 1st, push 2nd, eventfd "reject rather than iterate" · cross-process lens: eventfd 1st, push 2nd, callback last (a function pointer cannot cross a boundary)</text>
+  <text x="660" y="826" text-anchor="middle" font-size="10" fill="#546e7a">Chromium-threading lens: push 1st, callback 2nd, eventfd last · → first once, second twice, last never. The currencies are what let all three constraints hold simultaneously.</text>
+</svg>
