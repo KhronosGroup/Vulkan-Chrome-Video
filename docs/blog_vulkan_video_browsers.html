@@ -10,7 +10,7 @@ Generated from the Markdown source by build_blog.py — edit the .md, not this f
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bringing Vulkan Video to the Browser</title>
+    <title>Vulkan Video Comes to the Browser: Zero-Copy Hardware Acceleration Across Vendors</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
@@ -54,6 +54,10 @@ Generated from the Markdown source by build_blog.py — edit the .md, not this f
         .logo-strip .nvidia { color: var(--accent-nvidia); border-color: var(--accent-nvidia); }
         .logo-strip .ff { color: var(--accent-firefox); border-color: var(--accent-firefox); }
         .logo-strip .chrome { color: var(--accent-chrome); border-color: var(--accent-chrome); }
+        .hero-banner {
+            display: block; width: 100%; height: auto;
+            border-radius: 12px; margin-bottom: 2rem;
+        }
         h1 {
             font-size: 2.7rem; font-weight: 700; line-height: 1.15; margin-bottom: 1rem;
             color: var(--text-primary);
@@ -94,6 +98,19 @@ Generated from the Markdown source by build_blog.py — edit the .md, not this f
             font-size: 1.03rem; color: var(--text-primary);
         }
         blockquote.pull p { color: var(--text-primary); margin: 0; }
+        aside.takeaways {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-vulkan-bright);
+            border-radius: 0 12px 12px 0; padding: 1.4rem 1.7rem;
+            margin: 2.2rem 0 2.6rem;
+        }
+        aside.takeaways h2 {
+            font-size: 0.95rem; margin: 0 0 0.9rem; padding: 0; border-left: none;
+            font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--accent-vulkan-bright);
+        }
+        aside.takeaways ul { margin: 0 0 0 1.2rem; }
+        aside.takeaways li:last-child { margin-bottom: 0; }
         hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
         footer {
             border-top: 1px solid var(--border); padding: 2rem 0 3.5rem;
@@ -107,14 +124,15 @@ Generated from the Markdown source by build_blog.py — edit the .md, not this f
 
 <header class="hero">
     <div class="container">
+        <img class="hero-banner" src="images/blog_hero_banner.jpg" alt="Vulkan Video Comes to the Browser: Zero-Copy Hardware Acceleration Across Vendors">
         <div class="logo-strip">
             <span class="vulkan">Vulkan Video Subgroup</span>
             <span class="nvidia">NVIDIA</span>
             <span class="ff">Firefox</span>
             <span class="chrome">Chromium</span>
         </div>
-        <h1>Bringing Vulkan Video to the Browser</h1>
-        <p class="dek">How the Khronos Vulkan Video Subgroup and NVIDIA are rebuilding browser hardware video acceleration around one cross-vendor API — with zero-copy pipelines shipping in Firefox and a Vulkan-native encoder headed for Chromium.</p>
+        <h1>Vulkan Video Comes to the Browser: Zero-Copy Hardware Acceleration Across Vendors</h1>
+        <p class="dek">How the Khronos Vulkan Video Subgroup and NVIDIA are delivering zero-copy decode in Firefox and a native Vulkan encoder path for Chromium.</p>
         <div class="byline">NVIDIA Multimedia · Khronos Vulkan Video Subgroup · July 2026</div>
     </div>
 </header>
@@ -122,9 +140,21 @@ Generated from the Markdown source by build_blog.py — edit the .md, not this f
 <article>
 <div class="container">
 
-<p>Hardware video acceleration in browsers has always been a patchwork. On Linux it means VA-API on some stacks and V4L2 on others; Windows brings DXVA and Media Foundation; embedded platforms add their own vendor SDKs. Every browser carries a backend per API per platform, every vendor maintains a different integration, and entire classes of hardware — NVIDIA GPUs on Linux desktops most visibly — end up with <em>no</em> accelerated path at all, burning CPU on software codecs during every video call.</p>
+<aside class="takeaways">
+<h2>Key Takeaways</h2>
+<ul>
+  <li><strong>Fragmented acceleration ends:</strong> Browsers currently juggle multiple platform-specific APIs (VA-API, V4L2, DXVA, etc.). Vulkan Video replaces them with one explicit, cross-vendor API for hardware decode and encode.</li>
+  <li><strong>Firefox: zero-copy decode is here:</strong> Decoded frames stay on the GPU, exported as DMA-bufs and imported directly by the compositor — pixels never touch system memory. The path is largely merged and in final review.</li>
+  <li><strong>Chromium: encode first, then decode:</strong> A temporary VA-API bridge already accelerates NVIDIA decode. The first Vulkan-native backend (the encoder) begins upstreaming at the end of July 2026; the native decoder follows and retires the bridge.</li>
+  <li><strong>Real-world impact:</strong> Video calls, streaming, screen sharing, WebCodecs, remote desktop, and cloud gaming all benefit from lower CPU load, reduced power draw, lower latency, and true zero-copy pipelines.</li>
+  <li><strong>One stack for the whole ecosystem:</strong> The same Vulkan Video API, drivers, conformance tests, and reference library power browsers today and scale to desktops, embedded, and automotive systems tomorrow.</li>
+  <li><strong>Broad collaboration:</strong> Led by the Khronos Vulkan Video Subgroup and NVIDIA, with active participation from AMD, Intel, Google, Mozilla, and the FFmpeg community.</li>
+</ul>
+</aside>
 
-<p><strong>Vulkan® Video</strong> changes that equation: one explicit, cross-vendor, cross-platform API for hardware decode <em>and</em> encode, defined by the Khronos® Vulkan Video Technical Subgroup and implemented by NVIDIA, AMD, and Intel drivers (with Mesa's RADV, ANV, and NVK following). The Subgroup and NVIDIA are not just behind the API — we are carrying it through the media frameworks and into the browsers ourselves, and this post is a tour of that work: what has already merged, what it took, and what lands next.</p>
+<p>Hardware video acceleration in web browsers has always been a patchwork. On Linux it means VA-API on some stacks and V4L2 on others; Windows brings DXVA and Media Foundation; embedded platforms add their own vendor SDKs. Every browser carries a backend per API per platform, every vendor maintains a different integration, and entire classes of hardware — NVIDIA GPUs on Linux desktops most visibly — end up with <em>no</em> accelerated path at all, unnecessarily burning CPU cycles on software codecs during every video call.</p>
+
+<p><strong>Vulkan® Video</strong> changes that equation: one explicit, cross-vendor, cross-platform API for hardware decode <em>and</em> encode, defined by the Khronos® Vulkan Video Technical Subgroup and implemented by NVIDIA, AMD, and Intel drivers (with Mesa's RADV, ANV, and NVK following). The Subgroup and NVIDIA are not just defining the API — we are implementing it in media frameworks and browsers ourselves, and this post is a tour of that work: what has already merged, what it took, and what lands next.</p>
 
 <figure class="diagram">
   <img src="diagrams/blog_initiative_stack.svg" alt="The initiative at a glance: the Subgroup-defined API at the base, hardened media frameworks in the middle, and two browser integrations on top." loading="lazy">
@@ -167,7 +197,7 @@ Generated from the Markdown source by build_blog.py — edit the .md, not this f
 
 <h2>Why this matters</h2>
 
-<p>Because video is not a feature of the browser — by traffic volume it <strong>is</strong> most of what a browser does. Video makes up well over half of all internet traffic by most measurements, and nearly every way people produce or consume it runs through a browser engine. Every one of these everyday activities crosses the hardware codec path this initiative accelerates:</p>
+<p>Video is not just a feature of the browser — by traffic volume, video <strong>is</strong> most of what a browser does. Video makes up well over half of all internet traffic by most measurements, and nearly every way people produce or consume it runs through a browser engine. Every one of these everyday activities crosses the hardware codec path this initiative accelerates:</p>
 
 <ul>
   <li><strong>Playback &amp; streaming</strong> — YouTube, Netflix, Twitch, embedded video everywhere <em>(decode)</em></li>
@@ -180,16 +210,16 @@ Generated from the Markdown source by build_blog.py — edit the .md, not this f
   <li><strong>Creator tools &amp; live broadcast</strong> — WebCodecs editors, transcoders, WebRTC/WHIP ingest <em>(decode + encode)</em></li>
 </ul>
 
-<p>Moving encode off the CPU and onto dedicated silicon should show up on every axis that matters to a laptop or a fanless device — processor load, power draw, latency, and the memory traffic of shuttling frames around. We are measuring exactly those KPIs, for an everyday 1080p video call and for the all-GPU tab-recording lane where capture, color conversion, and encode never leave the GPU. Rather than quote numbers before they are measured, here is the scorecard we will fill in — with reproducible figures published alongside the upstream Chromium change lists:</p>
+<p>Moving encode off the CPU and onto dedicated silicon should show up on every axis that matters to a laptop or a fanless device: processor load, power draw, latency, and memory traffic. We are measuring all four. Our two test cases are an everyday 1080p video call and an all-GPU tab recording, where capture, color conversion, and encode never leave the GPU. We would rather not quote numbers before we have measured them, so here is the scorecard we will fill in — with reproducible figures published alongside the upstream Chromium change lists:</p>
 
 <figure class="diagram">
   <img src="diagrams/blog_kpi_snapshot.svg" alt="The KPI scorecard (numbers to be measured and published with the upstream CLs). The only entries filled in today are architectural facts, not benchmarks: the zero-copy path is verified bit-identical to the software reference, and the all-GPU lane moves zero frame bytes through system memory by construction." loading="lazy">
   <figcaption>The KPI scorecard (numbers to be measured and published with the upstream CLs). The only entries filled in today are architectural facts, not benchmarks: the zero-copy path is verified bit-identical to the software reference, and the all-GPU lane moves zero frame bytes through system memory by construction.</figcaption>
 </figure>
 
-<p>When this work completes, a browser needs <em>one</em> video acceleration backend that runs on every GPU vendor and every Vulkan-capable platform — Linux under Wayland and X11, Windows, and the embedded and automotive systems where Vulkan is already the standard graphics API. Video calls stop pegging CPU cores on machines that have dedicated silicon for exactly this job. And because the path from decoder to screen (and from capture to encoder) is zero-copy with explicit synchronization, it is not just accelerated — it is efficient in the way battery-powered and thermally-constrained devices need.</p>
+<p>When this work completes, a browser needs just <em>one</em> video acceleration backend. That backend runs on every GPU vendor and every Vulkan-capable platform: Linux under Wayland and X11, Windows, and the embedded and automotive systems where Vulkan is already the standard graphics API. Video calls stop pegging CPU cores on machines built with dedicated silicon for exactly this job. And the path from decoder to screen — and from capture to encoder — is zero-copy with explicit synchronization. That makes it not just accelerated but efficient, in the way battery-powered and thermally-constrained devices need.</p>
 
-<p>The Khronos Vulkan Video Subgroup and NVIDIA are committed to this across the stack: the API and conformance tests, the drivers, FFmpeg, the Vulkan Video Samples library, and the browser integrations themselves — with AMD, Intel, Google, Mozilla, and the FFmpeg community as partners in review and bring-up. Watch for the Chromium encoder CLs starting to land upstream at the end of this month.</p>
+<p>The Khronos Vulkan Video Subgroup and NVIDIA are committed to this across the whole stack: the API and conformance tests, the drivers, FFmpeg, the Vulkan Video Samples library, and the browser integrations themselves. AMD, Intel, Google, Mozilla, and the FFmpeg community are partners in review and bring-up. Watch for the Chromium encoder CLs starting to land upstream at the end of this month.</p>
 
 <h3>References</h3>
 

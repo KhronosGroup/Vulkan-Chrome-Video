@@ -25,9 +25,11 @@ Defaults: blog_vulkan_video_browsers.md -> blog_vulkan_video_browsers.html
 Zero external dependencies (Python 3 standard library only) so it runs
 anywhere — CI, a fresh checkout, or a reviewer's laptop.
 
-Supported Markdown: a leading `<!--meta ... -->` comment (badges, byline,
-footer) plus a `# Title` and a subtitle paragraph for the hero, then
-`##`/`###` headings (with an optional `<!--accent:xx-->` marker on `##`),
+Supported Markdown: a leading `<!--meta ... -->` comment (hero, hero_alt,
+badges, byline, footer) plus a `# Title` and a subtitle paragraph for the
+hero, then `##`/`###` headings (with optional `<!--accent:xx-->` and
+`<!--sidebar-->` markers on `##`; `<!--sidebar-->` wraps the heading and the
+list that follows it in a boxed `<aside>`, for a Key-Takeaways panel),
 paragraphs, `-`/`*` and `1.` lists, `>` block-quotes
 (rendered as a callout), `![caption](src)` images (rendered as a captioned
 figure), horizontal rules, and inline `**bold**`, `*italic*`/`_italic_`,
@@ -90,6 +92,10 @@ CSS = """
         .logo-strip .nvidia { color: var(--accent-nvidia); border-color: var(--accent-nvidia); }
         .logo-strip .ff { color: var(--accent-firefox); border-color: var(--accent-firefox); }
         .logo-strip .chrome { color: var(--accent-chrome); border-color: var(--accent-chrome); }
+        .hero-banner {
+            display: block; width: 100%; height: auto;
+            border-radius: 12px; margin-bottom: 2rem;
+        }
         h1 {
             font-size: 2.7rem; font-weight: 700; line-height: 1.15; margin-bottom: 1rem;
             color: var(--text-primary);
@@ -130,6 +136,19 @@ CSS = """
             font-size: 1.03rem; color: var(--text-primary);
         }
         blockquote.pull p { color: var(--text-primary); margin: 0; }
+        aside.takeaways {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-vulkan-bright);
+            border-radius: 0 12px 12px 0; padding: 1.4rem 1.7rem;
+            margin: 2.2rem 0 2.6rem;
+        }
+        aside.takeaways h2 {
+            font-size: 0.95rem; margin: 0 0 0.9rem; padding: 0; border-left: none;
+            font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--accent-vulkan-bright);
+        }
+        aside.takeaways ul { margin: 0 0 0 1.2rem; }
+        aside.takeaways li:last-child { margin-bottom: 0; }
         hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
         footer {
             border-top: 1px solid var(--border); padding: 2rem 0 3.5rem;
@@ -246,14 +265,31 @@ def render_body(md):
             continue
         if line.startswith("## "):
             text = line[3:]
-            accent = ""
+            sidebar = bool(re.search(r"<!--\s*sidebar\s*-->", text))
             am = re.search(r"<!--\s*accent:(\w+)\s*-->", text)
-            if am:
-                accent = ACCENT_CLASS.get(am.group(1), "")
-                text = re.sub(r"<!--.*?-->", "", text)
+            accent = ACCENT_CLASS.get(am.group(1), "") if am else ""
+            text = re.sub(r"<!--.*?-->", "", text)
             cls = ' class="%s"' % accent if accent else ""
-            out.append("<h2%s>%s</h2>" % (cls, inline(text.strip())))
+            heading = "<h2%s>%s</h2>" % (cls, inline(text.strip()))
             i += 1
+            if sidebar:
+                # A sidebar heading takes the list that follows it into a
+                # boxed <aside> — used for the Key Takeaways panel.
+                j = i
+                while j < n and not lines[j].strip():
+                    j += 1
+                items = []
+                while j < n and re.match(r"[-*]\s+", lines[j]):
+                    items.append("  <li>%s</li>" % inline(re.sub(r"^[-*]\s+", "", lines[j])))
+                    j += 1
+                if items:
+                    out.append(
+                        '<aside class="takeaways">\n%s\n<ul>\n%s\n</ul>\n</aside>'
+                        % (heading, "\n".join(items))
+                    )
+                    i = j
+                    continue
+            out.append(heading)
             continue
         # blockquote (callout)
         if line.startswith(">"):
@@ -323,6 +359,11 @@ def build(md_path, html_path):
     footer = meta.get("footer", "")
     badges = render_badges(meta.get("badges", ""))
     body = render_body(body_md)
+    hero = meta.get("hero", "")
+    hero_img = (
+        '        <img class="hero-banner" src="%s" alt="%s">\n'
+        % (hero, html.escape(meta.get("hero_alt", title), quote=True))
+    ) if hero else ""
 
     doc = (
         "<!DOCTYPE html>\n" + LICENSE_HEADER + '<html lang="en">\n<head>\n'
@@ -334,7 +375,7 @@ def build(md_path, html_path):
         '    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">\n'
         "    <style>" + CSS + "    </style>\n</head>\n<body>\n"
         '<div class="bg-pattern"></div>\n\n'
-        '<header class="hero">\n    <div class="container">\n'
+        '<header class="hero">\n    <div class="container">\n' + hero_img +
         '        <div class="logo-strip">\n            ' + badges + "\n        </div>\n"
         "        <h1>" + html.escape(title) + "</h1>\n"
         '        <p class="dek">' + inline(subtitle) + "</p>\n"
