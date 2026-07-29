@@ -25,9 +25,12 @@ Defaults: blog_vulkan_video_browsers.md -> blog_vulkan_video_browsers.html
 Zero external dependencies (Python 3 standard library only) so it runs
 anywhere — CI, a fresh checkout, or a reviewer's laptop.
 
-Supported Markdown: a leading `<!--meta ... -->` comment (hero, hero_alt,
-badges, byline, footer) plus a `# Title` and a subtitle paragraph for the
-hero, then `##`/`###` headings (with optional `<!--accent:xx-->` and
+Supported Markdown: a leading `<!--meta ... -->` comment (badges, byline,
+footer) plus an optional leading `![alt](src)` banner image, a `# Title`,
+and a subtitle paragraph — all three go into the hero, so the banner shows
+both on GitHub and on the built page. (`hero:`/`hero_alt:` meta keys
+override the banner if you need one that GitHub should not show.)
+Then `##`/`###` headings (with optional `<!--accent:xx-->` and
 `<!--sidebar-->` markers on `##`; `<!--sidebar-->` wraps the heading and the
 list that follows it in a boxed `<aside>`, for a Key-Takeaways panel),
 paragraphs, `-`/`*` and `1.` lists, `>` block-quotes
@@ -198,9 +201,12 @@ def parse_meta(src):
 
 
 def split_lead(body_md, meta):
-    """Pull the leading `# Title` and the subtitle paragraph out of the body so
-    the hero renders them and the article does not repeat them. Title/subtitle
-    fall back to `meta` values if the body has none."""
+    """Pull the leading banner image, the `# Title`, and the subtitle paragraph
+    out of the body so the hero renders them and the article does not repeat
+    them. An `![alt](src)` on the first line becomes the hero banner — writing
+    it as ordinary Markdown, rather than a `hero:` meta key, is what makes it
+    visible when the source file is viewed on GitHub. Values fall back to
+    `meta` if the body has none."""
     lines = body_md.split("\n")
 
     def skip_blank(i):
@@ -209,6 +215,12 @@ def split_lead(body_md, meta):
         return i
 
     i = skip_blank(0)
+    hero = hero_alt = None
+    if i < len(lines):
+        m = re.match(r"!\[(.*)\]\(([^)]+)\)\s*$", lines[i].strip())
+        if m:
+            hero_alt, hero = m.group(1), m.group(2)
+            i = skip_blank(i + 1)
     title = meta.get("title")
     if i < len(lines) and lines[i].startswith("# "):
         title = lines[i][2:].strip()
@@ -223,7 +235,7 @@ def split_lead(body_md, meta):
         sub = " ".join(buf).strip()
         m = re.match(r"^[_*]+(.+?)[_*]+$", sub)
         subtitle = m.group(1).strip() if m else sub
-    return title, subtitle, "\n".join(lines[i:])
+    return title, subtitle, hero, hero_alt, "\n".join(lines[i:])
 
 
 def render_body(md):
@@ -352,17 +364,17 @@ def render_badges(spec):
 
 def build(md_path, html_path):
     meta, body_md = parse_meta(Path(md_path).read_text(encoding="utf-8"))
-    title, subtitle, body_md = split_lead(body_md, meta)
+    title, subtitle, hero, hero_alt, body_md = split_lead(body_md, meta)
     title = title or "Untitled"
     subtitle = subtitle or ""
     byline = meta.get("byline", "")
     footer = meta.get("footer", "")
     badges = render_badges(meta.get("badges", ""))
     body = render_body(body_md)
-    hero = meta.get("hero", "")
+    hero = meta.get("hero", hero or "")
     hero_img = (
         '        <img class="hero-banner" src="%s" alt="%s">\n'
-        % (hero, html.escape(meta.get("hero_alt", title), quote=True))
+        % (hero, html.escape(meta.get("hero_alt", hero_alt or title), quote=True))
     ) if hero else ""
 
     doc = (

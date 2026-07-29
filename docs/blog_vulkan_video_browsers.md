@@ -19,12 +19,12 @@ This Markdown file is the SOURCE for the blog. Regenerate the styled HTML with:
     python3 build_blog.py blog_vulkan_video_browsers.md blog_vulkan_video_browsers.html
 -->
 <!--meta
-hero: images/blog_hero_banner.jpg
-hero_alt: Vulkan Video Comes to the Browser: Zero-Copy Hardware Acceleration Across Vendors
 badges: Vulkan Video Subgroup:vulkan, NVIDIA:nvidia, Firefox:ff, Chromium:chrome
 byline: NVIDIA Multimedia · Khronos Vulkan Video Subgroup · July 2026
 footer: Khronos Vulkan Video Subgroup & NVIDIA · Browser Hardware Video Acceleration Initiative · July 2026
 -->
+
+![Vulkan Video Comes to the Browser: Zero-Copy Hardware Acceleration Across Vendors](images/blog_hero_banner.jpg)
 
 # Vulkan Video Comes to the Browser: Zero-Copy Hardware Acceleration Across Vendors
 
