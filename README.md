@@ -39,7 +39,7 @@ This project implements Vulkan Video hardware acceleration for video decoding in
 
 ### Blog
 
-**Vulkan Video Comes to the Browser: Zero-Copy Hardware Acceleration Across Vendors** — read the Markdown source: [`docs/blog_vulkan_video_browsers.md`](docs/blog_vulkan_video_browsers.md).
+**Vulkan Video Comes to the Browser: Portable Zero-Copy Hardware Acceleration** — read the Markdown source: [`docs/blog_vulkan_video_browsers.md`](docs/blog_vulkan_video_browsers.md).
 
 The blog is authored in Markdown; its rendered HTML page is part of the documentation site (see **View Full Documentation** above) and is regenerated with `python3 docs/build_blog.py` (Python 3 standard library only — no dependencies).
 

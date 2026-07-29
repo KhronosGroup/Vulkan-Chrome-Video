@@ -157,7 +157,14 @@ CSS = """
             border-top: 1px solid var(--border); padding: 2rem 0 3.5rem;
             color: var(--text-muted); font-size: 0.88rem; text-align: center;
         }
-        @media (max-width: 700px) { h1 { font-size: 1.9rem; } }
+        @media (max-width: 700px) {
+            h1 { font-size: 1.9rem; }
+            /* Keep the Key Takeaways panel readable on a phone: the box and
+               list indents eat a lot of a 390px viewport at desktop padding. */
+            aside.takeaways { padding: 1.1rem 1.15rem; border-radius: 0 8px 8px 0; }
+            aside.takeaways ul { margin-left: 1rem; }
+            figure.diagram { padding: 0.5rem; }
+        }
 """
 
 

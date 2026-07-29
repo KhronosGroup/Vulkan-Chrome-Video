@@ -249,20 +249,6 @@ limitations under the License.
         .doc-card:nth-child(4) .doc-icon { background: rgba(118, 185, 0, 0.2); }
         .doc-card:nth-child(5) .doc-icon { background: rgba(172, 45, 45, 0.2); }
 
-        .doc-card.featured {
-            grid-template-columns: 1fr;
-            padding: 1.25rem;
-            gap: 1.1rem;
-        }
-
-        .doc-card.featured .card-banner {
-            display: block;
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-        }
-
-        .doc-card.featured .doc-content { padding: 0 0.75rem 0.5rem; }
 
         .doc-content h2 {
             font-size: 1.3rem;
@@ -364,13 +350,14 @@ limitations under the License.
         <div class="section-title">Blog</div>
 
         <div class="docs-grid" style="margin-bottom: 2.5rem;">
-            <a href="blog_vulkan_video_browsers.html" class="doc-card featured">
-                <img class="card-banner" src="images/blog_hero_banner.jpg" alt="Vulkan Video Comes to the Browser: Zero-Copy Hardware Acceleration Across Vendors">
+            <a href="blog_vulkan_video_browsers.html" class="doc-card">
+                <div class="doc-icon">📰</div>
                 <div class="doc-content">
-                    <h2>Vulkan Video Comes to the Browser: Zero-Copy Hardware Acceleration Across Vendors</h2>
+                    <h2>Vulkan Video Comes to the Browser: Portable Zero-Copy Hardware Acceleration</h2>
                     <p>The Khronos Vulkan Video Subgroup &amp; NVIDIA initiative: FFmpeg and Firefox zero-copy DMA-buf decode with DRM modifiers, and the Vulkan-native encoder headed for Chromium.</p>
                     <span class="tag">Blog · July 2026</span>
                 </div>
+                <div class="doc-arrow">→</div>
             </a>
         </div>
 

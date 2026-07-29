@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: 2026 The Khronos Group, Inc.
+SPDX-License-Identifier: Apache-2.0
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 700" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="prodG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/>
+      <stop offset="100%" stop-color="#90caf9"/>
+    </linearGradient>
+    <linearGradient id="resG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff9c4"/>
+      <stop offset="100%" stop-color="#fff176"/>
+    </linearGradient>
+    <linearGradient id="encG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffcdd2"/>
+      <stop offset="100%" stop-color="#ef9a9a"/>
+    </linearGradient>
+    <marker id="ar2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="640" y="32" text-anchor="middle" font-size="21" font-weight="bold" fill="#263238">
+    The Zero-Copy Encode Input Path — and What Registration Removes
+  </text>
+  <text x="640" y="56" text-anchor="middle" font-size="12" fill="#546e7a">
+    A captured or rendered frame reaches the encoder as a GPU image. Nothing is copied — and under the v2 API, nothing is re-imported either.
+  </text>
+
+  <!-- ============ STAGE 1 ============ -->
+  <rect x="40" y="86" width="376" height="216" rx="10" fill="url(#prodG)" stroke="#1976d2" stroke-width="2"/>
+  <text x="228" y="112" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#0d47a1">1 · PRODUCER</text>
+  <text x="228" y="132" text-anchor="middle" font-size="11" font-style="italic" fill="#1565c0">renderer or viz — capture and rendering</text>
+  <text x="228" y="160" text-anchor="middle" font-size="11" fill="#37474f">A camera frame, a captured tab, or a</text>
+  <text x="228" y="177" text-anchor="middle" font-size="11" fill="#37474f">rendered surface is already a GPU image</text>
+  <text x="228" y="194" text-anchor="middle" font-size="11" fill="#37474f">in an NV12 SharedImage — never a CPU buffer.</text>
+  <text x="228" y="222" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#0d47a1">tagged at allocation:</text>
+  <text x="228" y="239" text-anchor="middle" font-size="10" fill="#37474f">SHARED_IMAGE_USAGE_VIDEO_ENCODE_ACCELERATOR</text>
+  <text x="228" y="268" text-anchor="middle" font-size="10.5" fill="#37474f">Only a mailbox crosses the process</text>
+  <text x="228" y="285" text-anchor="middle" font-size="10.5" fill="#37474f">boundary — not a single pixel.</text>
+
+  <line x1="422" y1="194" x2="446" y2="194" stroke="#37474f" stroke-width="2.5" marker-end="url(#ar2)"/>
+
+  <!-- ============ STAGE 2 ============ -->
+  <rect x="452" y="86" width="376" height="216" rx="10" fill="url(#resG)" stroke="#f9a825" stroke-width="2"/>
+  <text x="640" y="112" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#5d4037">2 · RESOLVE, IN THE GPU PROCESS</text>
+  <text x="640" y="132" text-anchor="middle" font-size="11" font-style="italic" fill="#795548">mailbox becomes an encodable VkImage</text>
+  <text x="640" y="160" text-anchor="middle" font-size="11" fill="#37474f">The SharedImage backing is asked for a</text>
+  <text x="640" y="177" text-anchor="middle" font-size="11" fill="#37474f">video-encode view of itself: the underlying</text>
+  <text x="640" y="194" text-anchor="middle" font-size="11" fill="#37474f">DMA-buf is imported as a VkImage with</text>
+  <text x="640" y="211" text-anchor="middle" font-size="11" fill="#37474f">VIDEO_ENCODE_SRC usage — two-plane NV12.</text>
+  <text x="640" y="239" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#5d4037">Correctness, not just speed:</text>
+  <text x="640" y="256" text-anchor="middle" font-size="10.5" fill="#37474f">acquire / release semaphores and a queue-family</text>
+  <text x="640" y="273" text-anchor="middle" font-size="10.5" fill="#37474f">ownership transfer into the encode queue, so the</text>
+  <text x="640" y="290" text-anchor="middle" font-size="10.5" fill="#37474f">encoder reads only finished pixels.</text>
+
+  <line x1="834" y1="194" x2="858" y2="194" stroke="#37474f" stroke-width="2.5" marker-end="url(#ar2)"/>
+
+  <!-- ============ STAGE 3 ============ -->
+  <rect x="864" y="86" width="376" height="216" rx="10" fill="url(#encG)" stroke="#c62828" stroke-width="2"/>
+  <text x="1052" y="112" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#b71c1c">3 · ENCODE</text>
+  <text x="1052" y="132" text-anchor="middle" font-size="11" font-style="italic" fill="#c62828">vendored library on the shared VkDevice</text>
+  <text x="1052" y="160" text-anchor="middle" font-size="11" fill="#37474f">The frame is submitted to the Vulkan video</text>
+  <text x="1052" y="177" text-anchor="middle" font-size="11" fill="#37474f">encode queue on the same device that</text>
+  <text x="1052" y="194" text-anchor="middle" font-size="11" fill="#37474f">composited it. No staging, no readback.</text>
+  <text x="1052" y="222" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#b71c1c">Completion is pushed, not polled:</text>
+  <text x="1052" y="239" text-anchor="middle" font-size="10.5" fill="#37474f">one readiness edge raised when the bitstream</text>
+  <text x="1052" y="256" text-anchor="middle" font-size="10.5" fill="#37474f">is assembled, delivered to the encoder's own</text>
+  <text x="1052" y="273" text-anchor="middle" font-size="10.5" fill="#37474f">task sequence — no thread spins, no wait loop.</text>
+  <text x="1052" y="292" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#b71c1c">Out: the encoded bitstream.</text>
+
+  <!-- ============ REGISTRATION MODEL ============ -->
+  <rect x="40" y="330" width="1200" height="312" rx="10" fill="#fafafa" stroke="#9e9e9e" stroke-width="2"/>
+  <text x="60" y="356" font-size="13.5" font-weight="bold" fill="#37474f">The design decision behind stage 2: register the buffer once, not once per frame</text>
+  <text x="60" y="376" font-size="11" fill="#607d8b">Producers recycle a small pool of buffers, so the same handles come round again and again. Importing them per frame is work the pool already paid for.</text>
+
+  <!-- today -->
+  <rect x="60" y="392" width="565" height="106" rx="8" fill="#fbe9e7" stroke="#ff8a65" stroke-width="2"/>
+  <text x="342" y="416" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#bf360c">Per-frame import — what the port does today</text>
+  <text x="342" y="437" text-anchor="middle" font-size="10.5" fill="#37474f">every frame: duplicate the DMA-buf handles, allocate and import</text>
+  <text x="342" y="454" text-anchor="middle" font-size="10.5" fill="#37474f">the memory, create a VkImage and view — then throw them away</text>
+  <text x="342" y="478" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#bf360c">at 4K60: 60 imports per second, per stream</text>
+
+  <text x="642" y="450" text-anchor="middle" font-size="22" fill="#607d8b">→</text>
+
+  <rect x="660" y="392" width="560" height="106" rx="8" fill="#e8f5e9" stroke="#66bb6a" stroke-width="2"/>
+  <text x="940" y="416" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1b5e20">Registered resources — the v2 API</text>
+  <text x="940" y="437" text-anchor="middle" font-size="10.5" fill="#37474f">register each pool slot once and get back a stable id; submitting a</text>
+  <text x="940" y="454" text-anchor="middle" font-size="10.5" fill="#37474f">frame just names that id, and allocates nothing at all</text>
+  <text x="940" y="478" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1b5e20">at 4K60, 8-slot pool: 8 imports total, then zero</text>
+
+  <text x="60" y="528" font-size="12" font-weight="bold" fill="#37474f">Two consequences that matter more than the arithmetic:</text>
+  <text x="60" y="552" font-size="11" fill="#37474f">• <tspan font-weight="bold">Failures move to a negotiation point.</tspan> An unsupported format or memory layout is rejected once, at registration, with an error the browser can act on — renegotiate</text>
+  <text x="74" y="569" font-size="11" fill="#37474f">the allocation. Today the same mismatch fails on every frame, forever, mid-stream, as a driver-level error. That is the difference between a hiccup and a dead call.</text>
+  <text x="60" y="596" font-size="11" fill="#37474f">• <tspan font-weight="bold">Buffers are retired by reference count, never by a timer or a device wait.</tspan> A registered image is freed only once no queued encode can still be reading it —</text>
+  <text x="74" y="613" font-size="11" fill="#37474f">the alternative is either stalling the GPU or freeing memory out from under it, and both have already been observed in practice.</text>
+
+  <text x="640" y="668" text-anchor="middle" font-size="11" font-style="italic" fill="#607d8b">
+    Same shape on the decode side: the decoder's output image is exported once and imported by the compositor, rather than copied through system memory per frame.
+  </text>
+</svg>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: 2026 The Khronos Group, Inc.
+SPDX-License-Identifier: Apache-2.0
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 740" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="conG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbdefb"/>
+      <stop offset="100%" stop-color="#90caf9"/>
+    </linearGradient>
+    <linearGradient id="facG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <linearGradient id="vkG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffcdd2"/>
+      <stop offset="100%" stop-color="#ef9a9a"/>
+    </linearGradient>
+    <linearGradient id="libG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d1c4e9"/>
+      <stop offset="100%" stop-color="#b39ddb"/>
+    </linearGradient>
+    <marker id="ar" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+
+  <text x="640" y="32" text-anchor="middle" font-size="21" font-weight="bold" fill="#263238">
+    Where the Vulkan Encoder Plugs Into Chromium
+  </text>
+  <text x="640" y="56" text-anchor="middle" font-size="12" fill="#546e7a">
+    One backend registration behind the existing VideoEncodeAccelerator interface — every encode consumer in the browser is served by it, on every platform Vulkan reaches.
+  </text>
+
+  <!-- ============ RENDERER PROCESS ============ -->
+  <rect x="30" y="84" width="1220" height="112" rx="10" fill="#f6f9ff" stroke="#64b5f6" stroke-width="2"/>
+  <text x="50" y="108" font-size="13" font-weight="bold" fill="#1565c0">RENDERER PROCESS — the encode consumers, unchanged by this work</text>
+
+  <rect x="60" y="122" width="216" height="58" rx="8" fill="url(#conG)" stroke="#1976d2"/>
+  <text x="168" y="145" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">WebRTC</text>
+  <text x="168" y="164" text-anchor="middle" font-size="10" fill="#37474f">RTCPeerConnection</text>
+
+  <rect x="296" y="122" width="216" height="58" rx="8" fill="url(#conG)" stroke="#1976d2"/>
+  <text x="404" y="145" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">WebCodecs</text>
+  <text x="404" y="164" text-anchor="middle" font-size="10" fill="#37474f">blink::VideoEncoder</text>
+
+  <rect x="532" y="122" width="216" height="58" rx="8" fill="url(#conG)" stroke="#1976d2"/>
+  <text x="640" y="145" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">MediaRecorder</text>
+  <text x="640" y="164" text-anchor="middle" font-size="10" fill="#37474f">in-browser recording</text>
+
+  <rect x="768" y="122" width="216" height="58" rx="8" fill="url(#conG)" stroke="#1976d2"/>
+  <text x="876" y="145" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">Screen share</text>
+  <text x="876" y="164" text-anchor="middle" font-size="10" fill="#37474f">getDisplayMedia, tab capture</text>
+
+  <rect x="1004" y="122" width="216" height="58" rx="8" fill="url(#conG)" stroke="#1976d2"/>
+  <text x="1112" y="145" text-anchor="middle" font-size="12" font-weight="bold" fill="#0d47a1">Cast</text>
+  <text x="1112" y="164" text-anchor="middle" font-size="10" fill="#37474f">tab / desktop mirroring</text>
+
+  <!-- Mojo -->
+  <line x1="640" y1="198" x2="640" y2="234" stroke="#37474f" stroke-width="2.5" marker-end="url(#ar)"/>
+  <text x="656" y="221" font-size="11" fill="#37474f">Mojo IPC · media::mojom::VideoEncodeAccelerator — the interface the backend implements</text>
+
+  <!-- ============ GPU PROCESS ============ -->
+  <rect x="30" y="240" width="1220" height="354" rx="10" fill="#f4fbf4" stroke="#81c784" stroke-width="2"/>
+  <text x="50" y="264" font-size="13" font-weight="bold" fill="#2e7d32">GPU PROCESS</text>
+
+  <rect x="60" y="278" width="1160" height="52" rx="8" fill="url(#facG)" stroke="#388e3c" stroke-width="2"/>
+  <text x="640" y="300" text-anchor="middle" font-size="13" font-weight="bold" fill="#1b5e20">GpuVideoEncodeAcceleratorFactory::CreateVEA()</text>
+  <text x="640" y="318" text-anchor="middle" font-size="10.5" fill="#37474f">walks the registered factory list — the first backend that accepts the config serves the stream</text>
+
+  <line x1="400" y1="330" x2="400" y2="344" stroke="#37474f" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="880" y1="330" x2="880" y2="424" stroke="#37474f" stroke-width="2.5" marker-end="url(#ar)"/>
+
+  <!-- legacy per-platform row -->
+  <text x="60" y="360" font-size="11" font-style="italic" fill="#607d8b">Today: one backend per API per platform</text>
+
+  <rect x="60" y="370" width="275" height="72" rx="8" fill="#eceff1" stroke="#b0bec5"/>
+  <text x="197" y="392" text-anchor="middle" font-size="12" font-weight="bold" fill="#455a64">VaapiVEA</text>
+  <text x="197" y="410" text-anchor="middle" font-size="10" fill="#607d8b">media/gpu/vaapi/</text>
+  <text x="197" y="428" text-anchor="middle" font-size="10" fill="#607d8b">Linux · ChromeOS (Intel, AMD)</text>
+
+  <rect x="355" y="370" width="275" height="72" rx="8" fill="#eceff1" stroke="#b0bec5"/>
+  <text x="492" y="392" text-anchor="middle" font-size="12" font-weight="bold" fill="#455a64">V4L2VEA</text>
+  <text x="492" y="410" text-anchor="middle" font-size="10" fill="#607d8b">media/gpu/v4l2/</text>
+  <text x="492" y="428" text-anchor="middle" font-size="10" fill="#607d8b">ARM · ChromeOS</text>
+
+  <rect x="650" y="370" width="275" height="72" rx="8" fill="#eceff1" stroke="#b0bec5"/>
+  <text x="787" y="392" text-anchor="middle" font-size="12" font-weight="bold" fill="#455a64">D3D12VEA · MF VEA</text>
+  <text x="787" y="410" text-anchor="middle" font-size="10" fill="#607d8b">media/gpu/windows/</text>
+  <text x="787" y="428" text-anchor="middle" font-size="10" fill="#607d8b">Windows</text>
+
+  <rect x="945" y="370" width="275" height="72" rx="8" fill="#eceff1" stroke="#b0bec5"/>
+  <text x="1082" y="392" text-anchor="middle" font-size="12" font-weight="bold" fill="#455a64">NdkVEA · VT VEA</text>
+  <text x="1082" y="410" text-anchor="middle" font-size="10" fill="#607d8b">media/gpu/android, mac/</text>
+  <text x="1082" y="428" text-anchor="middle" font-size="10" fill="#607d8b">Android · macOS</text>
+
+  <!-- the new backend -->
+  <rect x="60" y="446" width="1160" height="66" rx="8" fill="url(#vkG)" stroke="#c62828" stroke-width="2.5"/>
+  <text x="640" y="469" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#b71c1c">VulkanVideoEncodeAccelerator — media/gpu/vulkan/ (new)</text>
+  <text x="640" y="488" text-anchor="middle" font-size="10.5" fill="#37474f">codec-neutral: H.264 · H.265 · AV1 from one backend · runs on the compositor's own VkDevice (bring-your-own device)</text>
+  <text x="640" y="505" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#b71c1c">one registration, every consumer above — and the same code on Linux, Android, and Windows</text>
+
+  <line x1="640" y1="512" x2="640" y2="526" stroke="#37474f" stroke-width="2" marker-end="url(#ar)"/>
+
+  <rect x="60" y="528" width="1160" height="58" rx="8" fill="url(#libG)" stroke="#4527a0" stroke-width="2"/>
+  <text x="640" y="550" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#311b92">third_party/vulkan_video_samples — vendored and statically linked, the libvpx / libaom pattern</text>
+  <text x="640" y="571" text-anchor="middle" font-size="10.5" fill="#37474f">video sessions · DPB slot management · rate control · GOP structure · bitstream assembly · YCbCr compute filters</text>
+
+  <line x1="640" y1="594" x2="640" y2="616" stroke="#37474f" stroke-width="2.5" marker-end="url(#ar)"/>
+
+  <!-- ============ DRIVER ============ -->
+  <rect x="30" y="618" width="1220" height="94" rx="10" fill="#fff8f6" stroke="#e57373" stroke-width="2.5"/>
+  <text x="50" y="642" font-size="13" font-weight="bold" fill="#c62828">VULKAN DRIVER (ICD) — NVIDIA · AMD · Intel · Mesa RADV / ANV / NVK</text>
+  <text x="640" y="668" text-anchor="middle" font-size="10.5" fill="#37474f">VK_KHR_video_encode_queue · VK_KHR_video_encode_h264 / h265 / av1 · VK_KHR_video_maintenance1 · quantization maps, intra-refresh</text>
+  <text x="640" y="691" text-anchor="middle" font-size="11" font-weight="bold" fill="#b71c1c">One conformance-tested API. The grey row above is what a single cross-vendor backend replaces.</text>
+</svg>
