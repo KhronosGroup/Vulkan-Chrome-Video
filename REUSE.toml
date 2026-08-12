@@ -1,0 +1,23 @@
+version = 1
+SPDX-PackageName = "Vulkan Chrome Video"
+SPDX-PackageSupplier = "The Khronos Group, Inc."
+SPDX-PackageDownloadLocation = "https://github.com/KhronosGroup/Vulkan-Chrome-Video"
+
+[[annotations]]
+precedence = "closest"
+path = [
+    ".gitattributes",
+    ".github/workflows/pages.yml",
+    ".gitignore",
+    ".gitlab-ci.yml",
+    "build-chrome.sh",
+    "docs/video/Chromium_and_Vulkan_Video.mp4",
+    "docs/video/NotebookLM Mind Map.png",
+    "docs/images/blog_hero_banner.jpg",
+    "setup_chromium.py",
+]
+SPDX-FileCopyrightText = [
+  "Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.",
+  "2026 The Khronos Group, Inc.",
+]
+SPDX-License-Identifier = "Apache-2.0"
