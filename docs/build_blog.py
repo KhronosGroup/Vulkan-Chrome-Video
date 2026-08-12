@@ -48,7 +48,7 @@ LICENSE_HEADER = (
     "<!--\n"
     "SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.\n"
     "SPDX-FileCopyrightText: 2026 The Khronos Group, Inc.\n"
-    "SPDX-License-Identifier: Apache-2.0\n\n"
+    "SPDX" "-License-Identifier: Apache-2.0\n\n"
     "Generated from the Markdown source by build_blog.py — edit the .md, not this file.\n"
     "-->\n"
 )
