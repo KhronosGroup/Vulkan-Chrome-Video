@@ -17,6 +17,11 @@ limitations under the License.
 -->
 # Chromium HW Codec Test Infrastructure, DRM Testing, and Software Fallback
 
+<!-- DOC-STATUS -->
+> **Status: CURRENT.** Test infrastructure and fallback behaviour.
+> Index: [`README.md`](README.md).
+
+
 **Date**: December 4, 2025  
 **Purpose**: Understand test infrastructure for HW codec development and integration
 

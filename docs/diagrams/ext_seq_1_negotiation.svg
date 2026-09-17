@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1340" height="880" viewBox="0 0 1340 880" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#37474f"/></marker>
+    <marker id="ar" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#1565c0"/></marker>
+    <marker id="ag" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#2e7d32"/></marker>
+  </defs>
+  <text x="22" y="30" font-size="19" font-weight="700" fill="#1a237e">1 — Codec and format negotiation</text>
+  <text x="22" y="52" font-size="12.5" fill="#546e7a">Everything here happens BEFORE any encoder session exists. Solid = call, dashed blue = return. Header: vk_video_encoder/include/vulkan_video_encoder_ext.h</text>
+
+  <!-- lifelines -->
+  <g font-size="12" font-weight="600" fill="#0d47a1">
+    <rect x="40" y="72" width="180" height="46" rx="6" fill="#e3f2fd" stroke="#1976d2"/>
+    <text x="56" y="92">GpuVideoEncodeAccel</text><text x="56" y="108">Factory / VEA</text>
+    <rect x="262" y="72" width="180" height="46" rx="6" fill="#e3f2fd" stroke="#1976d2"/>
+    <text x="278" y="92">capability</text><text x="278" y="108">enumerator</text>
+    <rect x="486" y="72" width="196" height="46" rx="6" fill="#ede7f6" stroke="#5e35b1"/>
+    <text x="502" y="92">ext free functions</text><text x="502" y="108" font-size="10.5" fill="#4527a0">Enumerate* / Create*</text>
+    <rect x="726" y="72" width="200" height="46" rx="6" fill="#e8f5e9" stroke="#2e7d32"/>
+    <text x="742" y="92">VulkanVideoEncoder</text><text x="742" y="108">Context</text>
+    <rect x="970" y="72" width="180" height="46" rx="6" fill="#fff3e0" stroke="#ef6c00"/>
+    <text x="986" y="92">Vulkan ICD</text><text x="986" y="108" font-size="10.5" fill="#e65100">physical devices</text>
+  </g>
+  <g stroke="#b0bec5" stroke-dasharray="4,5">
+    <line x1="130" y1="118" x2="130" y2="840"/><line x1="352" y1="118" x2="352" y2="840"/>
+    <line x1="584" y1="118" x2="584" y2="840"/><line x1="826" y1="118" x2="826" y2="840"/>
+    <line x1="1060" y1="118" x2="1060" y2="840"/>
+  </g>
+
+  <!-- Phase A -->
+  <rect x="40" y="134" width="1110" height="26" rx="4" fill="#eceff1"/>
+  <text x="52" y="152" font-size="12.5" font-weight="700" fill="#37474f">A · Profile advertisement — answered with NO device, no session (GetSupportedProfiles is [Sync] on the mojo wire)</text>
+
+  <line x1="130" y1="182" x2="345" y2="182" stroke="#37474f" stroke-width="1.6" marker-end="url(#a)"/>
+  <text x="140" y="176" font-size="11.5" fill="#263238">GetSupportedProfiles()</text>
+  <text x="362" y="200" font-size="11" fill="#546e7a">loop over 5 candidates: H.264 BL/Main/High, HEVC Main, AV1 Main</text>
+  <line x1="352" y1="222" x2="578" y2="222" stroke="#37474f" stroke-width="1.6" marker-end="url(#a)"/>
+  <text x="362" y="216" font-size="11.5" fill="#263238">EnumerateVulkanVideoEncoderProfileCapabilitiesEphemeral()</text>
+  <line x1="584" y1="248" x2="1054" y2="248" stroke="#37474f" stroke-width="1.6" marker-end="url(#a)"/>
+  <text x="596" y="242" font-size="11.5" fill="#263238">vkCreateInstance → vkEnumeratePhysicalDevices → vkGetPhysicalDeviceVideoCapabilitiesKHR</text>
+  <line x1="1060" y1="272" x2="590" y2="272" stroke="#1565c0" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#ar)"/>
+  <text x="700" y="266" font-size="11" fill="#1565c0">caps + min/max extent + rate-control modes</text>
+  <line x1="584" y1="294" x2="1054" y2="294" stroke="#c62828" stroke-width="1.4" marker-end="url(#a)"/>
+  <text x="596" y="288" font-size="11" fill="#c62828">vkDestroyInstance — ephemeral: instance is torn down per candidate</text>
+  <line x1="578" y1="318" x2="358" y2="318" stroke="#1565c0" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#ar)"/>
+  <line x1="345" y1="340" x2="136" y2="340" stroke="#1565c0" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#ar)"/>
+  <text x="150" y="334" font-size="11.5" fill="#1565c0">SupportedProfile[] — profile, extents, rate-control, gpu_supported_pixel_formats</text>
+
+  <rect x="150" y="356" width="880" height="40" rx="5" fill="#fff8e1" stroke="#f9a825"/>
+  <text x="164" y="373" font-size="11.5" fill="#e65100"><tspan font-weight="700">Cost:</tspan> one full loader + instance bring-up per candidate. Cached at file scope because the probe is too slow to repeat.</text>
+  <text x="164" y="389" font-size="11.5" fill="#e65100">This is the churn the context object (phase B) exists to remove — same query, one live instance.</text>
+
+  <!-- Phase B -->
+  <rect x="40" y="416" width="1110" height="26" rx="4" fill="#e8f5e9"/>
+  <text x="52" y="434" font-size="12.5" font-weight="700" fill="#1b5e20">B · Context-based enumeration — one live VkInstance, no VkDevice, answers reusable across sessions</text>
+
+  <line x1="130" y1="466" x2="578" y2="466" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#ag)"/>
+  <text x="142" y="460" font-size="11.5" font-weight="600" fill="#1b5e20">CreateVulkanVideoEncoderContext(&amp;createInfo, &amp;ctx)</text>
+  <text x="142" y="482" font-size="10.5" fill="#546e7a">mode = OWN (default) → library creates instance + enumerates | mode = ADOPT → adoptInstance + adoptPhysicalDevice, both or error</text>
+  <line x1="584" y1="504" x2="820" y2="504" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#ag)"/>
+  <line x1="826" y1="528" x2="1054" y2="528" stroke="#37474f" stroke-width="1.6" marker-end="url(#a)"/>
+  <text x="838" y="522" font-size="11.5" fill="#263238">phases 1–2 only: instance + physical-device enumeration (NO vkCreateDevice)</text>
+  <line x1="820" y1="552" x2="136" y2="552" stroke="#1565c0" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#ar)"/>
+  <text x="150" y="546" font-size="11.5" fill="#1565c0">ctx — refcounted, immutable after construction</text>
+
+  <g font-size="11.5" fill="#263238">
+    <line x1="130" y1="586" x2="820" y2="586" stroke="#37474f" stroke-width="1.6" marker-end="url(#a)"/>
+    <text x="142" y="580">VkEncGetPhysicalDeviceCount(ctx)</text>
+    <line x1="130" y1="612" x2="820" y2="612" stroke="#37474f" stroke-width="1.6" marker-end="url(#a)"/>
+    <text x="142" y="606">VkEncGetPhysicalDeviceIdentity(ctx, i, &amp;id)  →  deviceUUID, driverUUID, name, vendorID</text>
+    <line x1="130" y1="638" x2="820" y2="638" stroke="#37474f" stroke-width="1.6" marker-end="url(#a)"/>
+    <text x="142" y="632">VkEncGetEncodeCapabilities(ctx, i, codec, profile, &amp;caps)</text>
+    <line x1="130" y1="664" x2="820" y2="664" stroke="#37474f" stroke-width="1.6" marker-end="url(#a)"/>
+    <text x="142" y="658">VkEncEnumerateDrmModifiers(ctx, i, format, usage, &amp;count, modifiers)</text>
+  </g>
+  <line x1="820" y1="690" x2="136" y2="690" stroke="#1565c0" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#ar)"/>
+  <text x="150" y="684" font-size="11.5" fill="#1565c0">answered from the physical device alone — no session required</text>
+
+  <rect x="150" y="712" width="880" height="58" rx="5" fill="#e8f5e9" stroke="#66bb6a"/>
+  <text x="164" y="730" font-size="11.5" fill="#1b5e20"><tspan font-weight="700">Why this matters for allocation.</tspan> The producer picks a DRM modifier when it allocates — long before</text>
+  <text x="164" y="746" font-size="11.5" fill="#1b5e20">a session exists. Modifier enumeration therefore has to be answerable from the context, not from an encoder.</text>
+  <text x="164" y="762" font-size="11.5" fill="#33691e">On Chromium the allocation-side constraint is Ozone's DrmModifiersFilter — see the note in the design doc §3.3.2.</text>
+
+  <rect x="150" y="786" width="880" height="42" rx="5" fill="#fce4ec" stroke="#c62828"/>
+  <text x="164" y="804" font-size="11.5" fill="#b71c1c"><tspan font-weight="700">Measured on RTX 5080 / 620.05:</tspan> the ONLY accepted VIDEO_ENCODE_SRC format is NV12 OPTIMAL — for</text>
+  <text x="164" y="820" font-size="11.5" fill="#b71c1c">H.264, H.265 and AV1 alike. An RGB producer can never reach zero-copy; it reaches the filter tier (diagram 3).</text>
+</svg>

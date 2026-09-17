@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: 2026 The Khronos Group, Inc.
+SPDX-License-Identifier: Apache-2.0
+
+Generated from the Markdown source by build_blog.py — edit the .md, not this file.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulkan Video Encoder — Ext API Call Sequences</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-card: #1a2332;
+            --accent-vulkan: #ac2d2d;
+            --accent-vulkan-bright: #e05252;
+            --accent-chrome: #5b9bff;
+            --accent-nvidia: #8bd90a;
+            --accent-firefox: #ff9d3d;
+            --text-primary: #eef2f8;
+            --text-body: #d3dce8;
+            --text-secondary: #b3c0d1;
+            --text-muted: #8a97a8;
+            --border: #2d3a4f;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', system-ui, sans-serif; font-weight: 400;
+            background: var(--bg-primary); color: var(--text-body);
+            line-height: 1.75; font-size: 17px;
+        }
+        .bg-pattern {
+            position: fixed; inset: 0; z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(172, 45, 45, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 90%, rgba(66, 133, 244, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 40%, rgba(118, 185, 0, 0.05) 0%, transparent 60%);
+        }
+        .container { max-width: 980px; margin: 0 auto; padding: 0 1.5rem; }
+        header.hero { padding: 4rem 0 2.5rem; text-align: center; }
+        .logo-strip {
+            display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
+            margin-bottom: 2rem; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em;
+        }
+        .logo-strip span { padding: 0.4rem 0.8rem; border-radius: 4px; border: 1px solid var(--border); }
+        .logo-strip .vulkan { color: var(--accent-vulkan-bright); border-color: var(--accent-vulkan); }
+        .logo-strip .nvidia { color: var(--accent-nvidia); border-color: var(--accent-nvidia); }
+        .logo-strip .ff { color: var(--accent-firefox); border-color: var(--accent-firefox); }
+        .logo-strip .chrome { color: var(--accent-chrome); border-color: var(--accent-chrome); }
+        .hero-banner {
+            display: block; width: 100%; height: auto;
+            border-radius: 12px; margin-bottom: 2rem;
+        }
+        h1 {
+            font-size: 2.7rem; font-weight: 700; line-height: 1.15; margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .hero .dek { font-size: 1.2rem; color: var(--text-secondary); max-width: 760px; margin: 0 auto; }
+        .byline { margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        article { padding-bottom: 5rem; }
+        h2 {
+            font-size: 1.7rem; font-weight: 700; margin: 3.2rem 0 1.1rem; color: var(--text-primary);
+            padding-left: 0.9rem; border-left: 4px solid var(--accent-nvidia);
+        }
+        h2.ff { border-left-color: var(--accent-firefox); }
+        h2.cr { border-left-color: var(--accent-chrome); }
+        h2.vk { border-left-color: var(--accent-vulkan-bright); }
+        h3 { font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.7rem; color: var(--text-primary); }
+        p { margin-bottom: 1.1rem; color: var(--text-body); }
+        p strong, li strong { color: var(--text-primary); }
+        em { color: var(--text-primary); font-style: italic; }
+        ul, ol { margin: 0 0 1.1rem 1.5rem; color: var(--text-body); }
+        li { margin-bottom: 0.5rem; }
+        a { color: var(--accent-chrome); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 0.1rem 0.35rem; border-radius: 4px; color: #a8ecb2;
+        }
+        figure.diagram {
+            margin: 1.8rem 0; padding: 1rem; background: #ffffff;
+            border: 1px solid var(--border); border-radius: 12px; text-align: center;
+        }
+        figure.diagram img, figure.diagram object { max-width: 100%; height: auto; }
+        figure.diagram figcaption { margin-top: 0.6rem; font-size: 0.85rem; color: #475569; font-style: italic; }
+        blockquote.pull {
+            border-left: 4px solid var(--accent-vulkan-bright);
+            background: var(--bg-card); border-radius: 0 10px 10px 0;
+            padding: 1.1rem 1.4rem; margin: 1.6rem 0;
+            font-size: 1.03rem; color: var(--text-primary);
+        }
+        blockquote.pull p { color: var(--text-primary); margin: 0; }
+        table.doc {
+            width: 100%; border-collapse: collapse; margin: 1.8rem 0;
+            font-size: 0.95rem; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 10px;
+            overflow: hidden; display: table;
+        }
+        table.doc th, table.doc td {
+            padding: 0.68rem 0.9rem; text-align: left; vertical-align: top;
+            border-bottom: 1px solid var(--border);
+        }
+        table.doc thead th {
+            background: rgba(118, 185, 0, 0.10);
+            color: var(--text-primary); font-weight: 650;
+            border-bottom: 2px solid var(--accent-vulkan-bright);
+            white-space: nowrap;
+        }
+        table.doc tbody tr:last-child td { border-bottom: none; }
+        table.doc tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+        table.doc code { white-space: nowrap; }
+        @media (max-width: 720px) {
+            table.doc { display: block; overflow-x: auto; }
+        }
+        aside.takeaways {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-vulkan-bright);
+            border-radius: 0 12px 12px 0; padding: 1.4rem 1.7rem;
+            margin: 2.2rem 0 2.6rem;
+        }
+        aside.takeaways h2 {
+            font-size: 0.95rem; margin: 0 0 0.9rem; padding: 0; border-left: none;
+            font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--accent-vulkan-bright);
+        }
+        aside.takeaways ul { margin: 0 0 0 1.2rem; }
+        aside.takeaways li:last-child { margin-bottom: 0; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+        footer {
+            border-top: 1px solid var(--border); padding: 2rem 0 3.5rem;
+            color: var(--text-muted); font-size: 0.88rem; text-align: center;
+        }
+        @media (max-width: 700px) {
+            h1 { font-size: 1.9rem; }
+            /* Keep the Key Takeaways panel readable on a phone: the box and
+               list indents eat a lot of a 390px viewport at desktop padding. */
+            aside.takeaways { padding: 1.1rem 1.15rem; border-radius: 0 8px 8px 0; }
+            aside.takeaways ul { margin-left: 1rem; }
+            figure.diagram { padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<header class="hero">
+    <div class="container">
+        <div class="logo-strip">
+            
+        </div>
+        <h1>Vulkan Video Encoder — Ext API Call Sequences</h1>
+        <p class="dek">How Chromium drives the NVPRO sample library across the embeddable interface: what is negotiated, when the Vulkan context is created, and what actually repeats per frame.</p>
+        <div class="byline"></div>
+    </div>
+</header>
+
+<article>
+<div class="container">
+
+<p>Read against <code>vk_video_encoder/include/vulkan_video_encoder_ext.h</code>. Every call named here is a real entry point in that header, and every status code is one the library can actually return.</p>
+
+<hr>
+
+<h2>The shape, in one paragraph</h2>
+
+<p>Three phases, and they run at very different rates. <strong>Codec and format capabilities</strong> are answered with no device and no session — the browser needs them before it will even offer a profile. <strong>Context and session creation</strong> happen once per encode: the context owns the instance and the physical-device list, the session owns the <code>VkDevice</code> and every queue. <strong>Import and encode</strong> is the only part in the frame loop, and even there registration is once per producer pool slot — the per-frame call names an already-imported resource by id.</p>
+
+<p>The interface never hands a <code>VkDevice</code>, <code>VkImage</code> or queue to the embedder. Frames cross as OS handles; answers cross as plain data.</p>
+
+<hr>
+
+<h2>1. Codec and format negotiation</h2>
+
+<figure class="diagram">
+  <img src="diagrams/ext_seq_1_negotiation.svg" alt="Negotiation" loading="lazy">
+  <figcaption>Negotiation</figcaption>
+</figure>
+
+<p>Two ways to ask, and the difference is cost. <code>EnumerateVulkanVideoEncoderProfileCapabilitiesEphemeral()</code> stands an instance up and tears it down per candidate — correct, and too slow to repeat, which is why the browser caches it at file scope. The context form answers the same questions against one live instance: <code>VkEncGetPhysicalDeviceCount()</code>, <code>VkEncGetPhysicalDeviceIdentity()</code>, <code>VkEncGetEncodeCapabilities()</code> and <code>VkEncEnumerateDrmModifiers()</code>.</p>
+
+<p><strong>No <code>VkDevice</code> is involved in either.</strong> Every <code>vkGetPhysicalDevice*</code> entry point the capability path needs is loaded at instance level, which is what makes a device-free capability query possible at all.</p>
+
+<p>Modifier enumeration has to live here rather than on the session, because the producer chooses a DRM modifier when it <strong>allocates</strong> — long before an encoder exists.</p>
+
+<blockquote class="pull"><p>Measured on an RTX 5080, driver 620.05: the only accepted <code>VIDEO_ENCODE_SRC</code> format is <strong>NV12 <code>OPTIMAL</code></strong>, for H.264, H.265 and AV1 alike. There is no RGB encode-source format, so an RGB producer can never reach the zero-copy tier — it reaches the filter tier in §3.</p></blockquote>
+
+<hr>
+
+<h2>2. Context and session creation</h2>
+
+<figure class="diagram">
+  <img src="diagrams/ext_seq_2_context_creation.svg" alt="Context creation" loading="lazy">
+  <figcaption>Context creation</figcaption>
+</figure>
+
+<p><code>CreateVulkanVideoEncoderContext()</code> takes a mode. <strong>OWN is the default</strong>: the library creates its own instance, picks its own physical device, and later its own <code>VkDevice</code> and queues. <strong>ADOPT</strong> is opt-in and borrows the embedder's <strong>instance and physical device only</strong> — <code>externalDevice</code> is never written by anyone, so the two sides never share a logical device. Both adopt handles or neither; one alone is an error.</p>
+
+<p><code>CreateVulkanVideoEncoderExtOnContext()</code> then creates the session, and <code>InitializeExt(config)</code> binds codec, profile, extent, rate control and input format. The session creates <strong>encode, compute and transfer</strong> queues itself — the compute queue for the preprocess filter, the transfer queue for staging copies. No caller-supplied queue-family indices are involved.</p>
+
+<p>The completion channel is established before any frame is submitted: <code>GetCompletionEventHandle()</code> returns a level/counting eventfd the browser watches rather than polls, with <code>GetCompletionCounter()</code> / <code>GetCompletionInfo()</code> to disambiguate a wake. <code>ExportCompletionSemaphoreHandle()</code> is the GPU-ordering alternative.</p>
+
+<p>Two lifetime rules the context must honour: never <code>dlclose</code> the loader — the embedder's own function pointers bind the same <code>libvulkan</code> — and never let the refcount reach zero and re-create, because <code>vkCreateInstance</code> after sandbox lockdown will not come back.</p>
+
+<hr>
+
+<h2>3. Image import, tier selection, and the encode loop</h2>
+
+<figure class="diagram">
+  <img src="diagrams/ext_seq_3_import_encode.svg" alt="Import and encode" loading="lazy">
+  <figcaption>Import and encode</figcaption>
+</figure>
+
+<p>The producer exports a dma-buf and the browser <strong>asks</strong> before it registers:</p>
+
+<p>``<code> QueryImageSupport(descriptor, &amp;support) support.pNext -&gt; VkVideoEncoderImageSupportDetails { filterCapable, directModifierCount, directModifiers[] } </code>``</p>
+
+<p>The answer is a verdict, not a pass/fail, and every outcome is encodable — only the cost differs:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Verdict</th>
+    <th>Tier</th>
+    <th>Cost</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>supported = TRUE</code></td>
+    <td><strong>DIRECT</strong></td>
+    <td>zero copy</td>
+  </tr>
+  <tr>
+    <td><code>ERROR_CONVERSION_REQUIRED</code> + <code>filterCapable</code></td>
+    <td><strong>FILTER</strong></td>
+    <td>one compute pass on the encoder's own queue</td>
+  </tr>
+  <tr>
+    <td><code>ERROR_MODIFIER_UNSUPPORTED</code> (+ <code>directModifiers</code> = what would work)</td>
+    <td><strong>STAGED</strong></td>
+    <td>one <code>vkCmdCopyImage</code></td>
+  </tr>
+  <tr>
+    <td><code>ERROR_DEVICE_MISMATCH</code></td>
+    <td><em>none</em></td>
+    <td>wrong physical GPU — nothing to preprocess; pin with <code>gpuUUID</code></td>
+  </tr>
+</tbody>
+</table>
+
+<p><code>RegisterImageResource()</code> then imports once per pool slot and returns a generation-counted <code>resourceId</code>; the fd is consumed on every exit path under the default TRANSFER ownership. <code>RegisterSemaphore()</code> imports an OPAQUE_FD timeline the same way.</p>
+
+<p><strong>Per frame, only this repeats:</strong> <code>SubmitRegisteredFrame(frameId, resourceId, acquire, release, …)</code> — which names the already-imported resource, so no <code>VkImage</code>, fd or layout crosses the boundary — then the completion event fires, <code>GetEncodedFrame()</code> or <code>AcquireEncodedFrame()</code> collects the bitstream, and <code>ReleaseEncodedFrame()</code> returns the buffer.</p>
+
+<blockquote class="pull"><p><strong>Cache the registration by pool slot, never by frame id.</strong> A frame-counter key produced duplicate-frame bitstreams in the TRV reference client. Destroy slots only behind <code>vkDeviceWaitIdle</code>.</p></blockquote>
+
+<hr>
+
+<h2>Related</h2>
+
+<ul>
+  <li><a href="VULKAN_VIDEO_ENCODER_CONTEXT_DESIGN.md"><code>VULKAN_VIDEO_ENCODER_CONTEXT_DESIGN.md</code></a> — why the</li>
+</ul>
+
+<p>context/session split is drawn where it is</p>
+
+<ul>
+  <li><a href="VULKAN_VIDEO_ENCODER_DEVICE_INDEPENDENCE_PLAN.md"><code>VULKAN_VIDEO_ENCODER_DEVICE_INDEPENDENCE_PLAN.md</code></a></li>
+</ul>
+
+<p>— why OWN is the default</p>
+
+<ul>
+  <li><a href="VULKAN_VIDEO_ENCODER_RC5_REVIEW.md"><code>VULKAN_VIDEO_ENCODER_RC5_REVIEW.md</code></a> — conformance of the</li>
+</ul>
+
+<p>implementation against both</p>
+
+</div>
+</article>
+
+<footer>
+    <div class="container">
+        <p></p>
+    </div>
+</footer>
+</body>
+</html>

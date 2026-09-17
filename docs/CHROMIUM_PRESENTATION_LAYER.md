@@ -17,6 +17,11 @@ limitations under the License.
 -->
 # Chromium Presentation Layer Architecture
 
+<!-- DOC-STATUS -->
+> **Status: CURRENT.** How Chromium presents frames; background for the input tiers.
+> Index: [`README.md`](README.md).
+
+
 ## Rendering, Compositing, and Display
 
 This document provides an in-depth analysis of Chromium's presentation layer, focusing on how content is rendered, composited, and displayed on screen. Understanding this architecture is critical for Vulkan Video integration to ensure efficient zero-copy frame presentation.

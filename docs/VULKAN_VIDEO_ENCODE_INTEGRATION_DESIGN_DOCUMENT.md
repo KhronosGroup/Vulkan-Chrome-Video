@@ -17,6 +17,11 @@ limitations under the License.
 -->
 # Vulkan Video **Encode** Integration into Chromium: Complete Design Document
 
+<!-- DOC-STATUS -->
+> **Status: CURRENT.** Design of record for the ENCODE integration.
+> Index: [`README.md`](README.md).
+
+
 **Version**: 1.1 (incorporates `VULKAN_VIDEO_ENCODE_DESIGN_REVIEW_FINDINGS.md`)
 **Date**: May 19, 2026
 **Authors**: Engineering Team
@@ -75,7 +80,7 @@ limitations under the License.
 3.  [Plug-in and Interface Requirements](#3-plugin-requirements) — §3.7 `VideoEncoderInfo` initial values
 4.  [Vulkan Video Encode API Design](#4-vulkan-encode-design)
 5.  [Mapping: VA-API → Vulkan Video Encode (per codec)](#5-mapping) — §5.3 HEVC from D3D12, **not** VA-API
-6.  [Input Path: `VideoFrame` → `VkImage` (VIDEO\_ENCODE\_SRC)](#6-input-path) — §6.3 shared-image representation path
+6.  [Input Path: `VideoFrame` → `VkImage` (VIDEO\_ENCODE\_SRC)](#6-input-path) — §6.3 shared-image representation path; **§6.4 which tier a host actually reaches (measured: X11, Wayland, hybrid GPUs)**
 7.  [Rate Control, GOP, Quality Level and QP Maps](#7-rate-control) — §7.1.1 VUIDs, §7.2 per-codec `constantQp`, §7.7 manual ref control
 8.  [Bitstream Output, Queries and Feedback](#8-bitstream-output) — §8.2.3 inline-query fallback, §8.3 `dstBufferOffset` + `precedingExternallyEncodedBytes`
 9.  [Synchronization, DMA-BUF and Cross-Queue Handoffs](#9-sync)
@@ -1340,6 +1345,54 @@ Three reasons (Review F6):
 1. **Layered ownership**: `SharedImageManager` owns the backing's lifetime. Reaching in violates ref-count invariants and can race with destroy on the GPU runner.
 2. **Sync correctness**: the representation API gives us the producer's acquire/release semaphores. Without it, we'd need to invent ad-hoc synchronisation.
 3. **Forward compatibility**: tomorrow the compositor may use a non-Vulkan backing on the same OS (e.g. external-memory blob). The representation path keeps that change invisible to the encoder.
+
+---
+
+### 6.4 Which tier a host actually reaches — measured <a name="6-4-tiers-measured"></a>
+
+**The tier is decided by the window system and by which GPU the display server
+runs on, not by the encoder.** This subsection records what was measured on
+hardware; the full treatment, including the probes, is in
+[`VULKAN_VIDEO_ENCODE_SURFACES_AND_GPU_TOPOLOGY.md`](VULKAN_VIDEO_ENCODE_SURFACES_AND_GPU_TOPOLOGY.md).
+
+| Host | Display server on | Platform | Tier | Witness |
+|---|---|---|---|---|
+| RTX 4080, bare metal | NVIDIA | Wayland | `zero-copy`, 480/480 | NVENC 35 % |
+| RTX 4080, bare metal | NVIDIA | X11 | `cpu-dmabuf`, 398–475/480 | NVENC 28–46 % |
+| VM, virtio adapter | virtio | X11 | `staging` only | — |
+| Intel iGPU + RTX 4080 | Intel (compositor) | Wayland | browser killed | §6.4.3 |
+
+#### 6.4.1 On Linux the browser does not choose the GPU
+
+`GBMSupportX11` takes whatever DRI3 returns for the X root window;
+`X11SurfaceFactory::CreateNativePixmap` **discards** the `VulkanDeviceQueue*` it
+is given; and the `system_device_id` that would steer ANGLE is populated only on
+Windows. So allocation follows the X server's GPU, and passing the encoder's own
+device would change nothing.
+
+Practical consequence: **`cpu-dmabuf` requires the X server to be on a GPU whose
+GBM can allocate NV12 `SCANOUT_CPU_READ_WRITE`.** Measured: NVIDIA yes, Intel
+UHD 770 no, virtio no. A host failing that check reaches `staging` forever and
+the code is correct to reroute there.
+
+#### 6.4.2 Wayland
+
+Reaches `zero-copy`. Chromium still disables Vulkan *compositing* on Wayland
+(`VulkanImplementationWayland::CreateViewSurface` is `NOTIMPLEMENTED`) and logs
+that Wayland is incompatible with Vulkan; this does not stop the encoder.
+
+#### 6.4.3 Hybrid / mixed-vendor hosts
+
+Where the compositor renders on one vendor and the encoder on another, Chromium
+submits a presentation buffer (`AB24`) allocated on the encoder's GPU to a
+compositor that cannot import it. The compositor raises a Wayland protocol
+error and Chromium `CHECK`s on it, **killing the browser** — while the Vulkan
+encoder is working normally right up to that point. Two upstream defects, not
+encoder defects; see the topology document §4.
+
+For encode integration this means the input tier is not a safe proxy for encoder
+health on a hybrid host, and a tier below expectation there should be attributed
+to topology until the GBM probe says otherwise.
 
 ---
 

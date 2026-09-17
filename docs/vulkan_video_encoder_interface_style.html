@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: 2026 The Khronos Group, Inc.
+SPDX-License-Identifier: Apache-2.0
+
+Generated from the Markdown source by build_blog.py — edit the .md, not this file.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encoder Ext API — interface style: `sType`/`pNext` descriptors vs. C++ abstract interfaces</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-card: #1a2332;
+            --accent-vulkan: #ac2d2d;
+            --accent-vulkan-bright: #e05252;
+            --accent-chrome: #5b9bff;
+            --accent-nvidia: #8bd90a;
+            --accent-firefox: #ff9d3d;
+            --text-primary: #eef2f8;
+            --text-body: #d3dce8;
+            --text-secondary: #b3c0d1;
+            --text-muted: #8a97a8;
+            --border: #2d3a4f;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', system-ui, sans-serif; font-weight: 400;
+            background: var(--bg-primary); color: var(--text-body);
+            line-height: 1.75; font-size: 17px;
+        }
+        .bg-pattern {
+            position: fixed; inset: 0; z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(172, 45, 45, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 90%, rgba(66, 133, 244, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 40%, rgba(118, 185, 0, 0.05) 0%, transparent 60%);
+        }
+        .container { max-width: 980px; margin: 0 auto; padding: 0 1.5rem; }
+        header.hero { padding: 4rem 0 2.5rem; text-align: center; }
+        .logo-strip {
+            display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
+            margin-bottom: 2rem; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em;
+        }
+        .logo-strip span { padding: 0.4rem 0.8rem; border-radius: 4px; border: 1px solid var(--border); }
+        .logo-strip .vulkan { color: var(--accent-vulkan-bright); border-color: var(--accent-vulkan); }
+        .logo-strip .nvidia { color: var(--accent-nvidia); border-color: var(--accent-nvidia); }
+        .logo-strip .ff { color: var(--accent-firefox); border-color: var(--accent-firefox); }
+        .logo-strip .chrome { color: var(--accent-chrome); border-color: var(--accent-chrome); }
+        .hero-banner {
+            display: block; width: 100%; height: auto;
+            border-radius: 12px; margin-bottom: 2rem;
+        }
+        h1 {
+            font-size: 2.7rem; font-weight: 700; line-height: 1.15; margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .hero .dek { font-size: 1.2rem; color: var(--text-secondary); max-width: 760px; margin: 0 auto; }
+        .byline { margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        article { padding-bottom: 5rem; }
+        h2 {
+            font-size: 1.7rem; font-weight: 700; margin: 3.2rem 0 1.1rem; color: var(--text-primary);
+            padding-left: 0.9rem; border-left: 4px solid var(--accent-nvidia);
+        }
+        h2.ff { border-left-color: var(--accent-firefox); }
+        h2.cr { border-left-color: var(--accent-chrome); }
+        h2.vk { border-left-color: var(--accent-vulkan-bright); }
+        h3 { font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.7rem; color: var(--text-primary); }
+        p { margin-bottom: 1.1rem; color: var(--text-body); }
+        p strong, li strong { color: var(--text-primary); }
+        em { color: var(--text-primary); font-style: italic; }
+        ul, ol { margin: 0 0 1.1rem 1.5rem; color: var(--text-body); }
+        li { margin-bottom: 0.5rem; }
+        a { color: var(--accent-chrome); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 0.1rem 0.35rem; border-radius: 4px; color: #a8ecb2;
+        }
+        figure.diagram {
+            margin: 1.8rem 0; padding: 1rem; background: #ffffff;
+            border: 1px solid var(--border); border-radius: 12px; text-align: center;
+        }
+        figure.diagram img, figure.diagram object { max-width: 100%; height: auto; }
+        figure.diagram figcaption { margin-top: 0.6rem; font-size: 0.85rem; color: #475569; font-style: italic; }
+        blockquote.pull {
+            border-left: 4px solid var(--accent-vulkan-bright);
+            background: var(--bg-card); border-radius: 0 10px 10px 0;
+            padding: 1.1rem 1.4rem; margin: 1.6rem 0;
+            font-size: 1.03rem; color: var(--text-primary);
+        }
+        blockquote.pull p { color: var(--text-primary); margin: 0; }
+        table.doc {
+            width: 100%; border-collapse: collapse; margin: 1.8rem 0;
+            font-size: 0.95rem; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 10px;
+            overflow: hidden; display: table;
+        }
+        table.doc th, table.doc td {
+            padding: 0.68rem 0.9rem; text-align: left; vertical-align: top;
+            border-bottom: 1px solid var(--border);
+        }
+        table.doc thead th {
+            background: rgba(118, 185, 0, 0.10);
+            color: var(--text-primary); font-weight: 650;
+            border-bottom: 2px solid var(--accent-vulkan-bright);
+            white-space: nowrap;
+        }
+        table.doc tbody tr:last-child td { border-bottom: none; }
+        table.doc tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+        table.doc code { white-space: nowrap; }
+        @media (max-width: 720px) {
+            table.doc { display: block; overflow-x: auto; }
+        }
+        aside.takeaways {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-vulkan-bright);
+            border-radius: 0 12px 12px 0; padding: 1.4rem 1.7rem;
+            margin: 2.2rem 0 2.6rem;
+        }
+        aside.takeaways h2 {
+            font-size: 0.95rem; margin: 0 0 0.9rem; padding: 0; border-left: none;
+            font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--accent-vulkan-bright);
+        }
+        aside.takeaways ul { margin: 0 0 0 1.2rem; }
+        aside.takeaways li:last-child { margin-bottom: 0; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+        footer {
+            border-top: 1px solid var(--border); padding: 2rem 0 3.5rem;
+            color: var(--text-muted); font-size: 0.88rem; text-align: center;
+        }
+        @media (max-width: 700px) {
+            h1 { font-size: 1.9rem; }
+            /* Keep the Key Takeaways panel readable on a phone: the box and
+               list indents eat a lot of a 390px viewport at desktop padding. */
+            aside.takeaways { padding: 1.1rem 1.15rem; border-radius: 0 8px 8px 0; }
+            aside.takeaways ul { margin-left: 1rem; }
+            figure.diagram { padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<header class="hero">
+    <div class="container">
+        <div class="logo-strip">
+            
+        </div>
+        <h1>Encoder Ext API — interface style: `sType`/`pNext` descriptors vs. C++ abstract interfaces</h1>
+        <p class="dek"><strong>Status:</strong> proposal, for after the RC-6 review and rebase land. <strong>Supersedes nothing.</strong> It revisits one decision recorded in <code>VULKAN_VIDEO_ENCODER_API_V2_DESIGN.md</code> §5 (ABI versioning) in the light of what the implementation now looks like and where the API is actually consumed.</p>
+        <div class="byline"></div>
+    </div>
+</header>
+
+<article>
+<div class="container">
+
+<hr>
+
+<h2>0. The question</h2>
+
+<p>The encoder ext API is shaped like Vulkan: flat C structs, each stamped with a <code>VkVideoEncoderStructureType sType</code>, extended by <code>pNext</code> chains, driven by free functions.</p>
+
+<p>The rest of this library is not shaped that way. It uses virtual, abstract, reference-counted C++ interfaces.</p>
+
+<p>The question is whether the ext surface should follow the house idiom instead, and if so, where the descriptor style still earns its place.</p>
+
+<hr>
+
+<h2>1. The current shape, measured</h2>
+
+<p>Counted at <code>RC-6-lib-v3+nvpro-rebase+split</code>:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th></th>
+    <th></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>VkVideoEncoderStructureType</code> enumerants</td>
+    <td><strong>25</strong></td>
+  </tr>
+  <tr>
+    <td>structs carrying <code>sType</code> + <code>pNext</code></td>
+    <td><strong>24</strong></td>
+  </tr>
+  <tr>
+    <td>public header <code>vulkan_video_encoder_ext.h</code></td>
+    <td><strong>3,096 lines</strong></td>
+  </tr>
+  <tr>
+    <td>internal header <code>vulkan_video_encoder_ext_internal.h</code></td>
+    <td><strong>743 lines</strong></td>
+  </tr>
+  <tr>
+    <td>free <code>VkEnc*</code> entry points</td>
+    <td><strong>4</strong></td>
+  </tr>
+  <tr>
+    <td><code>pNext</code> mentions in <code>vulkan_video_encoder_ext.cpp</code></td>
+    <td><strong>86</strong></td>
+  </tr>
+  <tr>
+    <td>explicit <code>sType ==</code> / <code>sType !=</code> comparisons</td>
+    <td><strong>24</strong></td>
+  </tr>
+</tbody>
+</table>
+
+<p>The 25 structure types:</p>
+
+<p>``<code> CAPABILITIES              COMPLETION_INFO           CONFIG CONTEXT_CREATE_INFO       DEVICE_IDENTITY           DIAGNOSTIC_INFO ENCODE_RESULT             EXTERNAL_IMAGE_DESCRIPTOR FILTER_INFO FRAME_DEADLINE_INFO       FRAME_FENCE_DESCRIPTOR    FRAME_PARAMS FRAME_SYNC_DESCRIPTOR     IMAGE_SUPPORT             IMAGE_SUPPORT_DETAILS IMPORT_CONTENT_INFO       IMPORT_GUARD_INFO         INPUT_FRAME INPUT_RESIDENCY_INFO      RUNTIME_INFO              SEMAPHORE_DESCRIPTOR STAGED_SUBMIT_INFO        STATUS                    VALIDATION_INFO UNDEFINED </code>``</p>
+
+<p>That is roughly <strong>3,800 lines of header and 24 chained descriptor structs</strong> wrapped around a boundary that exposes <strong>four free functions</strong> and a session object.</p>
+
+<h2>2. The house idiom, which already exists</h2>
+
+<p><code>common/libs/VkCodecUtils/VkVideoRefCountBase.h:22</code> defines the reference-counted base, and <code>VkSharedBaseObj&lt;T&gt;</code> is the owning handle. Usage across the tree:</p>
+
+<ul>
+  <li><strong>100 files</strong> reference <code>VkSharedBaseObj</code></li>
+  <li><strong>26 classes</strong> derive from <code>VkVideoRefCountBase</code></li>
+</ul>
+
+<p>And the encoder already has exactly the interface shape proposed here, at <code>vk_video_encoder/include/vulkan_video_encoder.h:43</code>:</p>
+
+<p>```cpp class VulkanVideoEncoder : public virtual VkVideoRefCountBase { public: virtual VkResult Initialize(VkVideoCodecOperationFlagBitsKHR, int argc, const char** argv) = 0; virtual int64_t  GetNumberOfFrames() = 0; virtual VkResult EncodeNextFrame(int64_t&amp; frameNumEncoded) = 0; virtual VkResult GetBitstream() = 0; };</p>
+
+<p>extern "C" VkResult CreateVulkanVideoEncoder(..., VkSharedBaseObj&lt;VulkanVideoEncoder&gt;&amp;); ```</p>
+
+<p>So the ext layer is not extending the house idiom. It sits beside it in a different style.</p>
+
+<hr>
+
+<h2>3. What the descriptor style costs, concretely</h2>
+
+<p>These are observed, not speculative.</p>
+
+<h3>3.1 A whole test exists to police struct layout</h3>
+
+<p><code>Layout pins as the struct-extension review gate</code> is a commit whose purpose is to pin struct layouts so that appending a field is caught in review. A virtual interface does not need that test: adding a method changes a vtable, and callers that were not rebuilt fail to resolve rather than silently reading the wrong offsets.</p>
+
+<h3>3.2 A version skew reads as data, not as an error</h3>
+
+<p>While building TRV against this branch, <code>vk-nvcuvid-encoder-instance</code> was compiled against the new header and linked against a five-week-old <code>libvkvideo-encoder.so.1</code>. The failure surfaced as:</p>
+
+<p>``<code> [EncoderExt] Unsupported codec: 1447362561 </code>``</p>
+
+<p><code>1447362561</code> is <code>0x56450001</code> — the value of <code>VK_VIDEO_ENCODER_STRUCTURE_TYPE_CONFIG</code>. The library read the caller's <code>sType</code> at the offset where the older layout put <code>codec</code>. Flat structs passed by pointer make a layout disagreement look like a plausible-but-wrong field value; the diagnostic named a codec that never existed.</p>
+
+<p>An interface whose surface is a vtable does not remove ABI skew, but it changes its shape: an added or reordered virtual is a <strong>symbol/vtable mismatch</strong>, which fails at link or load for a <code>.so</code> and is impossible for a static link, rather than becoming an integer misread at runtime.</p>
+
+<h3>3.3 The chain-walking is the implementation</h3>
+
+<p><code>vulkan_video_encoder_ext.cpp</code> contains <strong>86</strong> <code>pNext</code> mentions and <strong>24</strong> <code>sType</code> comparisons. Every optional input and output is found by walking a chain and switching on a tag. With interfaces, an optional capability is a <code>virtual</code> returning <code>VkSharedBaseObj&lt;T&gt;</code> that is null when unsupported — no walk, no tag, and the compiler checks the type.</p>
+
+<h3>3.4 Defaults become a trap</h3>
+
+<p><code>VkEncoderConfig</code> defaults <code>enablePreprocessComputeFilter</code> to <strong>true</strong>, so the ext binder has to write the field in <em>both</em> directions — the code says so at <code>vulkan_video_encoder_ext.cpp</code>: writing it only in the true case would leave a directly encodable session with the filter created. Flat structs with defaults require every binder to know which fields must be written down even when the answer is "no". A method that returns an answer has no default to forget.</p>
+
+<h3>3.5 Reading cost</h3>
+
+<p>3,800 lines of header for four entry points is a large amount to read before the first call. The shape encourages documenting the <em>mechanism</em> — which struct chains off which — rather than the <em>contract</em>.</p>
+
+<hr>
+
+<h2>4. Why the current shape was chosen, and where that reasoning still holds</h2>
+
+<p><code>VULKAN_VIDEO_ENCODER_API_V2_DESIGN.md</code> §5 chose <code>sType</code>/<code>pNext</code> deliberately, and the reasoning is sound where it applies:</p>
+
+<blockquote class="pull"><p><em>"The <strong>only</strong> legal way to extend a struct in this API is a new <code>pNext</code>-chained struct with a new <code>sType</code> … The library <strong>rejects any <code>sType</code> it does not know</strong> … which is the whole point across an IPC seam where the two sides may ship independently."</em></p></blockquote>
+
+<p>It also rejected a <code>size</code> field, on the grounds that its natural behaviour — read fewer bytes than the caller wrote — is the same silent-truncation failure the API already suffered.</p>
+
+<p><strong>Both points are correct.</strong> The question is not whether they are true, but where they bind.</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>consumer</th>
+    <th>seam</th>
+    <th>independently shipped?</th>
+    <th>descriptor style needed?</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Chromium</td>
+    <td><strong>static link</strong>, vendored under <code>third_party/vulkan_video_samples/</code> (Model D)</td>
+    <td>no — same compiler, same build</td>
+    <td><strong>no</strong></td>
+  </tr>
+  <tr>
+    <td>in-process library callers, tests</td>
+    <td>direct C++ calls</td>
+    <td>no</td>
+    <td><strong>no</strong></td>
+  </tr>
+  <tr>
+    <td>TRV encoder service</td>
+    <td><strong>IPC</strong>, SCM_RIGHTS / named pipe</td>
+    <td>yes</td>
+    <td><strong>yes, at the wire</strong></td>
+  </tr>
+</tbody>
+</table>
+
+<p>The IPC case is real, and it is TRV's. But that boundary is already a <strong>serialisation</strong> layer: handles are passed by <code>SCM_RIGHTS</code> or <code>DuplicateHandle</code>, not by memcpy of a struct with a <code>pNext</code> pointer in it — a pointer chain cannot cross a process boundary as-is, so the chain is flattened by hand on both sides regardless.</p>
+
+<p>So the versioning argument justifies a <strong>tagged wire format</strong>, which is a different artifact from the <strong>in-process API</strong>. Today the two are conflated: every in-process caller pays the wire format's ceremony.</p>
+
+<hr>
+
+<h2>4b. How VA-API solves the same problem — a third answer</h2>
+
+<p>Worth reading before choosing, because VA-API is the <em>other</em> codec interface the browser uses, and it faces a strictly harder version problem than we do: a browser dynamically loading a vendor driver <code>.so</code> that was built by someone else, at some other time, against some other header.</p>
+
+<blockquote class="pull"><p><code>VAAPI_vs_VULKAN_VIDEO_DETAILED_COMPARISON.md</code> compares what the two APIs <strong>do</strong> — surfaces, dma-buf, synchronisation, protected content, overlays. This section compares how they <strong>stay compatible</strong>, which that document does not cover.</p></blockquote>
+
+<p>Measured from <code>/usr/include/va/va.h</code> (libva 1.20.0, 5,291 lines):</p>
+
+<h3>4b.1 Opaque integer handles — no live object's layout crosses the boundary</h3>
+
+<p>``<code>c typedef void*        VADisplay; typedef unsigned int VAGenericID; typedef VAGenericID  VAConfigID, VAContextID, VASurfaceID, VABufferID, VAImageID; </code>``</p>
+
+<p>Everything a client holds is an <code>unsigned int</code>. There is no object whose <em>layout</em> the two sides must agree on, so the entire class of "header and library disagree about offsets" cannot occur.</p>
+
+<p>That is precisely the failure recorded in §3.2: a caller's <code>sType</code> read at the offset where an older layout put <code>codec</code>, reported as <code>Unsupported codec: 1447362561</code>. Under VA-API's model that diagnostic is unreachable.</p>
+
+<h3>4b.2 Reserved padding instead of chaining</h3>
+
+<p>```c</p>
+
+<p>#define VA_PADDING_LOW 4 / MEDIUM 8 / HIGH 16 / LARGE 32</p>
+
+<p>uint32_t va_reserved[VA_PADDING_MEDIUM];   /<em> "must be zero" </em>/ ```</p>
+
+<p><strong>43 structs</strong> carry such a tail. New fields are carved out of the reserve, so <code>sizeof()</code> is stable across versions and an old binary stays layout-compatible. The budget is finite — when a struct's reserve is exhausted it needs a successor — but within it, extension costs nothing at the call site and requires no walk.</p>
+
+<p><strong><code>va.h</code> contains zero <code>sType</code> and zero <code>pNext</code>.</strong></p>
+
+<h3>4b.3 Explicit size in the data path — and why we decided the opposite</h3>
+
+<p>``<code>c VAStatus vaCreateBuffer(VADisplay, VAContextID, VABufferType type, unsigned int size, unsigned int num_elements, void *data, VABufferID *buf_id); </code>``</p>
+
+<p>The caller states how many bytes it wrote.</p>
+
+<p><code>VULKAN_VIDEO_ENCODER_API_V2_DESIGN.md</code> §5 <strong>explicitly rejected</strong> a size field, on the grounds that its natural behaviour — read fewer bytes than the caller wrote — is the same silent truncation that already lost ten fields of <code>VkVideoEncoderConfig</code>.</p>
+
+<p>Both positions are defensible, and the difference is not taste. VA-API can afford an explicit size because reserved padding means the size seldom changes; a wrong size is then a loud mismatch rather than a routine one. Our rejection is sound <strong>given our extension rule</strong> — but it is worth being clear that it is sound <em>because of</em> that rule, not on its own.</p>
+
+<h3>4b.4 Typed buffers, not typed chains</h3>
+
+<p><strong>48</strong> <code>VABufferType</code> enumerants. A new kind of parameter is a new buffer type consumed at one place (<code>vaCreateBuffer</code>), not a new struct chained onto an existing one and discovered by a walk at every entry point. Ours has <strong>86</strong> <code>pNext</code> sites and <strong>24</strong> <code>sType</code> comparisons.</p>
+
+<h3>4b.5 Runtime version negotiation</h3>
+
+<p>``<code>c VAStatus vaInitialize(VADisplay dpy, int *major_version, int *minor_version); </code>``</p>
+
+<p><code>VA_MAJOR/MINOR/MICRO_VERSION</code> (1.20.0) is the <em>compiled-against</em> version; <code>vaInitialize</code> hands back what the <strong>runtime</strong> actually is, so a client can adapt instead of assuming. Our API has no equivalent runtime query — a caller cannot ask the library what it is talking to.</p>
+
+<h3>4b.6 What this argues</h3>
+
+<p>Not "copy VA-API". Its opaque-handle and reserved-padding machinery is the price of a genuine third-party plugin boundary, which we do not have: Chromium <strong>static-links</strong> the vendored copy, and in-process callers make direct calls.</p>
+
+<p>The useful observation is that <strong>all three models — VA-API, Vulkan, and a C++ interface — agree that the layout of a live object should not cross a version boundary.</strong> VA-API achieves it with opaque IDs, Vulkan with tagged chains whose <em>tail</em> may grow, a C++ interface with a vtable behind a pointer. Ours is the only one of the three that lets a caller's struct layout be the contract at every entry point, and §3.2 is what that costs.</p>
+
+<p>VA-API also separates the <strong>plugin/wire</strong> concern from the <strong>call</strong> concern: the driver ABI is versioned and defensive, while a client that has already resolved a context passes integers. That is the same split §5 proposes here — a tagged format at the IPC seam, interfaces in process.</p>
+
+<hr>
+
+<h2>5. Proposal</h2>
+
+<p>Model the ext surface as the rest of the library already is: abstract, reference-counted, and versioned by inheritance.</p>
+
+<h3>5.1 Shape</h3>
+
+<p>```cpp // v1 — the surface a host embeds through. class VulkanVideoEncoderExt : public virtual VulkanVideoEncoder { public: // Capability queries, answerable before a session exists. virtual VkResult GetCapabilities(VkSharedBaseObj&lt;VulkanVideoEncoderCapabilities&gt;&amp;) = 0; virtual VkResult QueryInputFormatSupport(VkFormat, VulkanVideoEncoderInputFormatSupport&amp;) = 0;</p>
+
+<p>// Per-frame submission, keyed by the caller's frame id. virtual VkResult SubmitFrame(const VulkanVideoEncoderInputFrame&amp;) = 0; virtual VkResult AcquireEncodedFrame(uint64_t frameId, VkSharedBaseObj&lt;VulkanVideoEncodedFrame&gt;&amp;) = 0;</p>
+
+<p>// Dependent interfaces, returned rather than pNext-chained. // Null when this build or this device does not provide them. virtual VkResult GetContentProbe(VkSharedBaseObj&lt;VulkanVideoEncoderContentProbe&gt;&amp;) = 0; virtual VkResult GetDiagnostics(VkSharedBaseObj&lt;VulkanVideoEncoderDiagnostics&gt;&amp;) = 0; };</p>
+
+<p>// v2 — additive, by inheritance. Old callers keep compiling against v1. class VulkanVideoEncoderExtV2 : public virtual VulkanVideoEncoderExt { public: virtual VkResult SetFrameDeadline(uint64_t frameId, uint64_t deadlineNs) = 0; }; ```</p>
+
+<h3>5.2 The three rules</h3>
+
+<ol>
+  <li><strong>Each version inherits the previous one.</strong> <code>V2 : public virtual V1</code>. A caller written</li>
+</ol>
+
+<p>against v1 keeps working, and <code>QueryInterface</code>-style narrowing is a <code>dynamic_cast</code> or an explicit <code>GetV2()</code> accessor that returns null on an older implementation.</p>
+
+<ol>
+  <li><strong>Each interface hands back its dependants.</strong> What is a <code>pNext</code>-chained struct today becomes</li>
+</ol>
+
+<p>a getter returning <code>VkSharedBaseObj&lt;T&gt;&amp;</code>, null when unavailable. Optionality is expressed by the handle, not by the absence of a tag in a chain.</p>
+
+<ol>
+  <li><strong>Lifetime is the existing one.</strong> <code>VkVideoRefCountBase</code> + <code>VkSharedBaseObj</code>, the same as the</li>
+</ol>
+
+<p>other 26 classes, so there is one ownership model in the library rather than two.</p>
+
+<h3>5.3 What the descriptor structs become</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>today</th>
+    <th>proposed</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>VkVideoEncoderCapabilities</code> (sType, pNext)</td>
+    <td><code>VulkanVideoEncoderCapabilities</code> interface</td>
+  </tr>
+  <tr>
+    <td><code>VkVideoEncoderDiagnosticInfo</code> chained off status</td>
+    <td><code>GetDiagnostics()</code> → interface or null</td>
+  </tr>
+  <tr>
+    <td><code>VkVideoEncoderImportContentInfo</code> chained twice</td>
+    <td><code>GetContentProbe()</code> → interface or null</td>
+  </tr>
+  <tr>
+    <td><code>VkVideoEncoderFrameFenceDescriptor</code> in a chain</td>
+    <td>parameter on the submit method</td>
+  </tr>
+  <tr>
+    <td><code>VkVideoEncoderConfig</code> (24 fields, defaults)</td>
+    <td>a builder, or a plain struct with <strong>no defaults</strong></td>
+  </tr>
+</tbody>
+</table>
+
+<p>Plain aggregates stay plain where they are pure data — an input frame descriptor is a struct, not an interface. What goes away is the <em>tagging and chaining</em>, not every struct.</p>
+
+<hr>
+
+<h2>6. Migration path</h2>
+
+<p>This does not have to be a flag day.</p>
+
+<ol>
+  <li><strong>Land the C++ interface alongside the C surface.</strong> The implementation already exists; the</li>
+</ol>
+
+<p>interface is a facade over <code>VulkanVideoEncoderExtImpl</code>. No behaviour changes.</p>
+
+<ol>
+  <li><strong>Move in-process callers first</strong> — the 12 <code>encoder-ext-*</code> suites and the Chromium</li>
+</ol>
+
+<p><code>VulkanVideoEncodeAccelerator</code>. Chromium is a static link, so this is a rebuild, not an ABI event.</p>
+
+<ol>
+  <li><strong>Keep the C entry points as a thin shim</strong> for anyone who wants them, implemented by calling</li>
+</ol>
+
+<p>the interface. They stop being the definition and become one binding of it.</p>
+
+<ol>
+  <li><strong>Keep the tagged format at the IPC seam only</strong> — TRV's encoder service. Give it an explicit</li>
+</ol>
+
+<p>wire struct that is <em>not</em> the in-process API, so the versioning discipline of V2 §5 applies exactly where independent shipping happens.</p>
+
+<ol>
+  <li><strong>Retire the layout-pin test</strong> for anything that is no longer a layout contract.</li>
+</ol>
+
+<p>Step 1 is additive and independently reviewable. Steps 2–5 can proceed per consumer.</p>
+
+<hr>
+
+<h2>7. Risks and open questions</h2>
+
+<ul>
+  <li><strong><code>dynamic_cast</code> across a <code>.so</code></strong> needs consistent RTTI and one typeinfo; a <code>GetV2()</code> accessor</li>
+</ul>
+
+<p>avoids it and is the safer default.</p>
+
+<ul>
+  <li><strong>Versioning by inheritance is not free.</strong> A v3 that needs to <em>change</em> a v1 method's semantics</li>
+</ul>
+
+<p>cannot do it additively; that case still needs a new interface root. The V2 doc's point about never renumbering applies equally to never re-meaning a virtual.</p>
+
+<ul>
+  <li><strong>The wire format still needs the sType discipline.</strong> Nothing here relaxes it for IPC; it</li>
+</ul>
+
+<p>narrows where it is paid.</p>
+
+<ul>
+  <li><strong>Effort is not small.</strong> ~3,800 header lines and 86 <code>pNext</code> sites are the surface area, though</li>
+</ul>
+
+<p>most of the implementation is reusable behind the facade.</p>
+
+<ul>
+  <li><strong>Upstreamability.</strong> NVPRO/Khronos samples lean Vulkan-idiomatic. A C++ interface is the house</li>
+</ul>
+
+<p>idiom of <em>this</em> library but may read as unusual upstream; worth checking before committing.</p>
+
+<hr>
+
+<h2>8. Recommendation</h2>
+
+<p>Adopt the interface style for the <strong>in-process</strong> surface, keep a tagged format for the <strong>IPC</strong> surface, and stop paying for the second in places that only need the first.</p>
+
+<p>Do it after the RC-6 review and rebase land — the branch is 24 commits and mid-review, and this is not a change to make underneath it.</p>
+
+</div>
+</article>
+
+<footer>
+    <div class="container">
+        <p></p>
+    </div>
+</footer>
+</body>
+</html>

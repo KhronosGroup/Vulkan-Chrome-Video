@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: 2026 The Khronos Group, Inc.
+SPDX-License-Identifier: Apache-2.0
+
+Generated from the Markdown source by build_blog.py — edit the .md, not this file.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ownership and Resource-Sharing Principles</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-card: #1a2332;
+            --accent-vulkan: #ac2d2d;
+            --accent-vulkan-bright: #e05252;
+            --accent-chrome: #5b9bff;
+            --accent-nvidia: #8bd90a;
+            --accent-firefox: #ff9d3d;
+            --text-primary: #eef2f8;
+            --text-body: #d3dce8;
+            --text-secondary: #b3c0d1;
+            --text-muted: #8a97a8;
+            --border: #2d3a4f;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', system-ui, sans-serif; font-weight: 400;
+            background: var(--bg-primary); color: var(--text-body);
+            line-height: 1.75; font-size: 17px;
+        }
+        .bg-pattern {
+            position: fixed; inset: 0; z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(172, 45, 45, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 90%, rgba(66, 133, 244, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 40%, rgba(118, 185, 0, 0.05) 0%, transparent 60%);
+        }
+        .container { max-width: 980px; margin: 0 auto; padding: 0 1.5rem; }
+        header.hero { padding: 4rem 0 2.5rem; text-align: center; }
+        .logo-strip {
+            display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
+            margin-bottom: 2rem; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em;
+        }
+        .logo-strip span { padding: 0.4rem 0.8rem; border-radius: 4px; border: 1px solid var(--border); }
+        .logo-strip .vulkan { color: var(--accent-vulkan-bright); border-color: var(--accent-vulkan); }
+        .logo-strip .nvidia { color: var(--accent-nvidia); border-color: var(--accent-nvidia); }
+        .logo-strip .ff { color: var(--accent-firefox); border-color: var(--accent-firefox); }
+        .logo-strip .chrome { color: var(--accent-chrome); border-color: var(--accent-chrome); }
+        .hero-banner {
+            display: block; width: 100%; height: auto;
+            border-radius: 12px; margin-bottom: 2rem;
+        }
+        h1 {
+            font-size: 2.7rem; font-weight: 700; line-height: 1.15; margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .hero .dek { font-size: 1.2rem; color: var(--text-secondary); max-width: 760px; margin: 0 auto; }
+        .byline { margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        article { padding-bottom: 5rem; }
+        h2 {
+            font-size: 1.7rem; font-weight: 700; margin: 3.2rem 0 1.1rem; color: var(--text-primary);
+            padding-left: 0.9rem; border-left: 4px solid var(--accent-nvidia);
+        }
+        h2.ff { border-left-color: var(--accent-firefox); }
+        h2.cr { border-left-color: var(--accent-chrome); }
+        h2.vk { border-left-color: var(--accent-vulkan-bright); }
+        h3 { font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.7rem; color: var(--text-primary); }
+        p { margin-bottom: 1.1rem; color: var(--text-body); }
+        p strong, li strong { color: var(--text-primary); }
+        em { color: var(--text-primary); font-style: italic; }
+        ul, ol { margin: 0 0 1.1rem 1.5rem; color: var(--text-body); }
+        li { margin-bottom: 0.5rem; }
+        a { color: var(--accent-chrome); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 0.1rem 0.35rem; border-radius: 4px; color: #a8ecb2;
+        }
+        figure.diagram {
+            margin: 1.8rem 0; padding: 1rem; background: #ffffff;
+            border: 1px solid var(--border); border-radius: 12px; text-align: center;
+        }
+        figure.diagram img, figure.diagram object { max-width: 100%; height: auto; }
+        figure.diagram figcaption { margin-top: 0.6rem; font-size: 0.85rem; color: #475569; font-style: italic; }
+        blockquote.pull {
+            border-left: 4px solid var(--accent-vulkan-bright);
+            background: var(--bg-card); border-radius: 0 10px 10px 0;
+            padding: 1.1rem 1.4rem; margin: 1.6rem 0;
+            font-size: 1.03rem; color: var(--text-primary);
+        }
+        blockquote.pull p { color: var(--text-primary); margin: 0; }
+        table.doc {
+            width: 100%; border-collapse: collapse; margin: 1.8rem 0;
+            font-size: 0.95rem; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 10px;
+            overflow: hidden; display: table;
+        }
+        table.doc th, table.doc td {
+            padding: 0.68rem 0.9rem; text-align: left; vertical-align: top;
+            border-bottom: 1px solid var(--border);
+        }
+        table.doc thead th {
+            background: rgba(118, 185, 0, 0.10);
+            color: var(--text-primary); font-weight: 650;
+            border-bottom: 2px solid var(--accent-vulkan-bright);
+            white-space: nowrap;
+        }
+        table.doc tbody tr:last-child td { border-bottom: none; }
+        table.doc tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+        table.doc code { white-space: nowrap; }
+        @media (max-width: 720px) {
+            table.doc { display: block; overflow-x: auto; }
+        }
+        aside.takeaways {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-vulkan-bright);
+            border-radius: 0 12px 12px 0; padding: 1.4rem 1.7rem;
+            margin: 2.2rem 0 2.6rem;
+        }
+        aside.takeaways h2 {
+            font-size: 0.95rem; margin: 0 0 0.9rem; padding: 0; border-left: none;
+            font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--accent-vulkan-bright);
+        }
+        aside.takeaways ul { margin: 0 0 0 1.2rem; }
+        aside.takeaways li:last-child { margin-bottom: 0; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+        footer {
+            border-top: 1px solid var(--border); padding: 2rem 0 3.5rem;
+            color: var(--text-muted); font-size: 0.88rem; text-align: center;
+        }
+        @media (max-width: 700px) {
+            h1 { font-size: 1.9rem; }
+            /* Keep the Key Takeaways panel readable on a phone: the box and
+               list indents eat a lot of a 390px viewport at desktop padding. */
+            aside.takeaways { padding: 1.1rem 1.15rem; border-radius: 0 8px 8px 0; }
+            aside.takeaways ul { margin-left: 1rem; }
+            figure.diagram { padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<header class="hero">
+    <div class="container">
+        <div class="logo-strip">
+            
+        </div>
+        <h1>Ownership and Resource-Sharing Principles</h1>
+        <p class="dek">The rules that govern every object crossing the embeddable encoder boundary: who allocates it, who releases it, what keeps it alive while the GPU is still using it, and what a new resource type must do to be added safely.</p>
+        <div class="byline"></div>
+    </div>
+</header>
+
+<article>
+<div class="container">
+
+<p>This is the normative statement. For what the current interface actually does against these rules, see <a href="VULKAN_VIDEO_ENCODER_EXT_OBJECT_LIFECYCLE.md"><code>VULKAN_VIDEO_ENCODER_EXT_OBJECT_LIFECYCLE.md</code></a>.</p>
+
+<hr>
+
+<h2>P0 — The boundary never hands out a lifetime the client must reason about</h2>
+
+<p>The library is built internally on refcounted shared objects (<code>VkSharedBaseObj</code>, a <code>shared_ptr</code> alias). That refcount cannot cross the boundary: a <code>shared_ptr</code> does not survive a C ABI, does not survive a process boundary, and would bind the embedder to the library's allocator and destruction order.</p>
+
+<p><strong>The translation is an opaque id whose referent is refcounted internally.</strong> The client holds a token; the library holds the object. The safety property transfers; the pointer type does not. Every principle below is a consequence of this one.</p>
+
+<p>A corollary that decides most design questions: <strong>the client must never hold a raw Vulkan handle whose destruction the library's correctness depends on.</strong> If it does, no amount of documentation makes the interface safe, because the client can always destroy it at the wrong moment.</p>
+
+<hr>
+
+<h2>P1 — Ownership is a property of the registration, never of the outcome</h2>
+
+<p>An ownership mode is chosen <strong>per registration</strong>. It is never per frame and never per call outcome.</p>
+
+<p>What is explicitly rejected is an <em>outcome-conditional</em> rule — one where who closes the handle depends on how the call went. Under either mode the answer is identical on every exit path, success or failure. This is what makes the rule statable in one sentence, and therefore followable.</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Mode</th>
+    <th>Rule, on <strong>every</strong> exit path</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>TRANSFER</code> (default, and what <code>{}</code> gives you)</td>
+    <td>After the call the handle is <strong>not the caller's</strong>. It must not close it, use it, or look at it.</td>
+  </tr>
+  <tr>
+    <td><code>BORROW</code></td>
+    <td>The handle <strong>stays the caller's</strong>. The library takes a private duplicate (<code>F_DUPFD_CLOEXEC</code>) <em>before anything that can fail</em>, and applies the <code>TRANSFER</code> rule to its own copy.</td>
+  </tr>
+</tbody>
+</table>
+
+<p><code>TRANSFER</code> is the default deliberately: <strong>the safe thing must be what zero-initialisation gives you.</strong> <code>BORROW</code> exists for the narrow case of a caller that must import one received handle twice — the reference renderer imports a single frame fd into both its display device and the encoder. It is meaningless across an IPC boundary, where the transport has already duplicated the handle.</p>
+
+<hr>
+
+<h2>P2 — The platform decides fd rules; we only state them</h2>
+
+<p>The asymmetry between POSIX and Win32 is Vulkan's, not a choice this interface makes:</p>
+
+<ul>
+  <li><strong>A POSIX fd is consumed.</strong> On success it is owned by the imported <code>VkDeviceMemory</code> and released</li>
+</ul>
+
+<p>by <code>vkFreeMemory</code>. On failure it is closed exactly once, by whichever owner holds it at the point of failure — by the library when the failure preceded the <code>vkAllocateMemory</code> handoff, and by the <strong>driver</strong> when it did not, because some drivers consume the fd even when the import allocation fails. The library therefore never closes an fd it has already offered to <code>vkAllocateMemory</code>.</p>
+
+<ul>
+  <li><strong>A Win32 NT handle is never closed by the library.</strong> Not on success, not on failure. The caller</li>
+</ul>
+
+<p>retains it and closes it once the resource is unregistered. On Win32 both ownership modes are therefore identical and <code>BORROW</code> is accepted as a no-op.</p>
+
+<p>The principle: <strong>do not invent ownership semantics the platform does not have.</strong> State the platform's rule, apply it unconditionally, and make the difference visible rather than papered over.</p>
+
+<hr>
+
+<h2>P3 — Report the rule applied; never make it an input</h2>
+
+<p>The library echoes which ownership rule it applied through <code>VkVideoEncoderStatus::handlesConsumed</code>, so a caller can <strong>assert rather than guess</strong>.</p>
+
+<p>It is a constant of <code>(platform, handle type, mode)</code> — deliberately <em>not</em> of the call's outcome, which is the entire point of P1. It is <code>VK_TRUE</code> iff the caller's handle was consumed: always true for a POSIX fd under <code>TRANSFER</code>, always false under <code>BORROW</code>, always false for Win32 handles and for <code>VK_IMAGE</code>, where no handle is taken.</p>
+
+<p><strong>It is never a control input.</strong> A field that reports is testable; a field that steers becomes a second source of truth that will eventually disagree with the first.</p>
+
+<hr>
+
+<h2>P4 — Direction of ownership must be stated for exported handles too</h2>
+
+<p>Every fd rule above governs a handle the library is <strong>given</strong>. A handle the library <strong>exports</strong> needs its own statement, and gets one:</p>
+
+<blockquote class="pull"><p><code>pReleaseFenceFd</code> — the exported fd is the <strong>caller's</strong>. The library never closes it. <code>close(2)</code> it, or hand it to exactly one import, which consumes it.</p></blockquote>
+
+<p>This is the reverse of every other fd rule in the interface, which is precisely why it is written down rather than inferred. <strong>Name exactly one owner for every handle in both directions</strong>, and say so at the handle, not in a design document the caller will not have.</p>
+
+<p>Two supporting rules that make an out-parameter usable:</p>
+
+<ul>
+  <li><strong>Write it before anything can refuse.</strong> The library stores <code>-1</code> into every <code>pReleaseFenceFd</code> in the</li>
+</ul>
+
+<p>chain up front, ahead of any import, id resolution or <code>sType</code> check, so a caller may declare <code>int fd;</code> and rely on it being defined on <em>every</em> return — including the error returns and the chains that put the refusing node ahead of the descriptor.</p>
+
+<ul>
+  <li><strong>A sentinel is an answer, not a failure.</strong> <code>-1</code> means "no fence" and must never be read as "the</li>
+</ul>
+
+<p>input is already released". Legitimate causes include a platform that cannot export a SYNC_FD, an input-consuming submission not yet issued (a frame deferred into a B-frame reorder batch), and a fence already signalled.</p>
+
+<hr>
+
+<h2>P5 — Registration confers protection; an id alone confers nothing</h2>
+
+<p>An opaque id is the <em>mechanism</em>. The safety comes from what the library does behind it. A protected registration has <strong>all three</strong> of:</p>
+
+<ol>
+  <li><strong>A refcount held for the lifetime of every submitted frame that names it.</strong> The library's</li>
+</ol>
+
+<p>internal refcount is extended by the registration, not exposed through it.</p>
+
+<ol>
+  <li><strong>Deferred retire.</strong> An unregister racing an in-flight frame <strong>defers</strong> rather than freeing memory</li>
+</ol>
+
+<p>the GPU is still reading. The client is never required to prove quiescence.</p>
+
+<ol>
+  <li><strong>Generation counting.</strong> A stale or retired id is a typed refusal (<code>ERROR_RESOURCE_UNKNOWN</code>),</li>
+</ol>
+
+<p>never a silent match against a recycled slot. Use-after-retire fails loudly and deterministically.</p>
+
+<p>An id with fewer than three is not a protected reference; it is a handle with extra steps. The distinction matters because the two look identical at the call site.</p>
+
+<hr>
+
+<h2>P6 — One token type, one lifetime rule</h2>
+
+<p>If two resource classes share a token type, they must share a lifetime discipline. If their disciplines differ, the <strong>types must differ</strong>, so the compiler catches the confusion rather than a paragraph of header comment.</p>
+
+<p>This is the principle most easily violated by incremental growth: a second resource class is added, the existing id type is reused because it fits, and the differing rule is documented instead of encoded. The result is an interface where correctness depends on the caller having read the right paragraph.</p>
+
+<hr>
+
+<h2>P7 — Registration is once per pool slot; submission names, it does not import</h2>
+
+<p>The per-frame call must <strong>name</strong> an already-registered resource and perform no import, no allocation and no Vulkan object creation. This is what makes the frame loop allocation-free, and it is also what makes lifetime tractable: there is one place a resource enters the library and one place it leaves.</p>
+
+<p>Two consequences worth stating explicitly:</p>
+
+<ul>
+  <li><strong>Key the registration cache by producer pool slot, never by frame id.</strong> A frame-counter key</li>
+</ul>
+
+<p>produced duplicate-frame bitstreams in the reference renderer. Frame ids recycle; pool slots identify the underlying allocation.</p>
+
+<ul>
+  <li><strong>Destroy slots only behind a device-idle barrier</strong>, or behind the deferred-retire machinery of P5.</li>
+</ul>
+
+<hr>
+
+<h2>P8 — The library owns the import, not necessarily the allocation</h2>
+
+<p>It is tempting to state "the library allocates everything." That is not achievable and not the point.</p>
+
+<p>A wait semaphore is signalled by the <strong>producer</strong>, on the producer's device, before the encoder exists in that frame's story. A dma-buf is allocated by the compositor's allocator under constraints the encoder does not control. What the library <em>can</em> own — and must — is the <strong>import</strong>: the Vulkan object it creates from the handle, and the lifetime of that object relative to work in flight.</p>
+
+<p>So the correct formulation is not <em>"the library allocates it"</em> but:</p>
+
+<blockquote class="pull"><p><strong>Every externally-originated resource enters through a registration that creates a library-owned Vulkan object, and the client thereafter refers to it only by id.</strong></p></blockquote>
+
+<p>That is achievable for images, semaphores, and any future resource class, without requiring the library to own an allocator it has no business owning.</p>
+
+<hr>
+
+<h2>P9 — Failure paths obey the same rule as success paths</h2>
+
+<p>Every rule above is stated as "on every exit path" because the failure path is where ownership bugs live. Two specific obligations:</p>
+
+<ul>
+  <li><strong>A refusal does not hand the handle back.</strong> If an fd is imported before a limit is checked, the</li>
+</ul>
+
+<p>refusal consumes it exactly as success would. The ownership rule is not suspended by the refusal.</p>
+
+<ul>
+  <li><strong>Out-parameters are initialised before the first possible refusal</strong>, so a caller's cleanup path is</li>
+</ul>
+
+<p>valid regardless of where the call failed.</p>
+
+<p>An interface whose ownership rules hold only on success has no ownership rules.</p>
+
+<hr>
+
+<h2>Checklist for adding a resource class</h2>
+
+<p>A new externally-originated resource type is safe to add when all of the following are true:</p>
+
+<ul>
+  <li>[ ] It enters through a <strong>registration</strong> that returns an opaque id (P0).</li>
+  <li>[ ] Its ownership mode is fixed <strong>per registration</strong>, unconditional on outcome (P1).</li>
+  <li>[ ] Its handle rule matches the <strong>platform's</strong> rule, stated at the handle (P2).</li>
+  <li>[ ] The applied rule is <strong>reported</strong>, not accepted as input (P3).</li>
+  <li>[ ] Any handle the library <strong>exports</strong> names exactly one owner, with a defined sentinel (P4).</li>
+  <li>[ ] The registration carries <strong>refcount + deferred retire + generation counting</strong> (P5).</li>
+  <li>[ ] Its id type is <strong>distinct</strong> from any id with a different lifetime rule (P6).</li>
+  <li>[ ] The per-frame path <strong>names</strong> it and imports nothing (P7).</li>
+  <li>[ ] Failure paths obey the same rule as success paths (P9).</li>
+</ul>
+
+<p>Any box left unchecked should appear in the header as an explicit, named limitation — not as silence.</p>
+
+</div>
+</article>
+
+<footer>
+    <div class="container">
+        <p></p>
+    </div>
+</footer>
+</body>
+</html>

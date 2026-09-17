@@ -139,6 +139,28 @@ CSS = """
             font-size: 1.03rem; color: var(--text-primary);
         }
         blockquote.pull p { color: var(--text-primary); margin: 0; }
+        table.doc {
+            width: 100%; border-collapse: collapse; margin: 1.8rem 0;
+            font-size: 0.95rem; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 10px;
+            overflow: hidden; display: table;
+        }
+        table.doc th, table.doc td {
+            padding: 0.68rem 0.9rem; text-align: left; vertical-align: top;
+            border-bottom: 1px solid var(--border);
+        }
+        table.doc thead th {
+            background: rgba(118, 185, 0, 0.10);
+            color: var(--text-primary); font-weight: 650;
+            border-bottom: 2px solid var(--accent-vulkan-bright);
+            white-space: nowrap;
+        }
+        table.doc tbody tr:last-child td { border-bottom: none; }
+        table.doc tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+        table.doc code { white-space: nowrap; }
+        @media (max-width: 720px) {
+            table.doc { display: block; overflow-x: auto; }
+        }
         aside.takeaways {
             background: var(--bg-card); border: 1px solid var(--border);
             border-left: 4px solid var(--accent-vulkan-bright);
@@ -318,6 +340,32 @@ def render_body(md):
                 i += 1
             out.append('<blockquote class="pull"><p>%s</p></blockquote>' % inline(" ".join(buf)))
             continue
+        # pipe table: a header row, a |---|---| separator, then body rows.
+        # Leading/trailing pipes are optional, and a cell may contain an
+        # escaped \| or a pipe inside `code`, so split on unescaped pipes only.
+        if _is_table_start(lines, i):
+            aligns = [_cell_align(c) for c in _split_row(lines[i + 1])]
+            head = _split_row(line)
+            i += 2
+            body = []
+            while i < n and _is_table_row(lines[i]):
+                body.append(_split_row(lines[i]))
+                i += 1
+            def cells(row, tag):
+                res = []
+                for idx, cell in enumerate(row):
+                    a = aligns[idx] if idx < len(aligns) else ""
+                    style = ' style="text-align:%s"' % a if a else ""
+                    res.append("    <%s%s>%s</%s>" % (tag, style, inline(cell), tag))
+                return "\n".join(res)
+            rows = ["<thead>\n  <tr>\n%s\n  </tr>\n</thead>" % cells(head, "th")]
+            if body:
+                rows.append(
+                    "<tbody>\n%s\n</tbody>"
+                    % "\n".join("  <tr>\n%s\n  </tr>" % cells(r, "td") for r in body)
+                )
+            out.append('<table class="doc">\n%s\n</table>' % "\n".join(rows))
+            continue
         # unordered list
         if re.match(r"[-*]\s+", line):
             items = []
@@ -341,11 +389,69 @@ def render_body(md):
             continue
         # paragraph
         buf = []
-        while i < n and lines[i].strip() and not _is_block_start(lines[i]):
+        while (
+            i < n
+            and lines[i].strip()
+            and not _is_block_start(lines[i])
+            and not _is_table_start(lines, i)
+        ):
             buf.append(lines[i].strip())
             i += 1
+        if not buf:
+            # No block handler claimed this line and it does not start a
+            # paragraph either. Emitting it verbatim keeps the converter
+            # total: without this, a mis-classifying block predicate spins
+            # forever instead of producing slightly wrong output.
+            out.append("<p>%s</p>" % inline(line.strip()))
+            i += 1
+            continue
         out.append("<p>%s</p>" % inline(" ".join(buf)))
     return "\n\n".join(out)
+
+
+_PIPE_SPLIT = re.compile(r"(?<!\\)\|")
+
+
+def _split_row(line):
+    """Split a table row on unescaped pipes, dropping the optional outer ones."""
+    s = line.strip()
+    if s.startswith("|"):
+        s = s[1:]
+    if s.endswith("|") and not s.endswith("\\|"):
+        s = s[:-1]
+    return [c.strip().replace("\\|", "|") for c in _PIPE_SPLIT.split(s)]
+
+
+def _is_table_row(line):
+    return "|" in line and bool(_PIPE_SPLIT.search(line.strip()))
+
+
+def _is_table_rule(line):
+    cells = _split_row(line)
+    return bool(cells) and all(re.fullmatch(r":?-{2,}:?", c) for c in cells)
+
+
+def _is_table_start(lines, i):
+    """A table begins only where a row is followed by a |---|---| rule.
+
+    Requiring the rule matters: a bare pipe can appear in ordinary prose, and
+    treating that as a block start would strand the line between the table
+    branch and the paragraph branch.
+    """
+    return (
+        i + 1 < len(lines)
+        and _is_table_row(lines[i])
+        and _is_table_rule(lines[i + 1])
+    )
+
+
+def _cell_align(rule):
+    left, right = rule.startswith(":"), rule.endswith(":")
+    if left and right:
+        return "center"
+    if right:
+        return "right"
+    return ""
 
 
 def _is_block_start(line):

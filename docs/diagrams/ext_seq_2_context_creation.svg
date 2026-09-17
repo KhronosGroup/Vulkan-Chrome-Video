@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1340" height="860" viewBox="0 0 1340 860" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="b" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#37474f"/></marker>
+    <marker id="br" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#1565c0"/></marker>
+    <marker id="bg" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#2e7d32"/></marker>
+  </defs>
+  <text x="22" y="30" font-size="19" font-weight="700" fill="#1a237e">2 — Context and session creation</text>
+  <text x="22" y="52" font-size="12.5" fill="#546e7a">Context = Vulkan phases 1–2 (instance + physical devices). Session = phases 3–4 (logical device + queues). One context, many sessions.</text>
+
+  <g font-size="12" font-weight="600" fill="#0d47a1">
+    <rect x="40" y="72" width="176" height="46" rx="6" fill="#e3f2fd" stroke="#1976d2"/>
+    <text x="56" y="92">VulkanVideoEncode</text><text x="56" y="108">Accelerator</text>
+    <rect x="256" y="72" width="176" height="46" rx="6" fill="#e3f2fd" stroke="#1976d2"/>
+    <text x="272" y="92">EncoderConfig</text><text x="272" y="108">Builder</text>
+    <rect x="472" y="72" width="192" height="46" rx="6" fill="#ede7f6" stroke="#5e35b1"/>
+    <text x="488" y="92">ext free functions</text>
+    <rect x="704" y="72" width="192" height="46" rx="6" fill="#e8f5e9" stroke="#2e7d32"/>
+    <text x="720" y="92">Encoder Context</text><text x="720" y="108" font-size="10.5" fill="#1b5e20">instance + physDevs</text>
+    <rect x="936" y="72" width="192" height="46" rx="6" fill="#f1f8e9" stroke="#689f38"/>
+    <text x="952" y="92">Encoder Session</text><text x="952" y="108" font-size="10.5" fill="#33691e">VkDevice + queues</text>
+    <rect x="1168" y="72" width="140" height="46" rx="6" fill="#fff3e0" stroke="#ef6c00"/>
+    <text x="1184" y="92">Vulkan ICD</text>
+  </g>
+  <g stroke="#b0bec5" stroke-dasharray="4,5">
+    <line x1="128" y1="118" x2="128" y2="820"/><line x1="344" y1="118" x2="344" y2="820"/>
+    <line x1="568" y1="118" x2="568" y2="820"/><line x1="800" y1="118" x2="800" y2="820"/>
+    <line x1="1032" y1="118" x2="1032" y2="820"/><line x1="1238" y1="118" x2="1238" y2="820"/>
+  </g>
+
+  <rect x="40" y="134" width="1268" height="26" rx="4" fill="#eceff1"/>
+  <text x="52" y="152" font-size="12.5" font-weight="700" fill="#37474f">A · Which device model is in force — decided once, in the config builder</text>
+
+  <line x1="128" y1="182" x2="338" y2="182" stroke="#37474f" stroke-width="1.6" marker-end="url(#b)"/>
+  <text x="140" y="176" font-size="11.5" fill="#263238">Build(vea_config, adopted)</text>
+  <rect x="150" y="196" width="1000" height="74" rx="5" fill="#e8f5e9" stroke="#66bb6a"/>
+  <text x="164" y="215" font-size="11.5" fill="#1b5e20"><tspan font-weight="700">OWN — the default.</tspan> AdoptedVulkanHandles is empty. The library selects its own instance, physical device and</text>
+  <text x="164" y="231" font-size="11.5" fill="#1b5e20">logical device, and picks its own queue families. No dependency on the compositor being Vulkan.</text>
+  <text x="164" y="251" font-size="11.5" fill="#33691e"><tspan font-weight="700">ADOPT — opt-in</tspan> behind kVulkanVideoEncodeAdoptViaContext (default OFF). Borrows <tspan font-weight="700">instance + physical device only</tspan>;</text>
+  <text x="164" y="267" font-size="11.5" fill="#33691e">externalDevice is never written by anyone. Both handles or neither — one alone is an error.</text>
+
+  <rect x="40" y="288" width="1268" height="26" rx="4" fill="#e8f5e9"/>
+  <text x="52" y="306" font-size="12.5" font-weight="700" fill="#1b5e20">B · Context — created once, outlives every session</text>
+
+  <line x1="128" y1="338" x2="562" y2="338" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#bg)"/>
+  <text x="140" y="332" font-size="11.5" font-weight="600" fill="#1b5e20">CreateVulkanVideoEncoderContext({ mode, adoptInstance, adoptPhysicalDevice, gpuUUID })</text>
+  <line x1="568" y1="364" x2="794" y2="364" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#bg)"/>
+  <line x1="800" y1="388" x2="1232" y2="388" stroke="#37474f" stroke-width="1.6" marker-end="url(#b)"/>
+  <text x="812" y="382" font-size="11.5" fill="#263238">OWN: vkCreateInstance + vkEnumeratePhysicalDevices  |  ADOPT: adopt handles, create nothing</text>
+  <line x1="800" y1="412" x2="1232" y2="412" stroke="#37474f" stroke-width="1.6" marker-end="url(#b)"/>
+  <text x="812" y="406" font-size="11.5" fill="#263238">gpuUUID != 0 → pin to the matching deviceUUID (physical-device selection)</text>
+  <line x1="794" y1="436" x2="134" y2="436" stroke="#1565c0" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#br)"/>
+  <text x="150" y="430" font-size="11.5" fill="#1565c0">ctx (refcounted). Capability snapshot is built here and is read-only thereafter.</text>
+
+  <rect x="150" y="452" width="1000" height="40" rx="5" fill="#fce4ec" stroke="#c62828"/>
+  <text x="164" y="470" font-size="11.5" fill="#b71c1c"><tspan font-weight="700">Two lifetime rules.</tspan> The context must never dlclose the loader — Chromium's own VulkanFunctionPointers bind the</text>
+  <text x="164" y="486" font-size="11.5" fill="#b71c1c">same libvulkan. And the refcount must not reach zero and re-create: vkCreateInstance after sandbox lockdown fails.</text>
+
+  <rect x="40" y="510" width="1268" height="26" rx="4" fill="#f1f8e9"/>
+  <text x="52" y="528" font-size="12.5" font-weight="700" fill="#33691e">C · Session — one per encode; creates the VkDevice and every queue the library needs</text>
+
+  <line x1="128" y1="560" x2="562" y2="560" stroke="#37474f" stroke-width="1.8" marker-end="url(#b)"/>
+  <text x="140" y="554" font-size="11.5" font-weight="600" fill="#263238">CreateVulkanVideoEncoderExtOnContext(ctx, &amp;encoder)</text>
+  <line x1="568" y1="586" x2="1026" y2="586" stroke="#37474f" stroke-width="1.6" marker-end="url(#b)"/>
+  <line x1="1032" y1="610" x2="1232" y2="610" stroke="#37474f" stroke-width="1.6" marker-end="url(#b)"/>
+  <text x="1044" y="604" font-size="11" fill="#263238">vkCreateDevice</text>
+  <text x="620" y="632" font-size="11" fill="#546e7a">queues created by the library itself: <tspan font-weight="700">encode</tspan> + <tspan font-weight="700">compute</tspan> (filter) + <tspan font-weight="700">transfer</tspan> (staging) — no caller-supplied family indices</text>
+
+  <line x1="128" y1="662" x2="1026" y2="662" stroke="#37474f" stroke-width="1.8" marker-end="url(#b)"/>
+  <text x="140" y="656" font-size="11.5" font-weight="600" fill="#263238">InitializeExt(config)  —  codec, profile, extent, rate control, input format</text>
+  <line x1="1026" y1="686" x2="134" y2="686" stroke="#1565c0" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#br)"/>
+  <text x="150" y="680" font-size="11.5" fill="#1565c0">VK_SUCCESS — session live; SupportsFormat() / GetMaxWidth() / GetMaxHeight() now answerable</text>
+
+  <rect x="40" y="708" width="1268" height="26" rx="4" fill="#ede7f6"/>
+  <text x="52" y="726" font-size="12.5" font-weight="700" fill="#4527a0">D · Completion channel — established once, before any frame is submitted</text>
+
+  <line x1="128" y1="756" x2="1026" y2="756" stroke="#5e35b1" stroke-width="1.6" marker-end="url(#b)"/>
+  <text x="140" y="750" font-size="11.5" fill="#4527a0">GetCompletionEventHandle(&amp;handle)  — level/counting eventfd; the browser watches it, never polls</text>
+  <line x1="128" y1="782" x2="1026" y2="782" stroke="#5e35b1" stroke-width="1.6" marker-end="url(#b)"/>
+  <text x="140" y="776" font-size="11.5" fill="#4527a0">ExportCompletionSemaphoreHandle(...)  — optional: GPU-side ordering against the consumer</text>
+  <text x="140" y="810" font-size="11.5" fill="#546e7a">Alternative: SetCompletionCallback(). GetCompletionCounter() / GetCompletionInfo() disambiguate a level-triggered wake.</text>
+</svg>

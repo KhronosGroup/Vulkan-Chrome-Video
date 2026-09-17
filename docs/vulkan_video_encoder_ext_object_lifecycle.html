@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: 2026 The Khronos Group, Inc.
+SPDX-License-Identifier: Apache-2.0
+
+Generated from the Markdown source by build_blog.py — edit the .md, not this file.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ext API Object Lifecycle — who allocates, who frees, and what survives a race</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-card: #1a2332;
+            --accent-vulkan: #ac2d2d;
+            --accent-vulkan-bright: #e05252;
+            --accent-chrome: #5b9bff;
+            --accent-nvidia: #8bd90a;
+            --accent-firefox: #ff9d3d;
+            --text-primary: #eef2f8;
+            --text-body: #d3dce8;
+            --text-secondary: #b3c0d1;
+            --text-muted: #8a97a8;
+            --border: #2d3a4f;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', system-ui, sans-serif; font-weight: 400;
+            background: var(--bg-primary); color: var(--text-body);
+            line-height: 1.75; font-size: 17px;
+        }
+        .bg-pattern {
+            position: fixed; inset: 0; z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(172, 45, 45, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 90%, rgba(66, 133, 244, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 40%, rgba(118, 185, 0, 0.05) 0%, transparent 60%);
+        }
+        .container { max-width: 980px; margin: 0 auto; padding: 0 1.5rem; }
+        header.hero { padding: 4rem 0 2.5rem; text-align: center; }
+        .logo-strip {
+            display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
+            margin-bottom: 2rem; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em;
+        }
+        .logo-strip span { padding: 0.4rem 0.8rem; border-radius: 4px; border: 1px solid var(--border); }
+        .logo-strip .vulkan { color: var(--accent-vulkan-bright); border-color: var(--accent-vulkan); }
+        .logo-strip .nvidia { color: var(--accent-nvidia); border-color: var(--accent-nvidia); }
+        .logo-strip .ff { color: var(--accent-firefox); border-color: var(--accent-firefox); }
+        .logo-strip .chrome { color: var(--accent-chrome); border-color: var(--accent-chrome); }
+        .hero-banner {
+            display: block; width: 100%; height: auto;
+            border-radius: 12px; margin-bottom: 2rem;
+        }
+        h1 {
+            font-size: 2.7rem; font-weight: 700; line-height: 1.15; margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .hero .dek { font-size: 1.2rem; color: var(--text-secondary); max-width: 760px; margin: 0 auto; }
+        .byline { margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        article { padding-bottom: 5rem; }
+        h2 {
+            font-size: 1.7rem; font-weight: 700; margin: 3.2rem 0 1.1rem; color: var(--text-primary);
+            padding-left: 0.9rem; border-left: 4px solid var(--accent-nvidia);
+        }
+        h2.ff { border-left-color: var(--accent-firefox); }
+        h2.cr { border-left-color: var(--accent-chrome); }
+        h2.vk { border-left-color: var(--accent-vulkan-bright); }
+        h3 { font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.7rem; color: var(--text-primary); }
+        p { margin-bottom: 1.1rem; color: var(--text-body); }
+        p strong, li strong { color: var(--text-primary); }
+        em { color: var(--text-primary); font-style: italic; }
+        ul, ol { margin: 0 0 1.1rem 1.5rem; color: var(--text-body); }
+        li { margin-bottom: 0.5rem; }
+        a { color: var(--accent-chrome); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 0.1rem 0.35rem; border-radius: 4px; color: #a8ecb2;
+        }
+        figure.diagram {
+            margin: 1.8rem 0; padding: 1rem; background: #ffffff;
+            border: 1px solid var(--border); border-radius: 12px; text-align: center;
+        }
+        figure.diagram img, figure.diagram object { max-width: 100%; height: auto; }
+        figure.diagram figcaption { margin-top: 0.6rem; font-size: 0.85rem; color: #475569; font-style: italic; }
+        blockquote.pull {
+            border-left: 4px solid var(--accent-vulkan-bright);
+            background: var(--bg-card); border-radius: 0 10px 10px 0;
+            padding: 1.1rem 1.4rem; margin: 1.6rem 0;
+            font-size: 1.03rem; color: var(--text-primary);
+        }
+        blockquote.pull p { color: var(--text-primary); margin: 0; }
+        table.doc {
+            width: 100%; border-collapse: collapse; margin: 1.8rem 0;
+            font-size: 0.95rem; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 10px;
+            overflow: hidden; display: table;
+        }
+        table.doc th, table.doc td {
+            padding: 0.68rem 0.9rem; text-align: left; vertical-align: top;
+            border-bottom: 1px solid var(--border);
+        }
+        table.doc thead th {
+            background: rgba(118, 185, 0, 0.10);
+            color: var(--text-primary); font-weight: 650;
+            border-bottom: 2px solid var(--accent-vulkan-bright);
+            white-space: nowrap;
+        }
+        table.doc tbody tr:last-child td { border-bottom: none; }
+        table.doc tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+        table.doc code { white-space: nowrap; }
+        @media (max-width: 720px) {
+            table.doc { display: block; overflow-x: auto; }
+        }
+        aside.takeaways {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-vulkan-bright);
+            border-radius: 0 12px 12px 0; padding: 1.4rem 1.7rem;
+            margin: 2.2rem 0 2.6rem;
+        }
+        aside.takeaways h2 {
+            font-size: 0.95rem; margin: 0 0 0.9rem; padding: 0; border-left: none;
+            font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--accent-vulkan-bright);
+        }
+        aside.takeaways ul { margin: 0 0 0 1.2rem; }
+        aside.takeaways li:last-child { margin-bottom: 0; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+        footer {
+            border-top: 1px solid var(--border); padding: 2rem 0 3.5rem;
+            color: var(--text-muted); font-size: 0.88rem; text-align: center;
+        }
+        @media (max-width: 700px) {
+            h1 { font-size: 1.9rem; }
+            /* Keep the Key Takeaways panel readable on a phone: the box and
+               list indents eat a lot of a 390px viewport at desktop padding. */
+            aside.takeaways { padding: 1.1rem 1.15rem; border-radius: 0 8px 8px 0; }
+            aside.takeaways ul { margin-left: 1rem; }
+            figure.diagram { padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<header class="hero">
+    <div class="container">
+        <div class="logo-strip">
+            
+        </div>
+        <h1>Ext API Object Lifecycle — who allocates, who frees, and what survives a race</h1>
+        <p class="dek">The library is internally built on refcounted shared objects (<code>VkSharedBaseObj</code>). This is a review of how much of that safety actually crosses the embeddable boundary, and where it stops.</p>
+        <div class="byline"></div>
+    </div>
+</header>
+
+<article>
+<div class="container">
+
+<p>The rules this review measures against are stated separately in <a href="VULKAN_VIDEO_ENCODER_OWNERSHIP_PRINCIPLES.md"><code>VULKAN_VIDEO_ENCODER_OWNERSHIP_PRINCIPLES.md</code></a>.</p>
+
+<p><strong>Short answer: it crosses for images and stops at semaphores.</strong> One resource class is protected by construction; two are not; a fourth uses a different discipline again. Chromium happens not to hit the unprotected ones, but by avoidance rather than by the API making them safe.</p>
+
+<figure class="diagram">
+  <img src="diagrams/ext_object_lifecycle.svg" alt="Object lifecycle" loading="lazy">
+  <figcaption>Object lifecycle</figcaption>
+</figure>
+
+<hr>
+
+<h2>1. Images — the model that works</h2>
+
+<p><code>RegisterImageResource()</code> is the shape the rest of the interface should be measured against.</p>
+
+<p>The client allocates the dma-buf and exports an fd. <strong>Ownership transfers</strong>: under the default <code>VK_VIDEO_ENCODER_HANDLE_OWNERSHIP_TRANSFER</code> the fd is consumed on <em>every</em> exit path including failure, so the client must not close it afterwards. The library then allocates everything Vulkan- side — <code>VkImage</code>, <code>VkDeviceMemory</code>, the view, the pool wrapper — and returns an opaque <code>VkVideoEncoderResource</code> id.</p>
+
+<p>Three properties make this safe against a client release racing an in-flight frame:</p>
+
+<ol>
+  <li><strong>The registration is refcounted for the lifetime of each submitted frame.</strong> The library's</li>
+</ol>
+
+<p>internal <code>VkSharedBaseObj</code> refcount is extended across the boundary by the registration, not exposed through it.</p>
+
+<ol>
+  <li><strong><code>UnregisterImageResource</code> defers.</strong> In the header's words, an *"Unregister racing an in-flight</li>
+</ol>
+
+<p>frame defers rather than freeing memory the GPU is still reading."*</p>
+
+<ol>
+  <li><strong>The id is generation-counted.</strong> A stale id returns <code>ERROR_RESOURCE_UNKNOWN</code> rather than</li>
+</ol>
+
+<p>silently matching a recycled slot — so use-after-retire is a typed refusal, not corruption.</p>
+
+<p>The client never holds a Vulkan handle, so it cannot destroy one out from under the encoder. That is exactly the "refcounted reference passed back and forth" model, implemented with an id instead of a smart pointer — which is the right choice for a C ABI that has to survive a process boundary.</p>
+
+<hr>
+
+<h2>2. Registered semaphores — same shape, opposite guarantee</h2>
+
+<p><code>RegisterSemaphore()</code> looks identical: descriptor in, OS handle in, <code>VkVideoEncoderResource</code> id out. The lifetime contract is the reverse:</p>
+
+<blockquote class="pull"><p>Unlike an image, this does <strong>NOT</strong> defer: the imported <code>VkSemaphore</code> is destroyed before the call returns. The caller must therefore ensure that every submitted batch which waits on or signals this registration has completed execution before unregistering.</p></blockquote>
+
+<p>So the id carries no protection. The client is handed the same token type and must apply a completely different discipline to it — with the only signal being a paragraph of header comment. Two resources, one id type, opposite rules, is the most likely thing on this interface for an embedder to get wrong.</p>
+
+<p>The safe sub-case is documented and real: registrations never retired are destroyed at session teardown, after the encoder's threads are joined and its queue is idle.</p>
+
+<hr>
+
+<h2>3. Raw semaphores in the submit info — untracked entirely</h2>
+
+<p><code>VkVideoEncoderFrameSubmitInfo</code> carries <code>pWaitSemaphores</code> / <code>pSignalSemaphores</code> as <strong>raw <code>VkSemaphore</code> arrays</strong>, alongside a <code>resource</code> field that is a registered id. The header is candid that these are outside the ownership model — <em>"the caller's semaphores belong to its own sync layer — both outside this claim."</em></p>
+
+<p>The library records the handles into a submit batch and returns. Nothing tracks that the batch depends on them. A client that destroys one while the batch is pending gets a driver-level use-after-free, and there is no id, refcount, or deferral to catch it.</p>
+
+<p><strong>This is the gap the proposal targets, and the diagnosis is right.</strong> One struct mixes a protected id-based resource with two unprotected raw-handle arrays.</p>
+
+<hr>
+
+<h2>4. Per-frame fences — explicit, and it flows both ways</h2>
+
+<p><code>VkVideoEncoderFrameFenceDescriptor</code> is a third discipline, and unusually well specified:</p>
+
+<ul>
+  <li><strong><code>acquireFenceFd</code> (in)</strong> — consumed on every exit, <em>including</em> a <code>RESOURCE_LIMIT</code> refusal, which</li>
+</ul>
+
+<p>imports before it counts. The ownership rule is not suspended by the refusal.</p>
+
+<ul>
+  <li><strong><code>pReleaseFenceFd</code> (out)</strong> — the exported fd is the <strong>caller's</strong>; the library never closes it.</li>
+</ul>
+
+<p>This is the reverse of every other fd rule in the header, and it is called out as such.</p>
+
+<p>Also correct and easy to miss: <code>-1</code> means "no fence", not failure, and must never be read as "the input is already released". It is written before anything can refuse, so a caller may declare <code>int fd;</code> and rely on it being defined on every return.</p>
+
+<hr>
+
+<h2>5. What Chromium actually does</h2>
+
+<p>Both hazards are latent in the API rather than live in this embedder — and the reason is avoidance:</p>
+
+<ul>
+  <li>It sets <code>pWaitSemaphores = pSignalSemaphores = nullptr</code>. Discipline 3 is never exercised;</li>
+</ul>
+
+<p>per-frame synchronisation rides the fd fences instead.</p>
+
+<ul>
+  <li>It <strong>never calls <code>UnregisterSemaphore</code></strong>. Registrations live until session teardown, where the</li>
+</ul>
+
+<p>queue is already idle, so discipline 2's obligation is discharged by never invoking it.</p>
+
+<p>That is a working embedder, not a safe interface. Any other consumer using the documented API as written reaches both hazards on its first attempt.</p>
+
+<hr>
+
+<h2>6. Assessment of the proposal</h2>
+
+<p><strong>"All resources allocated by the library and passed as refcounted references."</strong> For images this is already true and is the reason that path is safe. Extending it to semaphores is the right direction, with two qualifications worth stating before it is specified:</p>
+
+<p><strong>Keep ids, not smart pointers, at the ABI.</strong> A <code>VkSharedBaseObj</code> is a C++ <code>shared_ptr</code>; it cannot cross a C ABI, cannot survive a process boundary, and would tie the embedder to the library's allocator and destruction order. The image path already demonstrates the correct translation: an opaque, generation-counted id whose <em>referent</em> is refcounted internally. The proposal's safety property is what matters, not the pointer type.</p>
+
+<p><strong>The library cannot allocate every semaphore.</strong> A wait semaphore is signalled by the <em>producer</em>, on the producer's device, before the encoder exists in that frame's story. What the library can own is the <strong>import</strong> — which is what <code>RegisterSemaphore</code> already does. So the fix is not "the library allocates it" but "the library's registration confers the same protection images get."</p>
+
+<p>Three concrete changes follow:</p>
+
+<ol>
+  <li><strong>Make <code>UnregisterSemaphore</code> defer</strong>, exactly as the image path does — refcount the registration</li>
+</ol>
+
+<p>for the lifetime of every submitted frame that names it, and retire it when the last one retires. This removes the client-side proof obligation entirely.</p>
+
+<ol>
+  <li><strong>Accept registered semaphore ids in <code>VkVideoEncoderFrameSubmitInfo</code></strong>, alongside or instead of</li>
+</ol>
+
+<p>the raw arrays, so a submitted batch holds references rather than bare handles. The raw arrays can remain for embedders that genuinely own their sync layer, but they should be the exception the header argues for, not the default shape of the struct.</p>
+
+<ol>
+  <li><strong>Make the two id disciplines indistinguishable, or make the types distinguishable.</strong> Today both</li>
+</ol>
+
+<p>are <code>VkVideoEncoderResource</code>. If the lifetime rules stay different, the types should differ so the compiler catches the confusion; if they converge under (1), one type is correct.</p>
+
+<p>None of this is a defect in the current Chromium integration. It is what the interface will need before a second embedder — or the cross-process encoder — drives it.</p>
+
+</div>
+</article>
+
+<footer>
+    <div class="container">
+        <p></p>
+    </div>
+</footer>
+</body>
+</html>

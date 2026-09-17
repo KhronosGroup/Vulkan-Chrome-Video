@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: 2026 The Khronos Group, Inc.
+SPDX-License-Identifier: Apache-2.0
+
+Generated from the Markdown source by build_blog.py — edit the .md, not this file.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Replacing shaderc with glslang in `VulkanShaderCompiler`</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-card: #1a2332;
+            --accent-vulkan: #ac2d2d;
+            --accent-vulkan-bright: #e05252;
+            --accent-chrome: #5b9bff;
+            --accent-nvidia: #8bd90a;
+            --accent-firefox: #ff9d3d;
+            --text-primary: #eef2f8;
+            --text-body: #d3dce8;
+            --text-secondary: #b3c0d1;
+            --text-muted: #8a97a8;
+            --border: #2d3a4f;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', system-ui, sans-serif; font-weight: 400;
+            background: var(--bg-primary); color: var(--text-body);
+            line-height: 1.75; font-size: 17px;
+        }
+        .bg-pattern {
+            position: fixed; inset: 0; z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(172, 45, 45, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 90%, rgba(66, 133, 244, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 40%, rgba(118, 185, 0, 0.05) 0%, transparent 60%);
+        }
+        .container { max-width: 980px; margin: 0 auto; padding: 0 1.5rem; }
+        header.hero { padding: 4rem 0 2.5rem; text-align: center; }
+        .logo-strip {
+            display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
+            margin-bottom: 2rem; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em;
+        }
+        .logo-strip span { padding: 0.4rem 0.8rem; border-radius: 4px; border: 1px solid var(--border); }
+        .logo-strip .vulkan { color: var(--accent-vulkan-bright); border-color: var(--accent-vulkan); }
+        .logo-strip .nvidia { color: var(--accent-nvidia); border-color: var(--accent-nvidia); }
+        .logo-strip .ff { color: var(--accent-firefox); border-color: var(--accent-firefox); }
+        .logo-strip .chrome { color: var(--accent-chrome); border-color: var(--accent-chrome); }
+        .hero-banner {
+            display: block; width: 100%; height: auto;
+            border-radius: 12px; margin-bottom: 2rem;
+        }
+        h1 {
+            font-size: 2.7rem; font-weight: 700; line-height: 1.15; margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .hero .dek { font-size: 1.2rem; color: var(--text-secondary); max-width: 760px; margin: 0 auto; }
+        .byline { margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        article { padding-bottom: 5rem; }
+        h2 {
+            font-size: 1.7rem; font-weight: 700; margin: 3.2rem 0 1.1rem; color: var(--text-primary);
+            padding-left: 0.9rem; border-left: 4px solid var(--accent-nvidia);
+        }
+        h2.ff { border-left-color: var(--accent-firefox); }
+        h2.cr { border-left-color: var(--accent-chrome); }
+        h2.vk { border-left-color: var(--accent-vulkan-bright); }
+        h3 { font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.7rem; color: var(--text-primary); }
+        p { margin-bottom: 1.1rem; color: var(--text-body); }
+        p strong, li strong { color: var(--text-primary); }
+        em { color: var(--text-primary); font-style: italic; }
+        ul, ol { margin: 0 0 1.1rem 1.5rem; color: var(--text-body); }
+        li { margin-bottom: 0.5rem; }
+        a { color: var(--accent-chrome); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 0.1rem 0.35rem; border-radius: 4px; color: #a8ecb2;
+        }
+        figure.diagram {
+            margin: 1.8rem 0; padding: 1rem; background: #ffffff;
+            border: 1px solid var(--border); border-radius: 12px; text-align: center;
+        }
+        figure.diagram img, figure.diagram object { max-width: 100%; height: auto; }
+        figure.diagram figcaption { margin-top: 0.6rem; font-size: 0.85rem; color: #475569; font-style: italic; }
+        blockquote.pull {
+            border-left: 4px solid var(--accent-vulkan-bright);
+            background: var(--bg-card); border-radius: 0 10px 10px 0;
+            padding: 1.1rem 1.4rem; margin: 1.6rem 0;
+            font-size: 1.03rem; color: var(--text-primary);
+        }
+        blockquote.pull p { color: var(--text-primary); margin: 0; }
+        table.doc {
+            width: 100%; border-collapse: collapse; margin: 1.8rem 0;
+            font-size: 0.95rem; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 10px;
+            overflow: hidden; display: table;
+        }
+        table.doc th, table.doc td {
+            padding: 0.68rem 0.9rem; text-align: left; vertical-align: top;
+            border-bottom: 1px solid var(--border);
+        }
+        table.doc thead th {
+            background: rgba(118, 185, 0, 0.10);
+            color: var(--text-primary); font-weight: 650;
+            border-bottom: 2px solid var(--accent-vulkan-bright);
+            white-space: nowrap;
+        }
+        table.doc tbody tr:last-child td { border-bottom: none; }
+        table.doc tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+        table.doc code { white-space: nowrap; }
+        @media (max-width: 720px) {
+            table.doc { display: block; overflow-x: auto; }
+        }
+        aside.takeaways {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-vulkan-bright);
+            border-radius: 0 12px 12px 0; padding: 1.4rem 1.7rem;
+            margin: 2.2rem 0 2.6rem;
+        }
+        aside.takeaways h2 {
+            font-size: 0.95rem; margin: 0 0 0.9rem; padding: 0; border-left: none;
+            font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--accent-vulkan-bright);
+        }
+        aside.takeaways ul { margin: 0 0 0 1.2rem; }
+        aside.takeaways li:last-child { margin-bottom: 0; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+        footer {
+            border-top: 1px solid var(--border); padding: 2rem 0 3.5rem;
+            color: var(--text-muted); font-size: 0.88rem; text-align: center;
+        }
+        @media (max-width: 700px) {
+            h1 { font-size: 1.9rem; }
+            /* Keep the Key Takeaways panel readable on a phone: the box and
+               list indents eat a lot of a 390px viewport at desktop padding. */
+            aside.takeaways { padding: 1.1rem 1.15rem; border-radius: 0 8px 8px 0; }
+            aside.takeaways ul { margin-left: 1rem; }
+            figure.diagram { padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<header class="hero">
+    <div class="container">
+        <div class="logo-strip">
+            
+        </div>
+        <h1>Replacing shaderc with glslang in `VulkanShaderCompiler`</h1>
+        <p class="dek">A concrete implementation guide for dropping the shaderc dependency from the standalone Vulkan-Video-Samples library and compiling GLSL through glslang directly.</p>
+        <div class="byline"></div>
+    </div>
+</header>
+
+<article>
+<div class="container">
+
+<p><strong>Goal:</strong> the standalone NVPRO sample library uses glslang, not shaderc.</p>
+
+<p><strong>As implemented, shaderc was kept as an opt-in backend rather than removed outright.</strong> The original position here was one compiler exercised by every build. That does not survive contact with the consumer list: <code>VulkanShaderCompiler.cpp</code> is compiled not only by this tree but by ThreadedRenderingVk and by aq-vulkan in <em>both</em> the internal AQ repo and the customer-delivered package, which has its own release cadence. glslang is the default everywhere and is what every build of this tree uses; <code>-DVK_VIDEO_SAMPLES_SHADER_BACKEND=shaderc</code> lets a downstream tree migrate on its own schedule. The seam also pays for itself in verification — the same test suite runs on both backends and the outputs are compared directly (§7).</p>
+
+<p><strong>Why it matters beyond tidiness:</strong> shaderc is what keeps the encoder's preprocess compute filter out of Chromium, and the filter is what would let the encoder accept RGBA input directly instead of forcing a CPU or pre-pass conversion. See <a href="VULKAN_VIDEO_ENCODER_DEVICE_INDEPENDENCE_PLAN.md"><code>VULKAN_VIDEO_ENCODER_DEVICE_INDEPENDENCE_PLAN.md</code></a> §3.4.</p>
+
+<hr>
+
+<h2>1. Why glslang rather than shaderc</h2>
+
+<p>shaderc <strong>is</strong> glslang. It is a convenience wrapper providing a stable C API, <code>#include</code> resolution, and an optimisation pass driven by SPIRV-Tools. The library uses none of those extras — no includes, no optimisation, no C-API stability requirement, since it is C++ already.</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th></th>
+    <th>shaderc</th>
+    <th>glslang</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Relationship</td>
+    <td>wrapper over glslang</td>
+    <td>the actual compiler</td>
+  </tr>
+  <tr>
+    <td>In the Chromium tree</td>
+    <td><strong>absent</strong> — not in <code>DEPS</code>, not in any <code>.gn</code></td>
+    <td><strong>present</strong>, <code>//third_party/glslang/src</code>, unrestricted GN visibility</td>
+  </tr>
+  <tr>
+    <td>Chromium review cost</td>
+    <td>new third-party package: ATL approval, security review, checkout-size and build-time justification</td>
+    <td><code>Shipped: no → yes</code> flip on an already-<code>Security Critical: yes</code> component: security review + binary-size accounting</td>
+  </tr>
+  <tr>
+    <td>Standalone availability</td>
+    <td>Vulkan SDK</td>
+    <td>distro packages (<code>libglslang-dev</code>) <strong>and</strong> the Vulkan SDK</td>
+  </tr>
+</tbody>
+</table>
+
+<p>Both machines in this project already have it:</p>
+
+<p>``<code> /usr/include/glslang/Public/ShaderLang.h /usr/include/glslang/Public/ResourceLimits.h /usr/include/glslang/SPIRV/GlslangToSpv.h /usr/lib/x86_64-linux-gnu/libglslang.so.15.3.0 /usr/lib/x86_64-linux-gnu/libglslang-default-resource-limits.so /usr/lib/x86_64-linux-gnu/libSPIRV.so </code>``</p>
+
+<hr>
+
+<h2>2. What has to change — the seam is already narrow</h2>
+
+<p><code>common/libs/VkCodecUtils/VulkanShaderCompiler.h</code> is 47 lines and <strong>does not include shaderc</strong>. It exposes two methods and stores the compiler as an opaque <code>void*</code>:</p>
+
+<p>```cpp class VulkanShaderCompiler { public: VulkanShaderCompiler(); ~VulkanShaderCompiler();</p>
+
+<p>VkShaderModule BuildGlslShader(const char <em>shaderCode, size_t shaderSize, VkShaderStageFlagBits type, const VulkanDeviceContext</em> vkDevCtx);</p>
+
+<p>VkShaderModule BuildShaderFromFile(const char <em>fileName, VkShaderStageFlagBits type, const VulkanDeviceContext</em> vkDevCtx); private: static void* GetSharedCompiler(); static void  ReleaseSharedCompiler(); void* compilerHandle; }; ```</p>
+
+<p><strong>The entire dependency is confined to the 178-line <code>VulkanShaderCompiler.cpp</code>.</strong> The header does not change at all, and no caller changes. Callers are:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Caller</th>
+    <th>Which method</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>VulkanComputePipeline.cpp:51</code></td>
+    <td><code>BuildGlslShader</code></td>
+  </tr>
+  <tr>
+    <td><code>VulkanFilter.h:64</code></td>
+    <td><code>BuildGlslShader</code> — this is the compute-filter path</td>
+  </tr>
+  <tr>
+    <td><code>VulkanVideoUtils.cpp:527,534</code></td>
+    <td><code>BuildGlslShader</code></td>
+  </tr>
+  <tr>
+    <td><code>VulkanVideoUtils.cpp:516,521</code></td>
+    <td><code>BuildShaderFromFile</code> — see §6</td>
+  </tr>
+</tbody>
+</table>
+
+<h3>The shaderc surface actually used — twelve entry points</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>shaderc</th>
+    <th>Purpose</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>shaderc_compiler_initialize</code> / <code>_release</code></td>
+    <td>singleton lifetime</td>
+  </tr>
+  <tr>
+    <td><code>shaderc_compile_options_initialize</code> / <code>_release</code></td>
+    <td>per-compile options</td>
+  </tr>
+  <tr>
+    <td><code>shaderc_compile_options_set_target_env</code></td>
+    <td><code>shaderc_target_env_vulkan</code>, <code>shaderc_env_version_vulkan_1_2</code></td>
+  </tr>
+  <tr>
+    <td><code>shaderc_compile_options_set_target_spirv</code></td>
+    <td><code>shaderc_spirv_version_1_5</code></td>
+  </tr>
+  <tr>
+    <td><code>shaderc_compile_into_spv</code></td>
+    <td>the compile</td>
+  </tr>
+  <tr>
+    <td><code>shaderc_result_get_compilation_status</code></td>
+    <td>success check</td>
+  </tr>
+  <tr>
+    <td><code>shaderc_result_get_error_message</code></td>
+    <td>diagnostics</td>
+  </tr>
+  <tr>
+    <td><code>shaderc_result_get_length</code> / <code>_get_bytes</code></td>
+    <td>SPIR-V out</td>
+  </tr>
+  <tr>
+    <td><code>shaderc_result_release</code></td>
+    <td>result lifetime</td>
+  </tr>
+  <tr>
+    <td><code>shaderc_glsl_*_shader</code> (6 enums)</td>
+    <td>stage mapping</td>
+  </tr>
+</tbody>
+</table>
+
+<p>That is the whole contract to reproduce. Note the current targets — <strong>Vulkan 1.2 / SPIR-V 1.5</strong> — must be preserved exactly, or the generated modules change behaviour.</p>
+
+<hr>
+
+<h2>3. The mapping</h2>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>shaderc</th>
+    <th>glslang</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>shaderc_compiler_initialize()</code></td>
+    <td><code>glslang::InitializeProcess()</code></td>
+  </tr>
+  <tr>
+    <td><code>shaderc_compiler_release()</code></td>
+    <td><code>glslang::FinalizeProcess()</code></td>
+  </tr>
+  <tr>
+    <td><code>shaderc_compile_into_spv()</code></td>
+    <td><code>TShader::parse()</code> → <code>TProgram::link()</code> → <code>GlslangToSpv()</code></td>
+  </tr>
+  <tr>
+    <td><code>set_target_env(vulkan, vulkan_1_2)</code></td>
+    <td><code>setEnvClient(EShClientVulkan, EShTargetVulkan_1_2)</code></td>
+  </tr>
+  <tr>
+    <td><code>set_target_spirv(spirv_1_5)</code></td>
+    <td><code>setEnvTarget(EShTargetSpv, EShTargetSpv_1_5)</code></td>
+  </tr>
+  <tr>
+    <td><code>shaderc_glsl_compute_shader</code></td>
+    <td><code>EShLangCompute</code></td>
+  </tr>
+  <tr>
+    <td><code>shaderc_glsl_vertex_shader</code></td>
+    <td><code>EShLangVertex</code></td>
+  </tr>
+  <tr>
+    <td><code>shaderc_glsl_fragment_shader</code></td>
+    <td><code>EShLangFragment</code></td>
+  </tr>
+  <tr>
+    <td><code>shaderc_glsl_geometry_shader</code></td>
+    <td><code>EShLangGeometry</code></td>
+  </tr>
+  <tr>
+    <td><code>shaderc_glsl_tess_control_shader</code></td>
+    <td><code>EShLangTessControl</code></td>
+  </tr>
+  <tr>
+    <td><code>shaderc_glsl_tess_evaluation_shader</code></td>
+    <td><code>EShLangTessEvaluation</code></td>
+  </tr>
+  <tr>
+    <td><code>result_get_error_message()</code></td>
+    <td><code>TShader::getInfoLog()</code> + <code>getInfoDebugLog()</code>, <code>TProgram::getInfoLog()</code></td>
+  </tr>
+  <tr>
+    <td><code>result_get_bytes()</code> / <code>_get_length()</code></td>
+    <td><code>std::vector&lt;uint32_t&gt;</code> filled by <code>GlslangToSpv</code></td>
+  </tr>
+  <tr>
+    <td><code>shaderc_result_release()</code></td>
+    <td>nothing — the vector owns it</td>
+  </tr>
+</tbody>
+</table>
+
+<p>One thing shaderc does implicitly that glslang requires explicitly: <strong>built-in resource limits.</strong> shaderc supplies a default <code>TBuiltInResource</code>; with glslang you must pass one, and <code>GetDefaultResources()</code> from <code>glslang/Public/ResourceLimits.h</code> is exactly that default. Omitting it produces spurious "too many uniform components" style errors on perfectly valid shaders.</p>
+
+<p><strong>It is declared at global scope, not in namespace <code>glslang</code></strong> — writing <code>glslang::GetDefaultResources()</code> does not compile. Confirmed against the installed 15.3.0 headers and by the symbol itself, <code>_Z19GetDefaultResourcesv</code> in <code>libglslang-default-resource-limits.so.15.3.0</code>, whose mangling carries no namespace.</p>
+
+<hr>
+
+<h2>4. Reference implementation</h2>
+
+<p>Replaces the body of <code>VulkanShaderCompiler.cpp</code>. The header is untouched.</p>
+
+<p>```cpp</p>
+
+<p>#include &lt;glslang/Public/ShaderLang.h&gt;</p>
+
+<p>#include &lt;glslang/Public/ResourceLimits.h&gt;</p>
+
+<p>#include &lt;glslang/SPIRV/GlslangToSpv.h&gt;</p>
+
+<p>// glslang::InitializeProcess() is process-global and must be balanced by // FinalizeProcess(). The existing refcount already gives us that shape, so it // is reused verbatim -- only what it guards changes. static std::mutex        g_compilerMutex; static std::atomic&lt;int&gt;  g_compilerRefCount{0}; static bool              g_glslangInitialized = false;</p>
+
+<p>static EShLanguage getGlslangStage(VkShaderStageFlagBits type) { switch (type) { case VK_SHADER_STAGE_VERTEX_BIT:                  return EShLangVertex; case VK_SHADER_STAGE_FRAGMENT_BIT:                return EShLangFragment; case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT:    return EShLangTessControl; case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT: return EShLangTessEvaluation; case VK_SHADER_STAGE_GEOMETRY_BIT:                return EShLangGeometry; case VK_SHADER_STAGE_COMPUTE_BIT:                 return EShLangCompute; default: std::cerr &lt;&lt; "VulkanShaderCompiler: invalid VkShaderStageFlagBits type = "</p>
+
+                  << type << std::endl;
+
+<p>return EShLangCount;   // sentinel; rejected below } }</p>
+
+<p>void* VulkanShaderCompiler::GetSharedCompiler() { std::lock_guard&lt;std::mutex&gt; lock(g_compilerMutex); if (g_compilerRefCount == 0) { if (!glslang::InitializeProcess()) { std::cerr &lt;&lt; "VulkanShaderCompiler: glslang::InitializeProcess() failed!"</p>
+
+                      << std::endl;
+
+<p>return nullptr; } g_glslangInitialized = true; } g_compilerRefCount++; // glslang has no compiler object to hand back. Return a non-null token so // the existing "did we get a compiler" checks keep working unchanged. return reinterpret_cast&lt;void*&gt;(0x1); }</p>
+
+<p>void VulkanShaderCompiler::ReleaseSharedCompiler() { std::lock_guard&lt;std::mutex&gt; lock(g_compilerMutex); if (--g_compilerRefCount == 0 &amp;&amp; g_glslangInitialized) { glslang::FinalizeProcess(); g_glslangInitialized = false; } }</p>
+
+<p>VkShaderModule VulkanShaderCompiler::BuildGlslShader(const char <em>shaderCode, size_t shaderSize, VkShaderStageFlagBits type, const VulkanDeviceContext</em> vkDevCtx) { if (compilerHandle == nullptr) { return VK_NULL_HANDLE; } const EShLanguage stage = getGlslangStage(type); if (stage == EShLangCount) { return VK_NULL_HANDLE; }</p>
+
+<p>std::vector&lt;uint32_t&gt; spirv; { // glslang's parser is not re-entrant across threads for a shared // process state, and the shaderc version serialised the whole compile // under this same mutex, so behaviour is preserved rather than widened. std::lock_guard&lt;std::mutex&gt; lock(g_compilerMutex);</p>
+
+<p>glslang::TShader shader(stage);</p>
+
+<p>const char* sources[1]    = { shaderCode }; const int   lengths[1]    = { static_cast&lt;int&gt;(shaderSize) }; shader.setStringsWithLengths(sources, lengths, 1);</p>
+
+<p>shader.setEntryPoint("main"); shader.setSourceEntryPoint("main");</p>
+
+<p>// Must match the shaderc settings exactly: Vulkan 1.2, SPIR-V 1.5. shader.setEnvInput(glslang::EShSourceGlsl, stage, glslang::EShClientVulkan, 100); shader.setEnvClient(glslang::EShClientVulkan, glslang::EShTargetVulkan_1_2); shader.setEnvTarget(glslang::EShTargetSpv,   glslang::EShTargetSpv_1_5);</p>
+
+<p>const EShMessages messages = static_cast&lt;EShMessages&gt;(EShMsgSpvRules | EShMsgVulkanRules);</p>
+
+<p>// 450 is the fallback only for source with no #version directive; the // library's generated shaders all declare one, which wins. if (!shader.parse(GetDefaultResources(), 450, ENoProfile, false /<em>forceDefaultVersionAndProfile</em>/, false /<em>forwardCompatible</em>/, messages)) { std::cerr &lt;&lt; "Compilation error: \n"</p>
+
+                      << shader.getInfoLog() << "\n"
+
+                      << shader.getInfoDebugLog() << std::endl;
+
+<p>return VK_NULL_HANDLE; }</p>
+
+<p>glslang::TProgram program; program.addShader(&amp;shader); if (!program.link(messages)) { std::cerr &lt;&lt; "Link error: \n" &lt;&lt; program.getInfoLog() &lt;&lt; std::endl; return VK_NULL_HANDLE; }</p>
+
+<p>glslang::SpvOptions spvOptions; spvOptions.disableOptimizer = true;   // shaderc did no optimisation either spvOptions.generateDebugInfo = false; spvOptions.stripDebugInfo = false; spv::SpvBuildLogger logger;</p>
+
+<p>glslang::GlslangToSpv(*program.getIntermediate(stage), spirv, &amp;logger, &amp;spvOptions);</p>
+
+<p>const std::string spvMessages = logger.getAllMessages(); if (!spvMessages.empty()) { std::cerr &lt;&lt; "SPIR-V generation: " &lt;&lt; spvMessages &lt;&lt; std::endl; } if (spirv.empty()) { std::cerr &lt;&lt; "SPIR-V generation produced no code" &lt;&lt; std::endl; return VK_NULL_HANDLE; } }</p>
+
+<p>VkShaderModuleCreateInfo shaderModuleCreateInfo = VkShaderModuleCreateInfo(); shaderModuleCreateInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO; shaderModuleCreateInfo.pNext    = nullptr; shaderModuleCreateInfo.flags    = 0; shaderModuleCreateInfo.codeSize = spirv.size() * sizeof(uint32_t);  // BYTES, not words shaderModuleCreateInfo.pCode    = spirv.data();</p>
+
+<p>VkShaderModule shaderModule = VK_NULL_HANDLE; VkResult result = vkDevCtx-&gt;CreateShaderModule(*vkDevCtx, &amp;shaderModuleCreateInfo, nullptr, &amp;shaderModule); assert(result == VK_SUCCESS); if (result != VK_SUCCESS) { std::cerr &lt;&lt; "Failed to create shader module" &lt;&lt; std::endl; return VK_NULL_HANDLE; } return shaderModule; } ```</p>
+
+<h3>Details that are easy to get wrong</h3>
+
+<ol>
+  <li><strong><code>codeSize</code> is bytes, shaderc's <code>get_length()</code> was already bytes.</strong> <code>spirv.size()</code> is</li>
+</ol>
+
+<p><strong>words</strong>. Forgetting <code>* sizeof(uint32_t)</code> yields a module that fails validation or, worse, silently truncates.</p>
+
+<ol>
+  <li><strong><code>GetDefaultResources()</code> is mandatory</strong> (§3).</li>
+  <li><strong><code>EShMsgSpvRules | EShMsgVulkanRules</code> are mandatory.</strong> Without them glslang compiles for</li>
+</ol>
+
+<p>OpenGL semantics and rejects Vulkan-only constructs such as <code>layout(set = …)</code> and push constants.</p>
+
+<ol>
+  <li><strong><code>setEnvInput</code>'s trailing <code>100</code></strong> is the client input semantics version, not a GLSL version.</li>
+</ol>
+
+<p>It is <code>100</code> for Vulkan regardless of the shader's <code>#version</code>.</p>
+
+<ol>
+  <li><strong><code>InitializeProcess()</code>/<code>FinalizeProcess()</code> are process-global</strong>, not per-object. The existing</li>
+</ol>
+
+<p>refcount already has the right shape; reuse it rather than inventing a new one.</p>
+
+<ol>
+  <li><strong><code>TShader</code> and <code>TProgram</code> must outlive <code>GlslangToSpv</code></strong> — <code>program.getIntermediate()</code> returns</li>
+</ol>
+
+<p>a pointer into the program. Keeping both in the same scope as the call, as above, is what makes that safe.</p>
+
+<ol>
+  <li><strong><code>disableOptimizer = true</code></strong> keeps parity. Leaving the optimiser on would pull in SPIRV-Tools,</li>
+</ol>
+
+<p>which is a dependency we do not otherwise need.</p>
+
+<hr>
+
+<h2>5. Build system</h2>
+
+<h3>Standalone CMake</h3>
+
+<p><code>cmake/FindVulkanAndDependencies.cmake</code> currently sets <code>USE_SYSTEM_SHADERC</code>. Replace the shaderc discovery with glslang, and drop the shaderc link from every target that has it — <code>vk_video_encoder/libs</code>, <code>vk_video_encoder/demos/vk-video-enc</code>, <code>common/libs/tests</code>, <code>common/libs/tests/drm_format_mod</code>, <code>common/libs/tests/win32_opaque_import</code>, <code>vk_video_decoder/libs</code>, <code>vk_video_decoder/demos/vk-video-dec</code>, <code>vk_video_decoder/test/vulkan-video-dec</code>.</p>
+
+<p><strong>That list is short by two.</strong> <code>vk_video_decoder/test/vulkan-video-simple-dec</code> and <code>vk_video_encoder/test/vulkan-video-enc</code> also link shaderc without compiling <code>VulkanShaderCompiler.cpp</code> at all, so they need the link deleted rather than substituted — ten sites in total. Each also carries an <code>add_dependencies(... ${SHADERC_LIB})</code> that must go with it, or a stale <code>SHADERC_LIB=shaderc_shared</code> cache entry makes the build fail on a target that no longer exists.</p>
+
+<p><strong>There is a second, always-executed shaderc block</strong> further down the same module (after the system/from-source branches) that ends in <code>message(FATAL_ERROR &quot;Could not find or build Shaderc&quot;)</code>. It is easy to miss and it alone keeps the tree unconfigurable without shaderc even after every link is gone.</p>
+
+<p>``<code>cmake find_package(glslang CONFIG QUIET) if(TARGET glslang::glslang AND TARGET glslang::glslang-default-resource-limits) set(GLSLANG_LIBS glslang::glslang glslang::glslang-default-resource-limits) else() find_library(GLSLANG_LIB glslang REQUIRED) find_library(GLSLANG_RES glslang-default-resource-limits REQUIRED) find_path(GLSLANG_INCLUDE_DIR NAMES glslang/Public/ShaderLang.h REQUIRED) set(GLSLANG_LIBS ${GLSLANG_LIB} ${GLSLANG_RES}) endif() </code>``</p>
+
+<p><strong>Do not link <code>SPIRV</code>.</strong> An earlier draft of this guide probed for it and advised ordering <code>SPIRV</code> before <code>glslang</code>; that is wrong for the glslang shipped here. On 15.3.0 a <code>libSPIRV</code> still exists but is a stub: <code>libSPIRV.so.15.3.0</code> exports <strong>zero</strong> symbols and <code>libSPIRV.a</code> is 1244 bytes. <code>GlslangToSpv</code> is defined in <code>libglslang</code>. Adding SPIRV is useless in the plain discovery path and, through the CONFIG package, can drag in a target that resolves to nothing.</p>
+
+<p><strong>Version note.</strong> glslang 14 merged the standalone <code>SPIRV</code> library into <code>glslang</code>, and <code>GetDefaultResources()</code> moved to <code>glslang/Public/ResourceLimits.h</code> in the <code>glslang-default-resource-limits</code> library. Both machines here carry glslang 15.3.0, so the merged layout is what applies.</p>
+
+<h3>Chromium GN</h3>
+
+<p>Add to <code>third_party/vulkan_video_samples/BUILD.gn</code>:</p>
+
+<p>``<code>gn deps = [ &quot;//third_party/glslang/src:glslang_lib_sources&quot;, &quot;//third_party/glslang/src:glslang_default_resource_limits_sources&quot;, ] </code>``</p>
+
+<p>Note the <code>/src</code> — there is <strong>no</strong> <code>BUILD.gn</code> at <code>//third_party/glslang</code>, and <code>//third_party/vulkan-deps/glslang</code> is a metadata stub with no sources. Both are easy wrong turns.</p>
+
+<p>Then add <code>VulkanShaderCompiler.cpp</code>, <code>VulkanComputePipeline.cpp</code> and <code>VulkanFilterYuvCompute.cpp</code> to the source lists, and define <code>VK_VIDEO_SAMPLES_COMPUTE_FILTER_SUPPORTED</code> in <code>private_includes</code>, replacing the comment that currently explains why it is absent.</p>
+
+<p>The Chromium-side prerequisite is a <code>Shipped: no → yes</code> flip in <code>third_party/glslang/README.chromium</code>, which needs a security review and binary-size accounting. See the device-independence plan §3.4 for the Rule-of-2 position and the two stale citations to avoid.</p>
+
+<hr>
+
+<h2>6. Clean-ups to fold in</h2>
+
+<p><strong><code>BuildShaderFromFile</code> is dead code — deleted ahead of the port</strong> in commit <code>2729135a</code>. Its entire body was wrapped in <code>#ifdef seekg</code>; <code>seekg</code> is an <code>std::istream</code> member function, never a macro, so the guard could not be true and the function unconditionally returned <code>VK_NULL_HANDLE</code>. Its call site was equally unreachable, gated on <code>const bool loadShadersFromFile = false;</code>. Removing it first left the port one entry point to reproduce instead of two, and kept the <code>#ifdef</code> from being carried forward. Verified safe: no caller exists in any consumer tree (this one, ThreadedRenderingVk, aq-vulkan in either AQ repo, or the Chromium copy), and all four compile clean with the declaration gone.</p>
+
+<p><strong>A stale <code>#include &lt;shaderc/shaderc.hpp&gt;</code> in <code>VulkanVideoUtils.cpp</code>.</strong> The file references no shaderc symbol — it only uses <code>VulkanShaderCompiler</code> — but the include forces shaderc <em>headers</em> onto four additional targets that would otherwise be shaderc-free. Delete it.</p>
+
+<p><strong>The <code>&quot;shaderc_error&quot;</code> string literal</strong> passed as <code>compile_into_spv</code>'s <code>input_file_name</code> argument appears in diagnostics. glslang has no equivalent parameter; the shader name simply does not appear in the log, which is no worse — the current value is not a filename anyway.</p>
+
+<hr>
+
+<h2>7. Verification</h2>
+
+<p>The library has direct test coverage for exactly this path, which is the reason to do the port in the standalone tree first.</p>
+
+<ol>
+  <li><strong><code>vk_filter_test</code></strong> (<code>common/libs/tests/</code>) drives <code>VulkanFilterYuvCompute</code> through</li>
+</ol>
+
+<p><code>TestCases.cpp</code>, which has ~30 cases spanning <code>RGBA2YCBCR</code>, <code>YCBCR2RGBA</code>, <code>YCBCRCOPY</code>, <code>YCBCRCLEAR</code> and the three <code>XFER_*</code> transfer modes. Every one compiles GLSL at runtime through <code>VulkanShaderCompiler</code>. <strong>This is the primary acceptance gate.</strong></p>
+
+<ol>
+  <li><strong>A/B the emitted SPIR-V.</strong> Before/after on the same generated GLSL, disassembled with</li>
+</ol>
+
+<p><code>spirv-dis</code>. Expect non-identical output — shaderc and a bare glslang differ in generator magic number and can differ in ID numbering — so compare <em>behaviour</em>, not bytes: same entry point, same descriptor bindings, same <code>LocalSize</code>.</p>
+
+<ol>
+  <li><strong><code>vk-video-enc-test</code> with <code>--inputNumPlanes 3</code>.</strong> The 3-plane I420 path is the one that</li>
+</ol>
+
+<p>exercises the filter for real. Note it must be run with the filter enabled: with it compiled out this input hangs the GPU, verified on hardware — see the device-independence plan §8.1.</p>
+
+<ol>
+  <li><strong>The decoder's post-process filter</strong> (<code>--enablePostProcessFilter</code>) uses the same compiler and</li>
+</ol>
+
+<p>should be run too; it is ungated and so already active in every standalone build.</p>
+
+<p>Run each on <code>zlat-vm-gpu-ub-test</code> (RTX 5080 / RTX 3080 Ti, driver 620.05), which has glslang dev packages, Vulkan Video encode, and the project NFS-mounted at the same path.</p>
+
+<h3>Result (measured)</h3>
+
+<p>Run on <code>zlat-vm-gpu-ub-test</code>, RTX 5080, glslang 15.3.0, Release, both backends built from the same tree via <code>-DVK_VIDEO_SAMPLES_SHADER_BACKEND</code>:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Gate</th>
+    <th>shaderc</th>
+    <th>glslang</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>vk_filter_test --all</code></td>
+    <td>49/49 pass</td>
+    <td>49/49 pass</td>
+  </tr>
+  <tr>
+    <td>h264 3-plane I420 encode</td>
+    <td>md5 <code>4fac5fd7c1ae34d9</code></td>
+    <td><strong>identical</strong></td>
+  </tr>
+  <tr>
+    <td>hevc 3-plane I420 encode</td>
+    <td>md5 <code>5b72505586206e48</code></td>
+    <td><strong>identical</strong></td>
+  </tr>
+  <tr>
+    <td>av1 3-plane I420 encode</td>
+    <td>md5 <code>8e853d3f7cde68b1</code></td>
+    <td><strong>identical</strong></td>
+  </tr>
+  <tr>
+    <td>h264 2-plane encode</td>
+    <td>md5 <code>cccf92b8c4cfd78d</code></td>
+    <td><strong>identical</strong></td>
+  </tr>
+  <tr>
+    <td>decoder <code>--enablePostProcessFilter</code></td>
+    <td>md5 <code>e37503f6a91b1875</code></td>
+    <td><strong>identical</strong></td>
+  </tr>
+  <tr>
+    <td>build warnings</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+</tbody>
+</table>
+
+<p>Note what this does and does not say. The <em>encoded bitstreams and decoded output</em> are byte-identical, which is the end-to-end property that matters: the shaders behave identically through the whole filter path. It is not a claim that the SPIR-V modules are byte-identical — they are not expected to be (generator magic number, ID numbering), which is exactly why the comparison is done on encoder/decoder output rather than on the modules.</p>
+
+<p>The backend swap itself is confirmed in the binaries: the shaderc build links <code>libshaderc_shared.so.1</code> and exports <code>shaderc_compile_into_spv</code>; the glslang build has <strong>zero</strong> shaderc symbols.</p>
+
+<p>Two gotchas met while doing this. The decoder appends <code>.y4m</code> and renames the output when y4m is the format, so a harness looking for the exact <code>-o</code> name finds nothing and silently reports an empty result — check for the renamed file. And the filter's generated GLSL is only printed when <code>static bool dumpShaders</code> in <code>VulkanFilterYuvCompute.cpp</code> is flipped by hand; there is no CLI flag, so "the filter ran" has to be established from the 3-plane encode succeeding and from <code>vk_filter_test</code>, not from a log line.</p>
+
+<hr>
+
+<h2>8. Sequencing</h2>
+
+<ol>
+  <li>Port <code>VulkanShaderCompiler.cpp</code> to glslang; header and callers untouched.</li>
+  <li>Switch standalone CMake from shaderc to glslang; remove every shaderc link.</li>
+  <li>Green <code>vk_filter_test</code>, plus the encoder and decoder filter paths (§7).</li>
+  <li>Delete <code>BuildShaderFromFile</code> and its Android-path callers.</li>
+  <li>Roll into the Chromium vendored copy; add the GN deps and the filter sources; define the macro.</li>
+  <li>File the <code>Shipped: no → yes</code> flip for <code>third_party/glslang</code>.</li>
+</ol>
+
+<p>Steps 1–4 are entirely within the standalone library and deliver the "NVPRO samples use glslang" outcome on their own. Steps 5–6 are the Chromium consequence and can follow independently.</p>
+
+<hr>
+
+<h2>9. References</h2>
+
+<ul>
+  <li><a href="VULKAN_VIDEO_ENCODER_DEVICE_INDEPENDENCE_PLAN.md"><code>VULKAN_VIDEO_ENCODER_DEVICE_INDEPENDENCE_PLAN.md</code></a></li>
+</ul>
+
+<p>§3.4 (why the filter matters), §8.1 (the 3-plane hardware result)</p>
+
+<ul>
+  <li><a href="VULKAN_VIDEO_ENCODER_API_V2_DESIGN.md"><code>VULKAN_VIDEO_ENCODER_API_V2_DESIGN.md</code></a> — the A2 /</li>
+</ul>
+
+<p>P3-RGBA prerequisite sequence</p>
+
+<ul>
+  <li><code>visgarg/src/docs/media/gpu/vulkan_video_encode_design.md</code> §9 and §9.1 — the Chromium-side</li>
+</ul>
+
+<p>position and review cost</p>
+
+<ul>
+  <li>glslang API: <code>glslang/Public/ShaderLang.h</code>, <code>glslang/Public/ResourceLimits.h</code>,</li>
+</ul>
+
+<p><code>glslang/SPIRV/GlslangToSpv.h</code></p>
+
+</div>
+</article>
+
+<footer>
+    <div class="container">
+        <p></p>
+    </div>
+</footer>
+</body>
+</html>

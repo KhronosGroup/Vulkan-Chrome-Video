@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: 2026 The Khronos Group, Inc.
+SPDX-License-Identifier: Apache-2.0
+
+Generated from the Markdown source by build_blog.py — edit the .md, not this file.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulkan Video Encoder — Context and Renderer-Agnostic Interface Design</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-card: #1a2332;
+            --accent-vulkan: #ac2d2d;
+            --accent-vulkan-bright: #e05252;
+            --accent-chrome: #5b9bff;
+            --accent-nvidia: #8bd90a;
+            --accent-firefox: #ff9d3d;
+            --text-primary: #eef2f8;
+            --text-body: #d3dce8;
+            --text-secondary: #b3c0d1;
+            --text-muted: #8a97a8;
+            --border: #2d3a4f;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', system-ui, sans-serif; font-weight: 400;
+            background: var(--bg-primary); color: var(--text-body);
+            line-height: 1.75; font-size: 17px;
+        }
+        .bg-pattern {
+            position: fixed; inset: 0; z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(172, 45, 45, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 90%, rgba(66, 133, 244, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 40%, rgba(118, 185, 0, 0.05) 0%, transparent 60%);
+        }
+        .container { max-width: 980px; margin: 0 auto; padding: 0 1.5rem; }
+        header.hero { padding: 4rem 0 2.5rem; text-align: center; }
+        .logo-strip {
+            display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
+            margin-bottom: 2rem; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em;
+        }
+        .logo-strip span { padding: 0.4rem 0.8rem; border-radius: 4px; border: 1px solid var(--border); }
+        .logo-strip .vulkan { color: var(--accent-vulkan-bright); border-color: var(--accent-vulkan); }
+        .logo-strip .nvidia { color: var(--accent-nvidia); border-color: var(--accent-nvidia); }
+        .logo-strip .ff { color: var(--accent-firefox); border-color: var(--accent-firefox); }
+        .logo-strip .chrome { color: var(--accent-chrome); border-color: var(--accent-chrome); }
+        .hero-banner {
+            display: block; width: 100%; height: auto;
+            border-radius: 12px; margin-bottom: 2rem;
+        }
+        h1 {
+            font-size: 2.7rem; font-weight: 700; line-height: 1.15; margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .hero .dek { font-size: 1.2rem; color: var(--text-secondary); max-width: 760px; margin: 0 auto; }
+        .byline { margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        article { padding-bottom: 5rem; }
+        h2 {
+            font-size: 1.7rem; font-weight: 700; margin: 3.2rem 0 1.1rem; color: var(--text-primary);
+            padding-left: 0.9rem; border-left: 4px solid var(--accent-nvidia);
+        }
+        h2.ff { border-left-color: var(--accent-firefox); }
+        h2.cr { border-left-color: var(--accent-chrome); }
+        h2.vk { border-left-color: var(--accent-vulkan-bright); }
+        h3 { font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.7rem; color: var(--text-primary); }
+        p { margin-bottom: 1.1rem; color: var(--text-body); }
+        p strong, li strong { color: var(--text-primary); }
+        em { color: var(--text-primary); font-style: italic; }
+        ul, ol { margin: 0 0 1.1rem 1.5rem; color: var(--text-body); }
+        li { margin-bottom: 0.5rem; }
+        a { color: var(--accent-chrome); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 0.1rem 0.35rem; border-radius: 4px; color: #a8ecb2;
+        }
+        figure.diagram {
+            margin: 1.8rem 0; padding: 1rem; background: #ffffff;
+            border: 1px solid var(--border); border-radius: 12px; text-align: center;
+        }
+        figure.diagram img, figure.diagram object { max-width: 100%; height: auto; }
+        figure.diagram figcaption { margin-top: 0.6rem; font-size: 0.85rem; color: #475569; font-style: italic; }
+        blockquote.pull {
+            border-left: 4px solid var(--accent-vulkan-bright);
+            background: var(--bg-card); border-radius: 0 10px 10px 0;
+            padding: 1.1rem 1.4rem; margin: 1.6rem 0;
+            font-size: 1.03rem; color: var(--text-primary);
+        }
+        blockquote.pull p { color: var(--text-primary); margin: 0; }
+        table.doc {
+            width: 100%; border-collapse: collapse; margin: 1.8rem 0;
+            font-size: 0.95rem; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 10px;
+            overflow: hidden; display: table;
+        }
+        table.doc th, table.doc td {
+            padding: 0.68rem 0.9rem; text-align: left; vertical-align: top;
+            border-bottom: 1px solid var(--border);
+        }
+        table.doc thead th {
+            background: rgba(118, 185, 0, 0.10);
+            color: var(--text-primary); font-weight: 650;
+            border-bottom: 2px solid var(--accent-vulkan-bright);
+            white-space: nowrap;
+        }
+        table.doc tbody tr:last-child td { border-bottom: none; }
+        table.doc tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+        table.doc code { white-space: nowrap; }
+        @media (max-width: 720px) {
+            table.doc { display: block; overflow-x: auto; }
+        }
+        aside.takeaways {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-vulkan-bright);
+            border-radius: 0 12px 12px 0; padding: 1.4rem 1.7rem;
+            margin: 2.2rem 0 2.6rem;
+        }
+        aside.takeaways h2 {
+            font-size: 0.95rem; margin: 0 0 0.9rem; padding: 0; border-left: none;
+            font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--accent-vulkan-bright);
+        }
+        aside.takeaways ul { margin: 0 0 0 1.2rem; }
+        aside.takeaways li:last-child { margin-bottom: 0; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+        footer {
+            border-top: 1px solid var(--border); padding: 2rem 0 3.5rem;
+            color: var(--text-muted); font-size: 0.88rem; text-align: center;
+        }
+        @media (max-width: 700px) {
+            h1 { font-size: 1.9rem; }
+            /* Keep the Key Takeaways panel readable on a phone: the box and
+               list indents eat a lot of a 390px viewport at desktop padding. */
+            aside.takeaways { padding: 1.1rem 1.15rem; border-radius: 0 8px 8px 0; }
+            aside.takeaways ul { margin-left: 1rem; }
+            figure.diagram { padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<header class="hero">
+    <div class="container">
+        <div class="logo-strip">
+            
+        </div>
+        <h1>Vulkan Video Encoder — Context and Renderer-Agnostic Interface Design</h1>
+        <p class="dek">A refcounted encoder context that holds a live Vulkan instance and enumerated physical devices, answers capability queries without creating or destroying devices, and hands frames across as OS handles regardless of whether the browser renders with GL, D3D, Metal or Vulkan.</p>
+        <div class="byline"></div>
+    </div>
+</header>
+
+<article>
+<div class="container">
+
+<p><strong>Status:</strong> design — <strong>implemented by RC-5</strong>. The device-model demotion, the adopt-by-context interface, encode-site input adaptation and the glslang-enabled compute filter all landed; see <a href="VULKAN_VIDEO_ENCODER_RC5_REVIEW.md"><code>VULKAN_VIDEO_ENCODER_RC5_REVIEW.md</code></a> for the conformance table and the four open findings. <strong>Verified against:</strong> upstream Chromium <code>main</code>, fork <code>visgarg/src</code> RC-2, <code>vk_video_samples</code> RC-2, and <code>ThreadedRenderingVk_Standalone</code> (TRV) as the renderer-agnostic reference client.</p>
+
+<figure class="diagram">
+  <img src="diagrams/encoder_context_architecture.svg" alt="Context architecture" loading="lazy">
+  <figcaption>Context architecture</figcaption>
+</figure>
+
+<hr>
+
+<h2>1. Requirements and settled decisions</h2>
+
+<p><strong>R1 — Encoder context.</strong> A refcounted object, creatable in the same or a different process, holding a live Vulkan context so capabilities — supported codecs, profiles, formats, DRM modifiers, quality and rate-control modes — can be queried <strong>without repeatedly creating and destroying devices</strong>. It enumerates devices and is later used to create per-session device and queue contexts. It lives in the NVPRO library.</p>
+
+<p><strong>R2 — Renderer-agnostic.</strong> No assumption that the renderer is GL, D3D, Metal or Vulkan. Everything crosses as OS handles and/or IPC, as TRV already does.</p>
+
+<p>Decisions taken before this design and <strong>not</strong> re-opened here:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Decision</th>
+    <th>Consequence</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Reuse Chromium's out-of-process <code>VideoEncodeAcceleratorProvider</code></td>
+    <td>No new process model is invented</td>
+  </tr>
+  <tr>
+    <td>IPC/mojo marshalling stays in the browser</td>
+    <td>The library exports plain versioned data, never a transport</td>
+  </tr>
+  <tr>
+    <td>Capability queries stay cheap and synchronous</td>
+    <td><code>GetVideoEncodeAcceleratorSupportedProfiles()</code> is <code>[Sync]</code> on the wire — a requirement, not a preference</td>
+  </tr>
+  <tr>
+    <td>Refcounting is in-process only</td>
+    <td>Cross-process lifetime belongs to the mojo connection</td>
+  </tr>
+  <tr>
+    <td><strong>No new <code>pNext</code> extension mechanism</strong></td>
+    <td><code>pNext</code> only where Vulkan already owns it; everything we add projects onto <code>VideoEncodeAcceleratorSupportedProfile</code> / <code>VideoEncoderInfo</code></td>
+  </tr>
+  <tr>
+    <td>In-process first; cross-process is a later, separable stage</td>
+    <td>Stage 1–2 deliver value with no Chromium core change</td>
+  </tr>
+</tbody>
+</table>
+
+<p>The extensibility ruling has a useful side effect: it forces the library's capability output to be <strong>flat, serializable, versioned data</strong> rather than a live object graph — which is exactly what a <code>[Sync]</code> mojo call requires. The constraint and the transport agree, so it costs nothing.</p>
+
+<hr>
+
+<h2>2. Ground truth</h2>
+
+<h3>2.1 The OOP encode mechanism already exists</h3>
+
+<p>Three mojo interfaces, one per hop: <code>VideoEncodeAcceleratorProviderFactory</code> → <code>VideoEncodeAcceleratorProvider</code> → <code>VideoEncodeAccelerator</code>, all in <code>media/mojo/mojom/video_encode_accelerator.mojom</code>. The factory carries <code>[EnableIf=allow_linux_video_acceleration, ServiceSandbox=sandbox.mojom.Sandbox.kHardwareVideoEncoding]</code> at <code>:102-104</code>. Capability query is <code>[Sync] GetVideoEncodeAcceleratorSupportedProfiles()</code> at <code>:81</code>.</p>
+
+<p>The browser-side launcher is seven lines — <code>content/browser/media/video_encode_accelerator_provider_launcher.cc:13-15</code>, <code>ServiceProcessHost::Launch(...).WithDisplayName(&quot;Video Encoder&quot;)</code> — driven lazily from the renderer binder at <code>render_process_host_impl_receiver_bindings.cc:361-368</code> with <code>reset_on_disconnect()</code>, so a crash respawns on next bind.</p>
+
+<p><strong>Two gating facts that matter more than the interfaces:</strong></p>
+
+<ul>
+  <li><code>use_linux_video_acceleration = use_vaapi || use_v4l2_codec</code> (<code>media/gpu/args.gni:58</code>) is a</li>
+</ul>
+
+<p><strong>derived global, not a <code>declare_args</code> knob.</strong> A Vulkan-only build has no OOP encode sandbox type and no mojom interface at all. Making OOP work for Vulkan requires changing that expression — a named upstream dependency.</p>
+
+<ul>
+  <li><code>kUseOutOfProcessVideoEncoding</code> is <code>FEATURE_DISABLED_BY_DEFAULT</code></li>
+</ul>
+
+<p>(<code>media/base/media_switches.cc:1248</code>). The OOP path has effectively no field coverage on Linux. It is a foundation to build on, not a tested baseline.</p>
+
+<h3>2.2 The utility process is GPU-service-less, and that is good news</h3>
+
+<p><code>mojo_video_encode_accelerator_provider_factory.cc:40-45</code> constructs the provider with default <code>gpu::GpuPreferences()</code>, <code>gpu::GpuDriverBugWorkarounds()</code>, <code>gpu::GPUInfo::GPUDevice()</code> and <strong><code>/*media_gpu_channel_manager=*/nullptr</code></strong>. That null short-circuits <code>GetCommandBufferHelper()</code> at <code>mojo_video_encode_accelerator_provider.cc:47-49</code>. Consequence: <strong>no <code>GpuChannel</code>, no <code>CommandBufferStub</code>, no <code>SharedImageManager</code>, no <code>SharedContextState</code>, no <code>gpu::VulkanDeviceQueue</code>, and no Ozone.</strong></p>
+
+<p>It is not, however, GPU-<em>less</em>: <code>content/utility/utility_main.cc:151-165</code> runs <code>gpu::CollectBasicGraphicsInfo</code>, and the pre-sandbox hook opens the DRM render node (<code>media/gpu/sandbox/hardware_video_encoding_sandbox_hook_linux.cc:115</code>).</p>
+
+<p>This is the strongest architectural argument in the whole design. In that host there is no SharedImage to borrow a <code>VkImage</code> from, so <strong>input must arrive as dma-buf handles over mojo</strong> — which is the renderer-agnostic model, arriving for free. The two hosts differ in how a frame is <em>obtained</em>, not in what the library is <em>handed</em>. Design the handle contract first and treat in-process as the special case where the handle happens to come from a SharedImage.</p>
+
+<h3>2.3 Sandbox: the syscall layer is fine, the file broker is the blocker</h3>
+
+<p><code>kHardwareVideoEncoding</code> reuses the GPU policy outright — <code>sandbox/policy/linux/sandbox_seccomp_bpf_linux.cc:223-227</code> calls <code>GetGpuProcessSandbox(options, MremapPolicy::kBlock)</code>, and <code>bpf_gpu_policy_linux.cc:46-48,81-82</code> allow <code>IsDlopen(sysno)</code> and unrestricted <code>ioctl</code>. So loading an ICD and talking to a driver is permitted at the syscall level.</p>
+
+<p>What the hook permits today (<code>hardware_video_encoding_sandbox_hook_linux.cc</code>): V4L2 encoder nodes; <code>/dev/dri/renderD128..137</code> <strong><code>ReadOnly</code> unless AMD</strong> (<code>:86-88</code>); AMD-only <code>COMMAND_READLINK</code>, <code>/sys</code> access, <code>/usr/share/vulkan/icd.d</code> with a hardcoded <code>radeon_icd.x86_64.json</code> (<code>:72-75</code>), and AMD-only <code>dlopen(&quot;libvulkan.so.1&quot;)</code> (<code>:131-132</code>). <strong>Zero occurrences of <code>nvidia</code> in the file.</strong></p>
+
+<p>And a dead flag underneath it all: <code>content/utility/utility_main.cc:376</code> sets only <code>sandbox_options.use_amd_specific_policies</code>. <code>use_nvidia_specific_policies</code> is <strong>never computed for any utility process</strong>, unlike <code>content/gpu/gpu_main.cc:520</code>. So no NVIDIA branch is reachable there today, in either the hook or the BPF variant selection.</p>
+
+<p>The working port sidesteps all of this by staying in the GPU process and patching only <code>content/common/gpu_pre_sandbox_hook_linux.cc</code> — <code>/dev/nvidiactl</code> RW at <code>:525/:541</code>, <code>nvidia_icd.json</code> at <code>:511</code>, wired at <code>:782-783</code>. <code>hardware_video_encoding_sandbox_hook_linux.cc</code> is byte-identical to upstream across the whole branch.</p>
+
+<p><strong>Exact additive delta to host a Vulkan device in <code>kHardwareVideoEncoding</code>:</strong></p>
+
+<ol>
+  <li>Compute <code>use_nvidia_specific_policies</code> in <code>utility_main.cc</code> — prerequisite for everything else.</li>
+  <li><code>COMMAND_READLINK</code> for non-AMD (sysfs symlinks).</li>
+  <li><code>/dev/nvidiactl</code>, <code>/dev/nvidia0..9</code>, <code>/dev/nvidia-modeset</code> RW; <code>/proc/driver/nvidia/params</code> RO;</li>
+</ol>
+
+<p>upgrade <code>/dev/dri/renderD*</code> to <strong>ReadWrite</strong> for NVIDIA; <code>/dev/dri</code> directory RO.</p>
+
+<ol>
+  <li>ICD and layer manifests — <code>AddVulkanICDPermissions</code> currently lives only in <code>content/common</code></li>
+</ol>
+
+<p>and is not linked from <code>media/gpu/sandbox</code>; move it to a shared target or duplicate it.</p>
+
+<ol>
+  <li>Validate <code>MremapPolicy::kBlock</code> against the NVIDIA driver's unified-memory paths.</li>
+</ol>
+
+<p><code>/dev/nvidia-uvm</code> is <strong>not</strong> required — it appears nowhere in <code>content/</code>, <code>sandbox/</code> or <code>media/</code> in either tree, and the Vulkan path does not use it.</p>
+
+<h3>2.4 The library already has the phase split R1 needs</h3>
+
+<p><code>common/libs/VkCodecUtils/VulkanDeviceContext.cpp</code>:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Phase</th>
+    <th>Function</th>
+    <th>What it establishes</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>1</td>
+    <td><code>InitVulkanDevice</code> / <code>InitVkInstance</code></td>
+    <td><code>dlopen</code> (<code>:75</code>), <code>InitDispatchTableTop</code>, <code>vkCreateInstance</code>, <code>InitDispatchTableMiddle</code> (<code>:988-996</code>)</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><code>InitPhysicalDevice</code></td>
+    <td>enumerate + filter by <code>deviceID</code>/UUID (<code>:661-679</code>), queue-family probe, <code>PopulateDeviceExtensions()</code> (<code>:849</code>), <code>m_physDevice</code> (<code>:832</code>)</td>
+  </tr>
+  <tr>
+    <td>3–4</td>
+    <td><code>CreateVulkanDevice</code></td>
+    <td><code>InitDispatchTableBottom</code> (<code>:1190</code>), <code>GetDeviceQueue</code> (<code>:1210-1220</code>)</td>
+  </tr>
+</tbody>
+</table>
+
+<p><strong>Context = phases 1+2. Session = phases 3+4.</strong> No state needs re-partitioning, only relocating.</p>
+
+<p>Decisively: every <code>vkGetPhysicalDevice*</code> entry point the capability path needs is loaded at <strong>instance</strong> level in <code>InitDispatchTableMiddle</code> — <code>HelpersDispatchTable.cpp:96,99,102</code> for <code>VideoFormatPropertiesKHR</code>, <code>VideoCapabilitiesKHR</code>, <code>VideoEncodeQualityLevelPropertiesKHR</code>, and <code>:33-34</code> for <code>FormatProperties2</code>/<code>ImageFormatProperties2</code>. <strong>Capabilities need no <code>VkDevice</code></strong>, which is exactly what R1 asserts.</p>
+
+<p>The refcount idiom already exists — <code>VkVideoRefCountBase.h:22-28</code>, with <code>template&lt;class T&gt; using VkSharedBaseObj = std::shared_ptr&lt;T&gt;;</code> and the factory shape <code>VkResult Create…(…, VkSharedBaseObj&lt;T&gt;&amp; out)</code>. R1 gets thread-safe refcounting for free; do not invent one.</p>
+
+<p><strong>What must break:</strong> <code>VulkanVideoEncoderExtImpl</code> holds <code>VulkanDeviceContext m_vkDevCtx;</code> <strong>by value</strong> (<code>vulkan_video_encoder_ext.cpp:233</code>). That becomes a <code>VkSharedBaseObj&lt;VulkanVideoEncoderContext&gt;</code>.</p>
+
+<p><strong>What must not happen:</strong> do <em>not</em> make <code>VulkanDeviceContext</code> itself refcounted. Its destructor unconditionally <code>dlclose()</code>s (<code>:1319</code>) and destroys non-imported instances (<code>:1271-1301</code>). Wrap that ownership once, inside the context, and never let it run in a Chromium process — Chromium's <code>gpu::VulkanFunctionPointers</code> are bound to the same library.</p>
+
+<p><strong>Device enumeration does not exist.</strong> <code>InitPhysicalDevice</code> is a first-match selector with <code>deviceId</code>/UUID filters; nothing returns a device list or a per-device capability array. R1's enumeration requirement is net-new API. Note <code>deviceId</code> matches <code>VkPhysicalDeviceProperties::deviceID</code>, not an ordinal — it cannot disambiguate two identical GPUs, so <code>gpuUUID</code> is the real selector.</p>
+
+<h3>2.5 What the capability path does today, and what a context fixes</h3>
+
+<p><code>media/gpu/vulkan/vulkan_video_encode_capability_enumerator.cc</code> loops a five-entry candidate table (<code>:82-98</code> — H.264 Baseline/Main/High, HEVC Main, AV1 Main) calling <code>…ProfileCapabilitiesEphemeral(/*deviceId=*/-1, …)</code> at <code>:220-221</code>. Each call builds a fresh <code>VulkanDeviceContext</code>: <code>dlopen</code> + layer/extension enumeration + <code>vkCreateInstance</code> + <code>vkEnumeratePhysicalDevices</code> + per-device extension enumeration + the capability query, then <code>vkDestroyInstance</code> + <code>dlclose</code>. <strong>Five full loader and instance bring-ups per cache computation.</strong> No <code>VkDevice</code> is ever created.</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>#</th>
+    <th>Defect</th>
+    <th>Fixed by a persistent context?</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>D1</td>
+    <td>Five loader/instance bring-ups per computation</td>
+    <td><strong>Yes</strong> — becomes five <code>vkGetPhysicalDeviceVideoCapabilitiesKHR</code> calls</td>
+  </tr>
+  <tr>
+    <td>D2</td>
+    <td>The cost is asserted, never measured — no <code>TRACE_EVENT</code>, timer or UMA on the path</td>
+    <td><strong>No.</strong> Instrument before claiming the win</td>
+  </tr>
+  <tr>
+    <td>D3</td>
+    <td>Unsynchronised lazy cache fill; the comment claims GPU-main-thread callers (<code>:336-338</code>) but production callers are per-provider ThreadPool sequences (<code>gpu_service_impl.cc:654</code>)</td>
+    <td><strong>No</strong> — refcounting does not serialise. Publish an immutable snapshot built in the constructor</td>
+  </tr>
+  <tr>
+    <td>D4</td>
+    <td>Hand-rolled cache invalidation via <code>IsProbeInfraFailure()</code> (<code>:150-167</code>)</td>
+    <td><strong>Yes, structurally</strong> — cache lifetime becomes context generation</td>
+  </tr>
+  <tr>
+    <td>D5</td>
+    <td>The probe uses "first capable device"; the encode uses Chromium's BYO device</td>
+    <td><strong>Yes</strong> — same <code>VkPhysicalDevice</code> probed and used</td>
+  </tr>
+  <tr>
+    <td>D6</td>
+    <td><code>Initialize()</code> returns <code>kOk</code> with <code>initialized_=true</code> before it knows it has a device, so the factory selects Vulkan ahead of VA-API (<code>gpu_video_encode_accelerator_factory.cc:186</code> vs <code>:189</code>) and the refusal arrives later via <code>NotifyTerminalError</code>, bypassing fallback</td>
+    <td><strong>Yes, if the accessor is synchronous</strong> — deletes <code>helper_fetch_pending_</code> / <code>async_init_pending_</code> / <code>pending_init_config_</code></td>
+  </tr>
+  <tr>
+    <td>D7</td>
+    <td>Field fidelity: only min/max resolution and <code>rate_control_modes</code> are probe data. <code>max_framerate</code> is hardcoded 60/1 (<code>:49,:184-185</code>), <code>scalability_modes</code> hardcoded <code>{kL1T1}</code> (<code>:267</code>)</td>
+    <td><strong>No</strong> — policy work, see §3.3</td>
+  </tr>
+  <tr>
+    <td>D8</td>
+    <td><strong>The BYO capability entry point is broken.</strong> It passes <code>requestQueueTypes = 0</code> (<code>vulkan_video_encoder_ext.cpp:4968-4972</code>), and <code>InitPhysicalDevice</code> <code>continue</code>s when <code>(queueFamilyFlags &amp; requestQueueTypes) == 0</code> (<code>VulkanDeviceContext.cpp:726-728</code>), so <code>m_physDevice</code> stays null and it returns <code>VK_ERROR_FEATURE_NOT_PRESENT</code></td>
+    <td><strong>Prerequisite, not a fix</strong> — must be repaired first</td>
+  </tr>
+</tbody>
+</table>
+
+<p>D8 is worth dwelling on: the entry point this design most wants to build on has never worked. The only test (<code>vulkan_video_encode_accelerator_unittest.cc:4244-4267</code>) exercises the <code>sType</code>/<code>pNext</code> gate and returns before any Vulkan work, and the samples repo has no caller at all. The honest repair is an <em>adopt</em> entry point that skips queue selection entirely — when the caller supplies the physical device there is nothing to select.</p>
+
+<h3>2.6 The handle vocabulary, and where it constrains R2</h3>
+
+<p><code>vulkan_video_encoder_ext.h:261-272</code> defines <code>NONE</code>, <code>OPAQUE_FD</code>, <code>DMA_BUF</code>, <code>OPAQUE_WIN32</code>, <code>D3D11_TEXTURE</code>, <code>VK_IMAGE</code>, with <code>TRANSFER</code>/<code>BORROW</code> ownership at <code>:258-259</code>.</p>
+
+<p>Scoping is enforced at <code>vulkan_video_encoder_ext.cpp:3802-3841</code>: <strong><code>DMA_BUF</code> is the only cross-driver-legal type</strong>; the opaque types fail <code>DEVICE_MISMATCH</code> on <code>driverUUID</code>/<code>deviceLUID</code> mismatch; <code>VK_IMAGE</code> is same-<code>VkDevice</code>-only.</p>
+
+<p>The decisive asymmetry for R2 is <strong>memory-type derivation</strong>. <code>memoryTypeIndex == UINT32_MAX</code> (exporter's Vulkan parameters unknown — which is <em>always</em> true for a GL or D3D exporter) is legal for <code>DMA_BUF</code> via <code>vkGetMemoryFdPropertiesKHR</code> (<code>:3057-3069</code>) and for <code>D3D11_TEXTURE</code> via <code>vkGetMemoryWin32HandlePropertiesKHR</code> (<code>:3105-3121</code>), but is a hard <code>MEMORY_TYPE_UNSUPPORTED</code> for <code>OPAQUE_WIN32</code> (<code>:3091-3097</code>) and unusable for <code>OPAQUE_FD</code> (<code>:3081</code>).</p>
+
+<blockquote class="pull"><p><strong>Therefore R2 has exactly two renderer-agnostic transports: dma-buf on Linux and D3D11 shared NT handles on Windows.</strong> The opaque types require a Vulkan exporter that ships its own <code>memoryTypeIndex</code>, and are therefore Vulkan-to-Vulkan optimisations, not general transports.</p></blockquote>
+
+<p>A second constraint: <code>imageUsage == 0</code> is rejected as <code>USAGE_INSUFFICIENT</code> (<code>:3632-3636</code>) for every non-<code>VK_IMAGE</code> type, and the descriptor is documented as carrying "the exporter's ACTUAL <code>VkImageCreateInfo</code>. Never guessed" (<code>vulkan_video_encoder_ext.h:327</code>) — which a GL or D3D exporter cannot honour. §3.4 resolves this.</p>
+
+<p>On the Chromium side, dma-buf export is genuinely orthogonal to the compositor API: <code>OzoneImageBacking::GetGpuMemoryBufferHandle()</code> returns <code>pixmap_-&gt;ExportHandle()</code> (<code>ozone_image_backing.cc:129-131</code>) regardless of <code>GrContextType</code>. Only NativePixmap-backed SharedImages export — the base <code>SharedImageBacking::GetGpuMemoryBufferHandle</code> is <code>NOTREACHED()</code>.</p>
+
+<hr>
+
+<h2>3. Design</h2>
+
+<h3>3.1 The context object</h3>
+
+<p>```c // Opaque, refcounted, immutable after construction. typedef struct VulkanVideoEncoderContext VulkanVideoEncoderContext;</p>
+
+<p>typedef enum VkVideoEncoderContextMode { // Create and own VkInstance + enumerate physical devices. VK_VIDEO_ENCODER_CONTEXT_MODE_OWN    = 0, // Borrow an instance and physical device the embedder already has. // Nothing is created and nothing is destroyed on release. VK_VIDEO_ENCODER_CONTEXT_MODE_ADOPT  = 1, } VkVideoEncoderContextMode;</p>
+
+<p>typedef struct VkVideoEncoderContextCreateInfo { VkStructureType             sType; const void*                 pNext; VkVideoEncoderContextMode   mode; // ADOPT only. Both required together; either alone is an error. VkInstance                  adoptInstance; VkPhysicalDevice            adoptPhysicalDevice; // OWN only. All-zero UUID means "enumerate everything". uint8_t                     gpuUUID[VK_UUID_SIZE]; VkBool32                    silenceStdio; } VkVideoEncoderContextCreateInfo;</p>
+
+<p>VkResult CreateVulkanVideoEncoderContext( const VkVideoEncoderContextCreateInfo*      pCreateInfo, VkSharedBaseObj&lt;VulkanVideoEncoderContext&gt;&amp; outContext); ```</p>
+
+<p><strong>Lifetime rules, each derived from a specific hazard:</strong></p>
+
+<ol>
+  <li><strong>Never <code>dlclose</code>.</strong> Chromium's <code>gpu::VulkanFunctionPointers</code> bind the same <code>libvulkan.so.1</code>.</li>
+</ol>
+
+<p>The context owns the handle for the process lifetime.</p>
+
+<ol>
+  <li><strong>The refcount must not reach zero and re-create.</strong> Dropping to zero and re-creating re-issues</li>
+</ol>
+
+<p><code>vkCreateInstance</code> <em>after</em> sandbox lockdown — ICD manifest re-reads, <code>/dev/nvidiactl</code> re-open, <code>/sys</code> PCI reads — and any one broker denial is a device loss. Hold a <strong>leaky floor reference</strong> (<code>base::NoDestructor</code> on the browser side) with per-encoder references layered on top. Teardown releases sessions and images, never the instance.</p>
+
+<ol>
+  <li><strong>Immutable after construction.</strong> The capability snapshot is built inside the constructor</li>
+</ol>
+
+<p>under the construction lock and is thereafter read-only, so several sequences can share it without synchronisation. This is what fixes D3; refcounting alone would not.</p>
+
+<ol>
+  <li><strong>ADOPT never destroys.</strong> In ADOPT mode release is a no-op on the Vulkan objects.</li>
+  <li><strong>Refcount identity is the <code>(VkInstance, VkPhysicalDevice, VkDevice)</code> triple.</strong> Stamp a context</li>
+</ol>
+
+<p>epoch into the high bits of the generation-counted <code>VkVideoEncoderResource</code> id, so a resource minted on context A is rejected on context B rather than silently matching a recycled slot.</p>
+
+<ol>
+  <li><strong>The VEA currently caches <code>gpu::VulkanDeviceQueue*</code> as a raw pointer</strong> because the GPU-process</li>
+</ol>
+
+<p>root outlives it. Once ownership moves to the context, the context must be provably longer-lived than every VEA or that pointer becomes a use-after-free.</p>
+
+<p>Host A may use either mode; Host B must use OWN.</p>
+
+<h3>3.2 Capability query and device enumeration</h3>
+
+<p>```c uint32_t VkEncGetPhysicalDeviceCount(VulkanVideoEncoderContext* ctx);</p>
+
+<p>// Stable identity across processes and runs. deviceID alone cannot // disambiguate two identical GPUs; the UUID can. VkResult VkEncGetPhysicalDeviceIdentity( VulkanVideoEncoderContext* ctx, uint32_t deviceIndex, VkVideoEncoderDeviceIdentity* pOut);   // deviceUUID, driverUUID, name, vendorID</p>
+
+<p>VkResult VkEncGetEncodeCapabilities( VulkanVideoEncoderContext* ctx, uint32_t deviceIndex, VkVideoCodecOperationFlagBitsKHR codec, StdVideoProfile profile, VkVideoEncoderEncodeCapabilities* pOut);</p>
+
+<p>// Answerable WITHOUT a session -- required, because the producer picks a // modifier at allocation time, long before any encoder exists. VkResult VkEncEnumerateDrmModifiers( VulkanVideoEncoderContext* ctx, uint32_t deviceIndex, VkFormat format, VkImageUsageFlags usage, uint32_t* pCount, uint64_t* pModifiers); ```</p>
+
+<p>Two existing queries are gated on <code>m_initialized</code> today and must move onto the context, because both need only a physical device: <code>EnumerateDrmModifiers</code> (<code>vulkan_video_encoder_ext.cpp:3415-3439</code>) and the <code>filterCapable</code> half of <code>FillImageSupportDetails</code> (<code>:3525-3568</code>). <code>ModifierWouldRegister</code> (<code>:3441</code>) is already device-independent.</p>
+
+<p><strong>Compatibility:</strong> the four existing <code>Enumerate*</code> functions are <code>extern &quot;C&quot;</code> exports under <code>VK_VIDEO_ENCODER_EXT_API_VERSION 5</code> (<code>vulkan_video_encoder_ext.h:64</code>), whose own rule at <code>:26</code> says a compatibility break bumps the version. Keep them as thin wrappers that build a throwaway context, so the vendored copy migrates without a flag day.</p>
+
+<h3>3.3 The capability projection — and the ruling the extensibility decision forces</h3>
+
+<p>The library queries the full Vulkan capability chain, then <strong>projects it down</strong> to the flat properties Chromium understands. That projection is where honesty problems live: today some <code>SupportedProfile</code> fields are real probe data and others are constants, with nothing marking which is which.</p>
+
+<p><code>VideoEncodeAccelerator::SupportedProfile</code> has ten fields (<code>media/video/video_encode_accelerator.h:218-226</code>), mirrored 1:1 in <code>video_encode_accelerator.mojom:47-58</code> with traits at <code>video_encode_accelerator_mojom_traits.h:33,101</code> and a typemap at <code>media/mojo/mojom/BUILD.gn:967</code>. <code>VideoEncoderInfo</code> carries the post-init half.</p>
+
+<p><strong>Neither surface can express a DRM-modifier list, per-physical-device identity, <code>maxQualityLevels</code> or <code>maxBitrate</code>.</strong> The port currently keeps the last two in private side-maps inside the enumerator cache. Since we ruled out inventing a parallel extension mechanism, every such property needs an explicit per-property ruling:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Property</th>
+    <th>Ruling</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>maxQualityLevels</code>, <code>maxBitrate</code></td>
+    <td><strong>In-process only.</strong> Negotiated in-band at <code>Initialize()</code>; never crosses the capability wire</td>
+  </tr>
+  <tr>
+    <td>Per-device identity (<code>deviceUUID</code>)</td>
+    <td><strong>In-process only</strong> for now. If OOP needs device selection, it becomes an argument to the provider, not a property</td>
+  </tr>
+  <tr>
+    <td><strong>DRM modifier list</strong></td>
+    <td><strong>Does not cross the capability wire at all.</strong> Resolved at the allocation site instead — see §3.3.1</td>
+  </tr>
+  <tr>
+    <td><code>max_framerate</code>, <code>scalability_modes</code></td>
+    <td>Populate from real probes rather than the current constants (D7). No new surface needed — the fields already exist</td>
+  </tr>
+</tbody>
+</table>
+
+<p>Note the adapter corrects <code>supports_gpu_shared_images</code> after the fact via <code>NotifyEncoderInfoChange</code> (<code>video_encode_accelerator_adapter.cc:1043-1044</code>), so a wrong initial value costs extra copies on early frames rather than being permanent — which sets the precedent that <em>initially-conservative, corrected-later</em> is acceptable for this class of property.</p>
+
+<h3>3.3.1 What negotiation is for — and what it is not</h3>
+
+<p><strong>This interface does not expose a Vulkan device.</strong> It exchanges frames and formats. Nothing in it hands a <code>VkDevice</code>, <code>VkImage</code> or queue to the embedder, and nothing requires the embedder to own one.</p>
+
+<p><strong>Negotiation exists for exactly one purpose: to find out whether a zero-copy path between the producer and the encoder is possible, and if so which format and modifier achieve it.</strong> It is an optimisation search, not a compatibility gate. When it fails, nothing breaks — the library adapts (§3.4.1).</p>
+
+<p>Measured on an RTX 5080, driver 620.05, via <code>vkGetPhysicalDeviceVideoFormatPropertiesKHR</code> with <code>VIDEO_ENCODE_SRC</code> usage:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Codec</th>
+    <th>Accepted encode-source formats</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>H.264</td>
+    <td><strong>NV12 <code>OPTIMAL</code> — and nothing else</strong></td>
+  </tr>
+  <tr>
+    <td>H.265</td>
+    <td><strong>NV12 <code>OPTIMAL</code> — and nothing else</strong></td>
+  </tr>
+  <tr>
+    <td>AV1</td>
+    <td><strong>NV12 <code>OPTIMAL</code> — and nothing else</strong></td>
+  </tr>
+</tbody>
+</table>
+
+<p>So on contemporary hardware <strong>an RGB producer can never achieve zero-copy.</strong> Not "usually not" — there is no accepted RGB encode-source format at all, for any of the three codecs. Combined with the modifier data below (LINEAR NV12 does not advertise <code>VIDEO_ENCODE_INPUT</code>; five block-linear modifiers do), the zero-copy set on this device is exactly: <em>NV12, block-linear modifier, <code>VIDEO_ENCODE_SRC</code> usage.</em> Everything else is adaptation.</p>
+
+<p>That yields the negotiation outcome hierarchy, in order of preference:</p>
+
+<ol>
+  <li><strong>The producer's native format and modifier are already encodable</strong> → true zero-copy. Reachable</li>
+</ol>
+
+<p>only when the producer is producing NV12 on a block-linear modifier.</p>
+
+<ol>
+  <li><strong>No zero-copy format exists</strong> → choose a <strong>direct render format</strong>: the format the producer can</li>
+</ol>
+
+<p>render into <em>natively, with no producer-side conversion</em>, and let the library perform the single adaptation at the encode site. <strong>The goal here is to avoid a copy on both sides</strong>, not to force the producer toward the encoder's format.</p>
+
+<ol>
+  <li>Only if the producer cannot render the chosen format natively does a producer-side conversion</li>
+</ol>
+
+<p>become justified — and that should be treated as a negotiation failure worth logging.</p>
+
+<p><strong>Why outcome 2 matters concretely in Chromium.</strong> Today the RGBA path runs <code>WebGraphicsContext3DVideoFramePool::CopyRGBATextureToVideoFrame</code> — a producer-side GPU blit into a pooled NV12 shared image — and the encoder may then stage that image again. That is the copy-on-both-sides case. The correct resolution under this design is the opposite: <strong>let the producer keep RGBA</strong>, which is its native render target and therefore free, and let the library do the one RGBA → NV12 conversion on the encode side. One pass instead of two, and one fewer pooled allocation.</p>
+
+<p><strong>If a future device does accept RGB encode input, the library uses it and the negotiation simply succeeds at outcome 1.</strong> Nothing in the design has to change — that is the point of making negotiation a search over what the real device reports rather than a hardcoded format list.</p>
+
+<h3>3.3.2 DRM modifiers: do not negotiate them separately, filter at allocation</h3>
+
+<p>Having established what negotiation is <em>for</em>, the modifier half of it turns out to need no new protocol at all. This looked like the forcing case for a new capability field. It is not, and the reason is worth recording because two plausible designs are both wrong.</p>
+
+<p><strong>What TRV does: it removes the negotiation rather than solving it.</strong> Three decisions, none involving the encoder. The consumer's requirement is declared out-of-band before allocation (a CLI spec setting <code>encoderTarget</code>, <code>ThreadedRenderingVk.cpp:2076</code>). The <em>producer</em> then resolves the modifier against the driver on its own physical device — <code>selectBestDrmModifier()</code> (<code>ExternalMemory.h:398</code>) → <code>queryDrmModifiers()</code> (<code>:338</code>) → <code>vkGetPhysicalDeviceFormatProperties2</code> with <code>VkDrmFormatModifierPropertiesListEXT</code> (<code>:352</code>), called from <code>createOutputPool()</code> (<code>PostProcessFilter.cpp:467</code>). And the ordering makes the question unaskable anyway: <code>initPostProcessFilter()</code> runs at <code>ThreadedRenderingVk.cpp:1644-1646</code>, while <code>initMultiWindow()</code> — which forks the encoder process — runs at <code>:1706</code>. Allocation and export are complete before the consumer exists. The modifier then rides the IPC <code>FrameData</code> (<code>PresenterInstance.h:107-114</code>). On mismatch there is no renegotiation: <code>vkCreateImage</code> fails (<code>EncoderInstance.cpp:2232</code>) and the frame is dropped (<code>:2422-2430</code>).</p>
+
+<p><strong>Why "ask the encoder instead of advertising" does not work.</strong> The library ships a renegotiation surface — <code>MODIFIER_UNSUPPORTED</code> (<code>vulkan_video_encoder_ext.cpp:3853</code>) and a <code>directModifiers</code> "modifiers that would work" list (<code>:3581</code>) — but <code>QueryImageSupport</code>, <code>RegisterImageResource</code> and <code>SubmitRegisteredFrame</code> have <strong>zero callers repo-wide</strong>, and the physical-device half of <code>ValidateImageDescriptor</code> is gated on <code>m_initialized</code> (<code>:3685</code>), which is set only after <code>CreateVideoEncoder</code> (<code>:1461</code>). <strong>The library cannot answer a modifier question before a session exists.</strong> So the predicate-shaped API that would have made this a mojo method rather than a struct field is not usable today.</p>
+
+<p><strong>The ruling — neither of those. Chromium already has the mechanism, in the right process, at the right call site, with zero wire cost:</strong></p>
+
+<ul>
+  <li><code>ui::DrmModifiersFilter</code> (<code>ui/ozone/public/drm_modifiers_filter.h:30-37</code>) — the abstraction,</li>
+</ul>
+
+<p>whose header comment describes exactly this problem for a Vulkan consumer.</p>
+
+<ul>
+  <li><code>DrmModifiersFilterVulkan::Filter()</code></li>
+</ul>
+
+<p>(<code>gpu/command_buffer/service/drm_modifiers_filter_vulkan.cc:74-96</code>) — queries <code>VkDrmFormatModifierPropertiesEXT</code> on the physical device and intersects. This <em>is</em> <code>selectBestDrmModifier</code> under a different name.</p>
+
+<ul>
+  <li>Installed at <code>gpu/ipc/service/gpu_init.cc:940-953</code>, holding the same <code>VulkanImplementation</code> the</li>
+</ul>
+
+<p>encoder will use.</p>
+
+<ul>
+  <li>Consumed <strong>at allocation</strong>: <code>ui/ozone/platform/wayland/gpu/gbm_pixmap_wayland.cc:60</code> →</li>
+</ul>
+
+<p><code>CreateBufferWithModifiers</code> at <code>:77-78</code>.</p>
+
+<p>The out-of-band consumer declaration TRV hand-rolled in <code>argv</code> also already exists end to end: <code>NativePixmapUsage::kHWVideoEncoder</code> — <em>"Buffer will be read by a video encode accelerator"</em> (<code>ui/ozone/public/native_pixmap_usage.h:31-32</code>) — reached from <code>gfx::BufferUsage::VEA_READ_CAMERA_AND_CPU_READ_WRITE</code>, which WebRTC already passes (<code>rtc_video_encoder.cc:677</code>), arriving at the allocation site as <code>NativePixmapUsageSet usage</code> (<code>gbm_pixmap_wayland.cc:44</code>).</p>
+
+<p><strong>So the gap is one plumbing edit, not a negotiation protocol.</strong> Nothing crosses mojo, nothing is added to <code>SupportedProfile</code>, and it works identically whether the encoder is in-process or out — because the filtering happens in the GPU process where the allocator lives, in both cases.</p>
+
+<blockquote class="pull"><p><strong>Availability caveat, added after RC-5.</strong> The mechanism exists but is not unconditionally available. <code>DrmModifiersFilterVulkan</code> is installed only when <code>gpu_feature_info_.status_values[GPU_FEATURE_TYPE_VULKAN] == kGpuFeatureStatusEnabled</code> (<code>gpu/ipc/service/gpu_init.cc:978-990</code>) — that is, <strong>only when the compositor is Vulkan</strong>. Under the default GL compositor, which is the configuration this whole design exists to serve, no filter is installed and nothing constrains the modifiers the producer allocates with. An earlier revision of this section said "one plumbing edit"; the edit is real but it has to make the constraint available on a non-Vulkan compositor, which is more than rewiring an existing call. See <a href="VULKAN_VIDEO_ENCODER_RC5_REVIEW.md"><code>VULKAN_VIDEO_ENCODER_RC5_REVIEW.md</code></a> §2 F2.</p></blockquote>
+
+<p><strong>Why a field on <code>SupportedProfile</code> is an adjunct at best.</strong> It is cheaper than it sounds — <code>gpu_supported_pixel_formats</code> and <code>supports_gpu_shared_images</code> are precisely this shape and were added precisely this way, and <code>gpu::VideoEncodeAcceleratorSupportedProfile</code> (<code>gpu/config/gpu_info.h:184-191</code>) is already a lossy subset that drops such fields silently, so it does not metastasise into <code>about:gpu</code>. But <code>SupportedProfile</code> travels <strong>renderer → GPU</strong>, so it reaches the allocator only where the <em>renderer</em> allocates. WebRTC does; the compositor, capture and tab-share producers live in viz and never see one. It covers the case the question was not about.</p>
+
+<p><strong>Why a negotiation call on the provider is wrong outright.</strong> It answers on the wrong side of the process boundary — the entity that must consume a modifier list is the GBM/Ozone allocator in the GPU process, and that interface's client is the renderer, so the answer ships away from the consumer and must be shipped back. It also duplicates <code>GetVideoEncodeAcceleratorSupportedProfiles()</code>, giving one question two sources of truth with different cache lifetimes.</p>
+
+<p><strong><code>ModifierWouldRegister</code> omits <code>VkVideoProfileListInfoKHR</code> from its <code>vkGetPhysicalDeviceImageFormatProperties2</code> query, and that is fine.</strong> It reads like a violation of <code>VUID-VkPhysicalDeviceImageFormatInfo2-pNext-06813</code>, so it was tested rather than assumed — probed on an RTX 5080 (driver 620.05) under validation layer 1.4.313, with a <code>usage = 0</code> control proving the harness does catch VUIDs:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Query form</th>
+    <th>Result</th>
+    <th>Validation</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>No profile list, no <code>VIDEO_PROFILE_INDEPENDENT</code> — what the library does</td>
+    <td><code>VK_SUCCESS</code>, importable</td>
+    <td>clean</td>
+  </tr>
+  <tr>
+    <td>No profile list, with <code>VIDEO_PROFILE_INDEPENDENT</code></td>
+    <td><code>VK_SUCCESS</code>, importable</td>
+    <td>clean</td>
+  </tr>
+  <tr>
+    <td>With profile list — by the book</td>
+    <td><code>VK_SUCCESS</code>, importable</td>
+    <td>clean</td>
+  </tr>
+  <tr>
+    <td><strong>Control:</strong> <code>usage = 0</code></td>
+    <td>—</td>
+    <td><code>VUID-…-usage-requiredbitmask</code> fires</td>
+  </tr>
+</tbody>
+</table>
+
+<p>Validation does not flag the omission and the driver returns an identical verdict either way. <code>VK_IMAGE_CREATE_VIDEO_PROFILE_INDEPENDENT_BIT_KHR</code> (from <code>VK_KHR_video_maintenance1</code>, which the library already uses at <code>VulkanVideoImagePool.cpp:376</code>) exists precisely to lift that requirement. The query shape is sound as written.</p>
+
+<p><strong>What the probe did establish — measured NV12 modifier support on RTX 5080:</strong></p>
+
+<p>``<code> 0x0300000000606011 .. 0x0300000000606015   planes=2   VIDEO_ENCODE_INPUT: YES   (block-linear) 0x0000000000000000 (LINEAR)                planes=2   VIDEO_ENCODE_INPUT: no </code>``</p>
+
+<p><strong>LINEAR is not an encode source on this driver.</strong> A linear image can never be encoded directly, whatever device it lives on. That is not a limitation of the separate-device design — it is the normal case, and it is what §3.4.1 exists to handle.</p>
+
+<h3>3.4 The handle-exchange contract (R2)</h3>
+
+<p><strong>Transports.</strong> dma-buf on Linux and D3D11 shared NT handles on Windows are the renderer-agnostic pair (§2.6). <code>OPAQUE_FD</code>/<code>OPAQUE_WIN32</code> remain available as Vulkan-to-Vulkan optimisations and must be documented as such rather than as general transports.</p>
+
+<p><strong>The abstraction is not a common field set — it is a set of per-handle-type rules over one field set.</strong> That framing resolves both things a non-Vulkan producer supposedly cannot supply, and it means no "derive mode" or other new descriptor surface is needed for them.</p>
+
+<p><strong><code>memoryTypeIndex</code>: a non-Vulkan producer satisfies it by not supplying it.</strong> The rule is per-arm (<code>vulkan_video_encoder_ext.cpp:3032-3128</code>):</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Arm</th>
+    <th>Authoritative source</th>
+    <th>Producer's <code>memoryTypeIndex</code></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>DMA_BUF</code></td>
+    <td><code>vkGetMemoryFdPropertiesKHR</code> (<code>:3064-3070</code>), intersected with <code>memReqs.memoryTypeBits</code></td>
+    <td><strong>Preference only.</strong> <code>UINT32_MAX</code> legal; the heuristic fallback is logged, never silent (<code>:3072-3077</code>)</td>
+  </tr>
+  <tr>
+    <td><code>D3D11_TEXTURE</code></td>
+    <td><code>vkGetMemoryWin32HandlePropertiesKHR</code> (<code>:3106-3110</code>)</td>
+    <td>Not needed; if the query fails the library refuses to guess on WDDM (<code>:3111-3120</code>)</td>
+  </tr>
+  <tr>
+    <td><code>OPAQUE_FD</code></td>
+    <td>forbidden to query by spec</td>
+    <td><code>exporterIndexExact = TRUE</code> (<code>:3081</code>)</td>
+  </tr>
+  <tr>
+    <td><code>OPAQUE_WIN32</code></td>
+    <td>forbidden to query by spec</td>
+    <td><strong>Required</strong>; <code>UINT32_MAX</code> → <code>MEMORY_TYPE_UNSUPPORTED</code> (<code>:3090-3098</code>)</td>
+  </tr>
+</tbody>
+</table>
+
+<p>So the contract is <em>"a non-Vulkan producer may use only <code>DMA_BUF</code> or <code>D3D11_TEXTURE</code>; the opaque arms are Vulkan-exporter-only."</em> The opaque arms exist precisely because there the exporter's allocation parameters are the only legal ones — a statement only a Vulkan exporter can make.</p>
+
+<p>Note <strong>TRV is the counterexample here, not the model</strong>: <code>EncoderInstance.cpp:1981</code> assigns <code>allocInfo.memoryTypeIndex = frame.memoryTypeIndex</code> unconditionally, and <code>ExternalMemory.h:526-544</code> picks the first <code>DEVICE_LOCAL</code> type without calling <code>vkGetMemoryFdPropertiesKHR</code> at all. TRV's own audit flags this (<code>docs/proj-status/RELEASE_AUDIT_2026-07-23.md:227</code>); it survives only because both TRV processes sit on one physical GPU.</p>
+
+<p><strong><code>imageUsage</code>: it is the importer's declared minimal intent, not the exporter's usage.</strong> For a GBM/Ozone producer there is no <code>VkImageCreateInfo</code> to transport. The descriptor splits into a transported half and a derived half:</p>
+
+<ul>
+  <li><em>Transported, API-neutral, and already exactly Chromium's wire:</em> <code>format</code>, extent,</li>
+</ul>
+
+<p><code>tiling = DRM_FORMAT_MODIFIER</code>, <code>hasDrmFormatModifier</code> + <code>drmFormatModifier</code> (<code>vulkan_video_encoder_ext.h:347-348</code>), and explicit <code>planeLayouts[]</code> (<code>:357</code>). Every one is carried by <code>gfx::NativePixmapHandle</code> already (<code>ui/gfx/mojom/native_handle_types.mojom:12,23-27</code>). Field copy in both directions.</p>
+
+<ul>
+  <li><em>Not transportable:</em> <code>imageUsage</code> and <code>imageFlags</code>.</li>
+</ul>
+
+<p>The header's <em>"the exporter's ACTUAL <code>VkImageCreateInfo</code>. Never guessed"</em> is written for a Vulkan exporter. For a dma-buf import the correct rule is: <strong><code>VulkanVideoEncodeAccelerator</code> fills <code>imageUsage</code> itself from a fixed minimal set</strong> — <code>VIDEO_ENCODE_SRC_KHR</code>, plus <code>TRANSFER_SRC</code> only where a copy path is enabled — <strong>validated against the modifier</strong> via <code>vkGetPhysicalDeviceImageFormatProperties2</code> <em>with <code>VkVideoProfileListInfoKHR</code> chained</em> (§3.3.1), and <strong>never accepts a caller-supplied value</strong>, because a caller-supplied one is by construction a guess. This is the one place the library's rule cannot be applied verbatim to Chromium, and it belongs as a comment in the vendored carried patch.</p>
+
+<p>For contrast, TRV's non-Vulkan answer is <em>empirical verification, not contract</em>: the D3D probes fabricate a create-info from a canonical recipe and byte-compare both directions (<code>d3d11_vk_import_probe.cpp:293-296,330-335,480</code>). Chromium cannot run an NV12 round-trip probe per format per driver at GPU-process startup, which is exactly why the validated-usage rule above is not optional.</p>
+
+<p><strong>Four further rules, each from a specific hazard:</strong></p>
+
+<ol>
+  <li><strong>Arm discipline as an invariant.</strong> Ozone-sourced pixmaps ⇒ <code>DMA_BUF</code> only; make the opaque</li>
+</ol>
+
+<p>arms unreachable from <code>VulkanVideoEncodeAccelerator</code> by construction. The OOP path enforces this for free — <code>gfx::NativePixmapHandle</code> cannot express opaque-FD, having no <code>allocationSize</code> or <code>memoryTypeIndex</code>.</p>
+
+<ol>
+  <li><strong>Keep <code>hasDrmFormatModifier</code> explicit.</strong> TRV infers the DRM path from <code>tiling == 2</code> and so</li>
+</ol>
+
+<p>cannot distinguish "no modifier" from <code>DRM_FORMAT_MOD_LINEAR</code> (0). Worse, <code>PresenterInstance.cpp:1550</code> remaps <code>handleType == 0</code> to DMA_BUF as a legacy default while <code>EncoderInstance.cpp:1804-1805</code> casts it raw — two consumers, two behaviours, from one zero-initialised field. <code>_NONE = 0</code> is the correct choice.</p>
+
+<ol>
+  <li><strong>Honour <code>residency</code> on the <code>VK_IMAGE</code> arm.</strong> The in-process BYO path is</li>
+</ol>
+
+<p><code>handleType = VK_IMAGE</code> + <code>existingImage</code>, the one arm where the library cannot derive residency and honours the caller (<code>vulkan_video_encoder_ext.cpp:3737-3747</code>). Declaring FOREIGN for a locally-created image is a queue-family acquire with no matching release — a wedged queue, not a slowdown. TRV has no <code>VK_IMAGE</code> arm and no residency concept, so there is <strong>no prior art</strong>; this is the highest-risk field in the descriptor.</p>
+
+<ol>
+  <li><strong>Replace the disjoint-plane heuristic with the real test.</strong> The library infers disjointness</li>
+</ol>
+
+<p>from <code>planeLayouts[i].offset == 0</code> for <code>i &gt; 0</code> (<code>:3660-3668</code>) because it receives one fd. <code>gfx::NativePixmapHandle</code> carries <strong>one fd per plane</strong>, so Chromium can compare fd identity directly. GBM does produce disjoint NV12 on some drivers; do not inherit the proxy.</p>
+
+<h3>3.4.1 The library owns adaptation — this is the core contract</h3>
+
+<p>This is the load-bearing idea behind R2 and it must be unambiguous: <strong>the NVPRO library handles every detail of adapting a frame when zero-copy is impossible.</strong> The embedder is never asked to convert, re-tile, or re-allocate to suit the encoder. It hands over what it has, and the library makes it encodable.</p>
+
+<p><strong>The producer does not adapt to the encoder. The encoder adapts to whatever arrives.</strong> A frame may arrive with the wrong tiling (linear, when only block-linear modifiers are encodable), the wrong format (RGBA, when NV12 is the only accepted encode source — §3.3.1 measures both), or both.</p>
+
+<p><strong>And the library must adapt in the most efficient way the real device allows</strong>, in this order:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Mechanism</th>
+    <th>When</th>
+    <th>Cost</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><strong>Hardware conversion in the encoder</strong> — device accepts the producer's format as encode input directly</td>
+    <td>whenever <code>vkGetPhysicalDeviceVideoFormatPropertiesKHR</code> reports it. <em>Not available on RTX 5080 / 620.05: NV12 only</em></td>
+    <td>free</td>
+  </tr>
+  <tr>
+    <td><strong>Compute shader</strong> — <code>VulkanFilterYuvCompute</code>, e.g. <code>RGBA2YCBCR</code></td>
+    <td>format conversion, subsampling, bit-depth</td>
+    <td>one compute pass on the encoder's compute queue</td>
+  </tr>
+  <tr>
+    <td><strong>Transfer copy</strong> — <code>vkCmdCopyImage</code></td>
+    <td>tiling-only mismatch; linear → block-linear</td>
+    <td>one blit on the transfer or encode queue</td>
+  </tr>
+</tbody>
+</table>
+
+<p>The ordering is the design rule: <strong>query the device first, use hardware if it exists, compute if it does not, transfer only for pure tiling mismatches.</strong> Falling straight to a copy when the device could have converted, or to compute when the device could have taken the format directly, is a defect — which is why the mechanism choice belongs inside the library, where the device capabilities are known, rather than in the embedder.</p>
+
+<p>Three consequences follow, and they tie the open threads in this project together:</p>
+
+<ol>
+  <li><strong>This is why the encoder must own its queues.</strong> Preprocessing needs a transfer queue for the</li>
+</ol>
+
+<p>staging copy and a compute queue for the filter. Under the borrowed-device model those are queues the <em>embedder</em> had to create on the encoder's behalf — the coupling the device-independence plan removes. Self-sufficiency in queues is not tidiness; it is what makes the adaptation layer possible at all.</p>
+
+<ol>
+  <li><strong>This is why the compute filter is on the critical path, not a nice-to-have.</strong> With it</li>
+</ol>
+
+<p>compiled out, the only adaptation available is a tiling copy — so RGBA input has no path through the encoder and must be converted upstream, on the CPU via <code>libyuv::ARGBToNV12</code> or with an extra GPU pass plus a pooled NV12 allocation. Enabling it is what lets the encoder accept what renderers actually produce. See <a href="VULKAN_VIDEO_GLSLANG_SHADER_COMPILER.md"><code>VULKAN_VIDEO_GLSLANG_SHADER_COMPILER.md</code></a>.</p>
+
+<ol>
+  <li><strong>This is why zero-copy can be an optimisation rather than a requirement.</strong> If adaptation</li>
+</ol>
+
+<p>always works, a wrong-tiling or wrong-format frame is a performance tier, not a failure. That is what allows §3.3.1 to resolve modifier selection by filtering at allocation (§3.3.2) and <em>not</em> negotiating: a filter miss costs a copy, not a dropped frame.</p>
+
+<p>The one case the adaptation layer cannot rescue is a <strong>different physical GPU</strong>, where the import itself is refused (<code>DEVICE_MISMATCH</code>) and there is nothing to preprocess. Physical-device pinning via <code>gpuUUID</code> (§3.2) remains required for that reason alone.</p>
+
+<p><strong>Token-keyed registration on Windows.</strong> The NT handle is process-local, and Chromium dedupes by <code>gfx::DXGIHandleToken</code> alone (<code>dxgi_shared_handle_manager.h:166-168</code>). Registration must take <code>(opaque token, handle)</code> so a re-registration after an IPC hop maps to the same refcounted import rather than creating a second <code>VkImage</code> over one texture.</p>
+
+<p><strong>Also check <code>deviceUUID</code>/<code>driverUUID</code> at registration</strong> (<code>vulkan_video_encoder_ext.h:385</code>). TRV ships <code>FrameData::gpuUUID</code> and never reads it in any consumer. Chromium is genuinely multi-GPU, and <code>DEVICE_MISMATCH</code> before the modifier verdict (<code>:3840</code>) is the right order.</p>
+
+<p><strong>Cache and lifetime rules:</strong></p>
+
+<ul>
+  <li>Key the import cache by <code>(exporter pool slot, descriptor equality)</code> — <strong>never by frame id.</strong> TRV</li>
+</ul>
+
+<p>produced duplicate-frame bitstreams from a frame-counter key (<code>EncoderInstance.cpp:1606-1610</code>, <code>:2117-2120</code>). Destroy slots only behind <code>vkDeviceWaitIdle</code> (<code>:1632</code>, <code>:2136</code>).</p>
+
+<ul>
+  <li>Track <strong>two independent lifetimes</strong>: the OS handle (TRANSFER/BORROW) and the imported</li>
+</ul>
+
+<p><code>VkImage</code>/<code>VkDeviceMemory</code> (refcounted). Collapsing them double-closes an fd on Linux and leaks NT handles on Windows. Record the handle as consumed the moment <code>vkAllocateMemory</code> succeeds.</p>
+
+<ul>
+  <li><strong>Queue-family ownership transfer is performed by nobody</strong> in either codebase today, although</li>
+</ul>
+
+<p>every import uses <code>VK_SHARING_MODE_EXCLUSIVE</code>. That is a latent bug whenever the producer and the encoder sit on different families of one device. The context must either perform the acquire or require the caller to.</p>
+
+<p><strong>Cross-context rebinding:</strong> permitted for <code>DMA_BUF</code> only; <code>DEVICE_MISMATCH</code> for the three opaque types; refused for <code>VK_IMAGE</code>.</p>
+
+<h3>3.5 Synchronisation — the one genuine API gap</h3>
+
+<p>Chromium's cross-API sync currency is <code>gfx::GpuFenceHandle</code>, a <strong>binary <code>sync_fd</code></strong> on Linux, converted per device at <code>gpu/vulkan/semaphore_handle.cc:42-44</code> and imported at <code>vulkan_ozone_image_representation.cc:49-53</code>. The foreign seam is <code>BeginReadAccess/EndReadAccess(gfx::GpuFenceHandle&amp;)</code> (<code>shared_image_representation.h:1027</code>).</p>
+
+<p>The library's <code>VkVideoEncoderSemaphoreDescriptor</code> is <strong>timeline-only</strong> (<code>vulkan_video_encoder_ext.h:976-979</code>), and <code>RegisterSemaphoreResource</code> rejects binary semaphores deliberately — a binary semaphore cannot express "wait for frame N" and cannot be registered once and named repeatedly, which is the entire point of registration.</p>
+
+<p>Both positions are correct, and they do not meet. <strong>New API is required:</strong> a per-frame acquire/release fence entry point performing a <code>VK_SEMAPHORE_IMPORT_TEMPORARY_BIT</code> SYNC_FD import and exporting a release <code>sync_fd</code> — exactly the shape of <code>EncoderInstance.cpp:1302-1304</code>. TRV already demonstrates the three-handle-type, two-transference-semantics model: SYNC_FD is copy-transference, hence <code>TEMPORARY</code>; <code>OPAQUE_FD</code>/<code>OPAQUE_WIN32</code> are reference-transference and used for permanent cross-device timeline bridges (<code>:2539-2541</code>, <code>:2350</code>).</p>
+
+<p>Without this, a GL or Vulkan Chromium compositor can only be synchronised against the encoder by a CPU wait. This is a real gap, not a wiring detail, and it is on the critical path for zero-copy in either host.</p>
+
+<h3>3.6 Where the code lives</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Component</th>
+    <th>Home</th>
+    <th>Rationale</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Context object, enumeration, capability structs</td>
+    <td><strong>NVPRO library</strong></td>
+    <td>Capability truth belongs with the implementation</td>
+  </tr>
+  <tr>
+    <td>Capability → <code>SupportedProfile</code> projection</td>
+    <td><strong>Browser</strong></td>
+    <td>It is a Chromium type; the library must not depend on media/</td>
+  </tr>
+  <tr>
+    <td>Mojo marshalling, process launch</td>
+    <td><strong>Browser</strong></td>
+    <td>A transport inside a codec library is wrong for every non-Chromium embedder</td>
+  </tr>
+  <tr>
+    <td>Handle import/export</td>
+    <td><strong>NVPRO library</strong></td>
+    <td>Already there; TRV proves the seam</td>
+  </tr>
+</tbody>
+</table>
+
+<p>TRV is the standing proof that this split works: it does all its own handle plumbing and the library never learns what a renderer is.</p>
+
+<p><strong>One correction about TRV's scope, since it is easy to over-claim.</strong> TRV has exactly <strong>one producer API: Vulkan</strong> — three Vulkan sites fill the frame descriptor (<code>RenderFramePool.h:1575</code>, <code>PostProcessFilter.cpp:898</code>, <code>DecoderFrame.cpp:347</code>). CUDA is a <em>consumer</em> (<code>NvcuvidEncoderInstance.cpp:602</code> deserialises <code>presenter::FrameData</code> and calls <code>cuImportExternalMemory</code> at <code>:951-958</code>), and the D3D work is four standalone Windows probes plus a design note — <code>RemotePresenterSpec.h:513-514</code> parses only <code>vulkan</code> and <code>nvcuvid</code>. In <code>d3d11_vk_nvenc_probe.cpp</code> the direction is even reversed, with Vulkan as producer.</p>
+
+<p>So the polymorphism TRV demonstrates is <strong>consumer-side</strong>, and the renderer-agnostic <em>producer</em> contract lives in the library header rather than in TRV. TRV proves the process split, the handle transport and the separate-device model; it does not prove multi-API production, and this design should not cite it as if it did.</p>
+
+<p>TRV's IPC is likewise not a precedent for capability exchange: there is <strong>no capability handshake</strong>. <code>READY</code> carries only <code>{hasTimelineSemaphore, reserved}</code> (<code>PresenterInstance.h:70-74</code>), and <code>ENCODER_CONFIG</code> has no sender anywhere in the tree — only handlers. Everything the child needs arrives as <code>argv</code> at fork time. That is a reasonable choice for a sample and an unusable one for a browser, which is another reason capability transport stays on mojo (§1).</p>
+
+<hr>
+
+<h2>4. Prerequisites — defects to fix before building on any of this</h2>
+
+<ol>
+  <li><strong>D8 — repair the BYO capability entry point.</strong> It cannot work today. The repair is an <em>adopt</em></li>
+</ol>
+
+<p>path that skips queue selection. Note <code>PopulateDeviceExtensions()</code> is called only inside the unreachable block, and the capability path currently works around that by re-querying (<code>:4716-4736</code>).</p>
+
+<ol>
+  <li><strong><code>m_reqDeviceExtensions</code> accumulates duplicates</strong> across candidate devices</li>
+</ol>
+
+<p>(<code>VulkanDeviceContext.cpp:310,328</code> inside <code>HasAllDeviceExtensions</code>), affecting every candidate examined before the selected one. Build the list per candidate and make phase-2 state const-after-construction before sharing the context across sequences.</p>
+
+<ol>
+  <li><strong>Instrument the capability path</strong> (D2). No <code>TRACE_EVENT</code>, timer or UMA exists. The design is</li>
+</ol>
+
+<p>justified by a cost nobody has measured; measure it before the claim ships.</p>
+
+<ol>
+  <li><strong>Fix the fail-open selection</strong> (D6) — independently valuable, and the synchronous context</li>
+</ol>
+
+<p>accessor makes it trivial.</p>
+
+<ol>
+  <li><strong>Enable the compute filter</strong> — the second half of the adaptation layer (§3.4.1). Without it</li>
+</ol>
+
+<p>the encoder can correct tiling but not format, which leaves RGBA input with no path through the encoder at all. Requires the shaderc → glslang port.</p>
+
+<hr>
+
+<h2>5. Staging</h2>
+
+<p><strong>Stage 1 — context in-process, ADOPT mode.</strong> Build the context, adopt Chromium's instance and physical device, move the capability cache into it. Fixes D1, D4, D5. No Chromium core change, no sandbox change, no behaviour change visible to the renderer.</p>
+
+<p><strong>Stage 2 — context in OWN mode, in the GPU process.</strong> The library creates its own instance, device and every queue it needs. This is the device-independence plan's Stage 4 and this design's R1 converging — they are the same work. Requires §3.5 sync work for zero-copy.</p>
+
+<p><strong>Stage 3 — OOP.</strong> Requires, in order: the <code>use_linux_video_acceleration</code> expression changed upstream; <code>use_nvidia_specific_policies</code> plumbed to utility processes; the sandbox hook delta (§2.3); the DRM-modifier ruling (§3.3); and G-NEW-12 dma-buf external input — which is a <strong>prerequisite for OOP, not an optimisation</strong>, because there is no SharedImage in that host.</p>
+
+<p>Stages 1 and 2 deliver the architecture. Stage 3 buys crash isolation.</p>
+
+<hr>
+
+<h2>6. Risks and unknowns</h2>
+
+<p><strong>Verified risks:</strong> <code>dlclose</code> of a shared ICD (§3.1); refcount-to-zero re-creating an instance post-sandbox; ABI break on the four <code>extern &quot;C&quot;</code> exports; mutable phase-2 state; the VEA's raw <code>VulkanDeviceQueue*</code>; the binary/timeline semaphore mismatch; missing queue-family ownership transfer; process-local Windows handles; the never-computed NVIDIA vendor flag; <code>MremapPolicy::kBlock</code> unvalidated against the NVIDIA driver; the utility process having no Ozone (the existing sandbox browsertest already skips this sandbox type on Linux for that reason).</p>
+
+<p><strong>Not verified — do not treat as known:</strong></p>
+
+<ul>
+  <li><strong>The cost of <code>VkDevice</code> creation with video extensions on this stack.</strong> Nothing measures it.</li>
+</ul>
+
+<p>The requirement "we don't want to create and destroy a device" is well-motivated by the five-instance-bring-up capability path (D1, which <em>is</em> verified), but the per-session device cost is an assumption. Measure before it becomes a requirement.</p>
+
+<ul>
+  <li><strong>Whether <code>kHardwareVideoEncoding</code>'s BPF policy actually admits the NVIDIA driver</strong> once the</li>
+</ul>
+
+<p>file-broker paths are added. The syscall layer looks permissive, but <code>mremap</code> is blocked and nobody has run it.</p>
+
+<ul>
+  <li><strong>Whether a second <code>VkDevice</code> on one physical GPU costs anything material</strong> — still unmeasured,</li>
+</ul>
+
+<p>as recorded in the device-independence plan.</p>
+
+<hr>
+
+<h2>7. References</h2>
+
+<ul>
+  <li><a href="VULKAN_VIDEO_ENCODER_DEVICE_INDEPENDENCE_PLAN.md"><code>VULKAN_VIDEO_ENCODER_DEVICE_INDEPENDENCE_PLAN.md</code></a></li>
+</ul>
+
+<p>— why the encoder should own its device; §8.1 the hardware verification</p>
+
+<ul>
+  <li><a href="VULKAN_VIDEO_GLSLANG_SHADER_COMPILER.md"><code>VULKAN_VIDEO_GLSLANG_SHADER_COMPILER.md</code></a> — the</li>
+</ul>
+
+<p>filter dependency that unblocks RGBA input</p>
+
+<ul>
+  <li><a href="VULKAN_VIDEO_ENCODER_API_V2_DESIGN.md"><code>VULKAN_VIDEO_ENCODER_API_V2_DESIGN.md</code></a> — handle</li>
+</ul>
+
+<p>exchange; <em>"No same-device carve-out"</em></p>
+
+<ul>
+  <li><a href="VULKAN_VIDEO_ENCODER_ARCH_REVIEW.md"><code>VULKAN_VIDEO_ENCODER_ARCH_REVIEW.md</code></a> — findings A0–A14</li>
+  <li>TRV: <code>ThreadedRenderingVk_Standalone/src/encoder/EncoderInstance.cpp</code> — the reference client</li>
+</ul>
+
+</div>
+</article>
+
+<footer>
+    <div class="container">
+        <p></p>
+    </div>
+</footer>
+</body>
+</html>

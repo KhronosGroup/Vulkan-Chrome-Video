@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: 2026 The Khronos Group, Inc.
+SPDX-License-Identifier: Apache-2.0
+
+Generated from the Markdown source by build_blog.py — edit the .md, not this file.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encoder API v3 — a modern C++ interface design</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-card: #1a2332;
+            --accent-vulkan: #ac2d2d;
+            --accent-vulkan-bright: #e05252;
+            --accent-chrome: #5b9bff;
+            --accent-nvidia: #8bd90a;
+            --accent-firefox: #ff9d3d;
+            --text-primary: #eef2f8;
+            --text-body: #d3dce8;
+            --text-secondary: #b3c0d1;
+            --text-muted: #8a97a8;
+            --border: #2d3a4f;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', system-ui, sans-serif; font-weight: 400;
+            background: var(--bg-primary); color: var(--text-body);
+            line-height: 1.75; font-size: 17px;
+        }
+        .bg-pattern {
+            position: fixed; inset: 0; z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(172, 45, 45, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 90%, rgba(66, 133, 244, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 40%, rgba(118, 185, 0, 0.05) 0%, transparent 60%);
+        }
+        .container { max-width: 980px; margin: 0 auto; padding: 0 1.5rem; }
+        header.hero { padding: 4rem 0 2.5rem; text-align: center; }
+        .logo-strip {
+            display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
+            margin-bottom: 2rem; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em;
+        }
+        .logo-strip span { padding: 0.4rem 0.8rem; border-radius: 4px; border: 1px solid var(--border); }
+        .logo-strip .vulkan { color: var(--accent-vulkan-bright); border-color: var(--accent-vulkan); }
+        .logo-strip .nvidia { color: var(--accent-nvidia); border-color: var(--accent-nvidia); }
+        .logo-strip .ff { color: var(--accent-firefox); border-color: var(--accent-firefox); }
+        .logo-strip .chrome { color: var(--accent-chrome); border-color: var(--accent-chrome); }
+        .hero-banner {
+            display: block; width: 100%; height: auto;
+            border-radius: 12px; margin-bottom: 2rem;
+        }
+        h1 {
+            font-size: 2.7rem; font-weight: 700; line-height: 1.15; margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .hero .dek { font-size: 1.2rem; color: var(--text-secondary); max-width: 760px; margin: 0 auto; }
+        .byline { margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        article { padding-bottom: 5rem; }
+        h2 {
+            font-size: 1.7rem; font-weight: 700; margin: 3.2rem 0 1.1rem; color: var(--text-primary);
+            padding-left: 0.9rem; border-left: 4px solid var(--accent-nvidia);
+        }
+        h2.ff { border-left-color: var(--accent-firefox); }
+        h2.cr { border-left-color: var(--accent-chrome); }
+        h2.vk { border-left-color: var(--accent-vulkan-bright); }
+        h3 { font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.7rem; color: var(--text-primary); }
+        p { margin-bottom: 1.1rem; color: var(--text-body); }
+        p strong, li strong { color: var(--text-primary); }
+        em { color: var(--text-primary); font-style: italic; }
+        ul, ol { margin: 0 0 1.1rem 1.5rem; color: var(--text-body); }
+        li { margin-bottom: 0.5rem; }
+        a { color: var(--accent-chrome); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 0.1rem 0.35rem; border-radius: 4px; color: #a8ecb2;
+        }
+        figure.diagram {
+            margin: 1.8rem 0; padding: 1rem; background: #ffffff;
+            border: 1px solid var(--border); border-radius: 12px; text-align: center;
+        }
+        figure.diagram img, figure.diagram object { max-width: 100%; height: auto; }
+        figure.diagram figcaption { margin-top: 0.6rem; font-size: 0.85rem; color: #475569; font-style: italic; }
+        blockquote.pull {
+            border-left: 4px solid var(--accent-vulkan-bright);
+            background: var(--bg-card); border-radius: 0 10px 10px 0;
+            padding: 1.1rem 1.4rem; margin: 1.6rem 0;
+            font-size: 1.03rem; color: var(--text-primary);
+        }
+        blockquote.pull p { color: var(--text-primary); margin: 0; }
+        table.doc {
+            width: 100%; border-collapse: collapse; margin: 1.8rem 0;
+            font-size: 0.95rem; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 10px;
+            overflow: hidden; display: table;
+        }
+        table.doc th, table.doc td {
+            padding: 0.68rem 0.9rem; text-align: left; vertical-align: top;
+            border-bottom: 1px solid var(--border);
+        }
+        table.doc thead th {
+            background: rgba(118, 185, 0, 0.10);
+            color: var(--text-primary); font-weight: 650;
+            border-bottom: 2px solid var(--accent-vulkan-bright);
+            white-space: nowrap;
+        }
+        table.doc tbody tr:last-child td { border-bottom: none; }
+        table.doc tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+        table.doc code { white-space: nowrap; }
+        @media (max-width: 720px) {
+            table.doc { display: block; overflow-x: auto; }
+        }
+        aside.takeaways {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-vulkan-bright);
+            border-radius: 0 12px 12px 0; padding: 1.4rem 1.7rem;
+            margin: 2.2rem 0 2.6rem;
+        }
+        aside.takeaways h2 {
+            font-size: 0.95rem; margin: 0 0 0.9rem; padding: 0; border-left: none;
+            font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--accent-vulkan-bright);
+        }
+        aside.takeaways ul { margin: 0 0 0 1.2rem; }
+        aside.takeaways li:last-child { margin-bottom: 0; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+        footer {
+            border-top: 1px solid var(--border); padding: 2rem 0 3.5rem;
+            color: var(--text-muted); font-size: 0.88rem; text-align: center;
+        }
+        @media (max-width: 700px) {
+            h1 { font-size: 1.9rem; }
+            /* Keep the Key Takeaways panel readable on a phone: the box and
+               list indents eat a lot of a 390px viewport at desktop padding. */
+            aside.takeaways { padding: 1.1rem 1.15rem; border-radius: 0 8px 8px 0; }
+            aside.takeaways ul { margin-left: 1rem; }
+            figure.diagram { padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<header class="hero">
+    <div class="container">
+        <div class="logo-strip">
+            
+        </div>
+        <h1>Encoder API v3 — a modern C++ interface design</h1>
+        <p class="dek"><strong>Status:</strong> design proposal. Target: the branch after <code>RC-6-lib-v3+nvpro-rebase+split-02</code>. <strong>Companion:</strong> <code>VULKAN_VIDEO_ENCODER_INTERFACE_STYLE.md</code> argues <em>whether</em> to change style and measures the cost of the present one. This document is the <em>what</em>: the actual interface.</p>
+        <div class="byline"></div>
+    </div>
+</header>
+
+<article>
+<div class="container">
+
+<hr>
+
+<h2>0. What we are designing against</h2>
+
+<p>Measured on the current branch:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th></th>
+    <th></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>vulkan_video_encoder_ext.h</code></td>
+    <td><strong>3250</strong> lines</td>
+  </tr>
+  <tr>
+    <td><code>vulkan_video_encoder_ext_internal.h</code></td>
+    <td><strong>1698</strong> lines</td>
+  </tr>
+  <tr>
+    <td><code>vulkan_video_encoder_ext.cpp</code></td>
+    <td><strong>12611</strong> lines</td>
+  </tr>
+  <tr>
+    <td><code>VulkanVideoEncoderExt</code> virtual methods</td>
+    <td><strong>29</strong> (+4 inherited)</td>
+  </tr>
+  <tr>
+    <td>free <code>extern &quot;C&quot;</code> entry points</td>
+    <td><strong>12</strong></td>
+  </tr>
+  <tr>
+    <td>structs carrying <code>sType</code> + <code>pNext</code></td>
+    <td><strong>21</strong></td>
+  </tr>
+  <tr>
+    <td><code>VkVideoEncoderStructureType</code> enumerants</td>
+    <td><strong>22</strong></td>
+  </tr>
+  <tr>
+    <td>error currencies</td>
+    <td><strong>2</strong> (<code>VkResult</code> ×13, <code>VkVideoEncoderStatusCode</code> ×8)</td>
+  </tr>
+  <tr>
+    <td>Chromium code whose only job is to fill one config struct</td>
+    <td><strong>429</strong> lines (1537 of file, 1033 of it comment)</td>
+  </tr>
+</tbody>
+</table>
+
+<p>That last row is the finding that drives everything below, and it is worth stating at its true size. <code>media/gpu/vulkan/vulkan_video_encoder_config_builder.{h,cc}</code> spans 1537 lines of file, but 1033 of those are comment: the code is <strong>429 lines</strong>, and the part that is <em>library policy</em> rather than Chromium vocabulary is <strong>113</strong> of them -- <code>EncodesOnlyViaPreprocessFilter(VkFormat)</code>, <code>EncodesViaFilterPlaneStorage</code>, <code>EncodesViaFilterStorageRead</code>, <code>DeclaredSessionInputFormat</code>, <code>ClassifyFilterMatrix(int)</code>, <code>DeriveMatrixFromPrimaries(int)</code>, <code>ConvertsRgbToYcbcr(...)</code>, <code>MapPixelFormat</code>.</p>
+
+<p>113 lines is not, by itself, an argument for redesigning an interface, and this document should not pretend otherwise. What those 113 lines demonstrate is a <em>kind</em> of cost rather than a quantity of one: none of that reasoning is Chromium's business, all of it duplicates a decision the library already makes internally, and it exists only because <code>VkVideoEncoderConfig</code> is an inert record. A struct cannot decide anything, so every caller re-derives what the library knows and every caller must get it right independently -- and the second caller pays the same 113 lines again, with its own bugs. The case for the redesign rests on that, and on the defects in section 4a that the descriptor shape made invisible, not on a line count.</p>
+
+<p>An interface that can only be <em>filled in</em> pushes reasoning outward. An interface that can be <em>asked</em> keeps it in.</p>
+
+<hr>
+
+<h2>1. Principles</h2>
+
+<h3>1.1 Kept from VA-API</h3>
+
+<p>VA-API's durability comes from four rules, and they are the right four:</p>
+
+<ol>
+  <li><strong>The caller never lays out a library type.</strong> <code>VAGenericID</code> is opaque; buffers are created by</li>
+</ol>
+
+<p><code>vaCreateBuffer(..., size, ...)</code> with the size passed explicitly. The library owns layout, so layout can change.</p>
+
+<ol>
+  <li><strong>Version is negotiated, not assumed.</strong> <code>vaInitialize(dpy, &amp;major, &amp;minor)</code> tells the caller</li>
+</ol>
+
+<p>what it actually got.</p>
+
+<ol>
+  <li><strong>Capability query precedes use.</strong> <code>vaQueryConfigProfiles</code> → <code>vaQueryConfigEntrypoints</code> →</li>
+</ol>
+
+<p><code>vaQueryConfigAttributes</code>, before any context exists.</p>
+
+<ol>
+  <li><strong>One vocabulary, uniformly prefixed.</strong> Everything is <code>VA*</code>/<code>va*</code>. There is never a question</li>
+</ol>
+
+<p>of which namespace a symbol belongs to.</p>
+
+<h3>1.2 Rejected from VA-API</h3>
+
+<ol>
+  <li><strong><code>va_reserved[VA_PADDING_*]</code> on 43 structs.</strong> Guessed-ahead, untyped space with a fixed</li>
+</ol>
+
+<p>budget. When it runs out the struct is frozen forever; until it runs out every field added is a <code>uint32_t</code> reinterpreted by hand. Vtable extension has no budget and no casts.</p>
+
+<ol>
+  <li><strong>48 <code>VABufferType</code> enumerants over <code>void*</code>.</strong> A hand-rolled dynamic type system. C++ has one</li>
+</ol>
+
+<p>that the compiler checks.</p>
+
+<ol>
+  <li><strong>Implicit global state behind <code>VADisplay</code>.</strong> Our device binding is explicit and always has</li>
+</ol>
+
+<p>been; keep it that way.</p>
+
+<ol>
+  <li><strong>Errors as a bare int with a stringify function.</strong> No context, no propagation discipline.</li>
+</ol>
+
+<h3>1.3 The one structural move</h3>
+
+<p><strong>Extensibility moves from data layout to vtable extension.</strong></p>
+
+<p><code>pNext</code> extends a <em>struct</em>: the caller allocates it, so its layout is pinned the moment any caller compiles. Inheritance extends an <em>interface</em>: the library allocates, the caller only calls, so nothing about layout is observable and nothing needs pinning. That single move deletes, at once: 22 <code>sType</code> enumerants, 21 <code>sType</code>/<code>pNext</code> member pairs, every "values are permanent / never reuse" comment, every layout-pin test, and the class of bug where a struct is chained onto an entry point that refuses <code>pNext</code>.</p>
+
+<figure class="diagram">
+  <img src="vulkan_video_encoder_v3_interfaces.svg" alt="Encoder API v3 interface graph" loading="lazy">
+  <figcaption>Encoder API v3 interface graph</figcaption>
+</figure>
+
+<hr>
+
+<h2>2. Foundations</h2>
+
+<h3>2.1 Namespace and naming</h3>
+
+<p>``<code>cpp namespace vk::video::enc {}     // everything below lives here </code>``</p>
+
+<p>Interfaces are <code>IName</code>. Value types are <code>Name</code>. No <code>Vk</code>/<code>VkVideoEncoder</code> prefix soup: the namespace carries it. Vulkan handles keep their own spelling (<code>VkDevice</code>, <code>VkFormat</code>) because they <em>are</em> Vulkan's.</p>
+
+<h3>2.2 One error currency</h3>
+
+<p>Today a caller must know which of two enums a given method speaks. Replace both:</p>
+
+<p>```cpp enum class ResultCode : int32_t { Ok = 0, // Caller error InvalidArgument, NotConfigured, AlreadyConfigured, UnsupportedFormat, UnsupportedProfile, UnsupportedFeature, OutOfRange, // Transient NotReady, Timeout, WouldBlock, OutOfResources, // Terminal DeviceLost, InternalError, };</p>
+
+<p>class Result { public: Result() : code_(ResultCode::Ok), detail_("") {} Result(ResultCode c, const char* d = "") : code_(c), detail_(d ? d : "") {} bool ok() const { return code_ == ResultCode::Ok; } explicit operator bool() const { return ok(); } ResultCode  code()   const { return code_; } const char* detail() const { return detail_; } private: ResultCode  code_; const char* detail_; }; ```</p>
+
+<p><code>Result</code> is <strong>16 bytes and trivially copyable</strong> — a code plus a pointer to a string literal the library owns. That is deliberate on three counts: it puts no STL type in the ABI (§2.3), it allocates nothing on a path that runs once per frame, and it is returnable in registers.</p>
+
+<p>The constraint that buys this is that <code>detail()</code> is a literal, not a formatted message. Detail needing runtime context — <em>which</em> frame id, <em>which</em> format — belongs on <code>IDiagnostics</code>, which exists for exactly that and is queried when a caller wants it.</p>
+
+<p>Value-returning calls need a carrier for "a T, or a Status":</p>
+
+<p>``<code>cpp template &lt;class T&gt; class Expected;   // holds T or Result; value(), status(), operator bool </code>``</p>
+
+<p>This is roughly 60 header-only lines and it is <strong>permanent, not a stopgap</strong>. <code>std::expected</code> is C++23; this header targets C++11 (§2.6), so aliasing to the standard type is not on the table and the call sites do not need it to be.</p>
+
+<h3>2.3 Object model</h3>
+
+<p><code>VkSharedBaseObj&lt;T&gt;</code> is already <code>std::shared_ptr&lt;T&gt;</code> and <code>VkVideoRefCountBase</code> is already just a virtual destructor. Keep both, spelled plainly:</p>
+
+<p>``<code>cpp class IObject { public: virtual ~IObject() = default; protected: IObject() = default; }; template &lt;class T&gt; using Ref = std::shared_ptr&lt;T&gt;; </code>``</p>
+
+<p>No <code>AddRef</code>/<code>Release</code> to get wrong; no intrusive count to race.</p>
+
+<blockquote class="pull"><p><strong>ABI constraint, stated once.</strong> <code>shared_ptr</code> is not ABI-portable across toolchains. It is the <em>only</em> standard-library type in this surface: <code>Result</code> is a code and a <code>const char*</code>, enumerations are values, and array returns are <code>ArrayView</code> (§3.1). <code>std::shared_ptr</code> itself is C++11. Chromium static-links (Model D) and is unaffected. Consumers that load <code>libvkvideo-encoder.so</code> must be built with the same compiler and standard library. VA-API avoids this with opaque integer handles; we are trading that portability for type safety knowingly. If a third consumer ever needs true cross-toolchain ABI, the answer is a thin C shim over these interfaces — not a redesign of them.</p></blockquote>
+
+<h3>2.4 Feature discovery — the replacement for <code>pNext</code></h3>
+
+<p>One virtual, on the base, that never grows:</p>
+
+<p>```cpp class IObject { public: virtual ~IObject() = default; virtual void* QueryInterface(std::string_view id) = 0; };</p>
+
+<p>// Each interface names itself, version included: class IFrameSubmitter : public IObject { public: static constexpr std::string_view kId = "vk.video.enc.IFrameSubmitter/1"; ... };</p>
+
+<p>template &lt;class I&gt; Ref&lt;I&gt; Query(const Ref&lt;IObject&gt;&amp; obj) { if (!obj) return Ref&lt;I&gt;(); void* p = obj-&gt;QueryInterface(I::kId); return p ? Ref&lt;I&gt;(obj, static_cast&lt;I*&gt;(p)) : Ref&lt;I&gt;();   // aliasing ctor: shares obj's count } ```</p>
+
+<p>Three properties worth naming:</p>
+
+<p>Three properties worth naming:</p>
+
+<ul>
+  <li><strong>A missing feature is <code>nullptr</code>, checked once</strong>, not <code>UnsupportedFeature</code> returned from a</li>
+</ul>
+
+<p>method the caller had no way to know was unavailable.</p>
+
+<ul>
+  <li><strong>Identity is a string, so there is no central registry to keep in lockstep</strong> — no</li>
+</ul>
+
+<p><code>VkVideoEncoderStructureType</code> block with reservation comments, and a vendor can add <code>&quot;com.nvidia.enc.IFoo/1&quot;</code> without touching a shared enum.</p>
+
+<ul>
+  <li><strong>The version is in the name.</strong> <code>IFrameSubmitter/2</code> is a different interface, not a struct</li>
+</ul>
+
+<p>whose meaning depends on a size field.</p>
+
+<h3>2.5 How a version is added</h3>
+
+<p>``<code>cpp class IFrameSubmitterV2 : public IFrameSubmitter { public: static constexpr std::string_view kId = &quot;vk.video.enc.IFrameSubmitter/2&quot;; virtual Status SubmitWithDeadline(const FrameSubmit&amp;, Deadline) = 0; }; </code>``</p>
+
+<p>An old caller keeps calling <code>IFrameSubmitter</code> and does not recompile. A new caller does <code>if (auto v2 = Query&lt;IFrameSubmitterV2&gt;(session))</code>. An old <em>implementation</em> (a test fake) simply does not answer the v2 id. No struct grew, no size was compared, no <code>pNext</code> was walked.</p>
+
+<hr>
+
+<h3>2.6 The language floor is C++17</h3>
+
+<p><strong>The public header compiles at <code>-std=c++17</code>. The implementation stays C++20.</strong> Those are two different requirements and only the first one is a portability constraint: consumers include the header, they do not compile the 12611-line implementation. <code>CMAKE_CXX_STANDARD 20</code> stays as it is.</p>
+
+<p>C++17 is the floor because the library's own threading and synchronisation use C++17 facilities, and because the current public header is portable today — it compiles clean at <code>-std=c++11</code> through <code>-std=c++20</code>, and a redesign that quietly raised the bar to C++20 would be a regression for consumers no one has surveyed.</p>
+
+<p>Three C++20 conveniences are therefore out, and each has a cheap replacement:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>C++20 convenience</th>
+    <th>Replacement</th>
+    <th>Cost</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>std::span&lt;const T&gt;</code></td>
+    <td><code>ArrayView&lt;T&gt;</code> — a borrowed <code>{const T*, size_t}</code> view</td>
+    <td>~14 lines, header-only</td>
+  </tr>
+  <tr>
+    <td><code>std::expected&lt;T, E&gt;</code></td>
+    <td><code>Expected&lt;T&gt;</code> (§2.2)</td>
+    <td>~60 lines, and permanent — <code>std::expected</code> is C++<strong>23</strong>, not 20</td>
+  </tr>
+  <tr>
+    <td>designated initialisers <code>{.device = d}</code></td>
+    <td>plain member assignment on the aggregate</td>
+    <td>none</td>
+  </tr>
+</tbody>
+</table>
+
+<p>``<code>cpp // The only container type that crosses the interface. template &lt;class T&gt; class ArrayView { public: ArrayView() = default; ArrayView(const T* data, size_t size) : data_(data), size_(size) {} const T* data() const { return data_; } size_t   size() const { return size_; } const T* begin() const { return data_; } const T* end()   const { return data_ + size_; } const T&amp; operator[](size_t i) const { return data_[i]; } private: const T* data_ = nullptr; size_t   size_ = 0; }; </code>``</p>
+
+<p>Everything else in the design is C++11 or C++14 and needs nothing. <code>std::shared_ptr</code> and its aliasing constructor are C++11; <code>std::string_view</code> and nested <code>namespace a::b::c</code> are C++17.</p>
+
+<blockquote class="pull"><p><strong>One trap worth recording, because it decides a spelling.</strong> <code>static constexpr std::string_view kId</code> is safe <em>at C++17 and above only</em>. Before C++17 a <code>constexpr</code> static data member that has a reference bound to it is an ODR-use requiring an out-of-line definition, and the link fails — verified: the same program produces an undefined reference at <code>-std=c++11</code> and links at <code>-std=c++17</code>, because C++17 made such members implicitly inline. Reading it by value is fine at every standard, so the bug only appears when some caller writes <code>const auto&amp; id = I::kId;</code>. If the floor ever has to drop below C++17, the id becomes <code>static const char* Id()</code>, which has no such edge — but at a C++17 floor the data member is the better spelling and is used here.</p></blockquote>
+
+<h2>3. The interface set</h2>
+
+<p>Today's 29 methods and 12 free functions form one god object plus a loose bag. Split by role — each interface is what one collaborator needs, and nothing else.</p>
+
+<h3>3.1 Platform scope (before any session exists)</h3>
+
+<p>```cpp class IEncoderPlatform : public IObject { public: static constexpr std::string_view kId = "vk.video.enc.IEncoderPlatform/1";</p>
+
+<p>virtual Ref&lt;IEncoderCaps&gt;   Caps()   const = 0; virtual Ref&lt;IDeviceBinding&gt; Device() const = 0;</p>
+
+<p>virtual Expected&lt;Ref&lt;IEncoderConfig&gt;&gt;  CreateConfig(Codec, Profile) = 0; virtual Expected&lt;Ref&lt;IEncoderSession&gt;&gt; CreateSession(const Ref&lt;IEncoderConfig&gt;&amp;) = 0; };</p>
+
+<p>// The ONE exported symbol. Adopt the caller's Vulkan objects; a null device // means the library creates its own. extern "C" VK_VIDEO_ENCODER_EXPORT VkResult VkEncCreatePlatform(const PlatformCreateInfo&amp; info, Ref&lt;IEncoderPlatform&gt;&amp;   outPlatform); ```</p>
+
+<p><code>IEncoderCaps</code> absorbs the six enumeration free functions (<code>VkEncGetEncodeCapabilities</code>, <code>VkEncEnumerateStdFlags</code>, <code>VkEncEnumerateInputFormats</code>, <code>VkEncEnumerateDrmModifiers</code>, <code>VkEncQueryInputFormatSupport</code>, <code>EnumerateVulkanVideoEncoderProfileCapabilities</code>) into one queryable object:</p>
+
+<p>``<code>cpp class IEncoderCaps : public IObject { public: static constexpr std::string_view kId = &quot;vk.video.enc.IEncoderCaps/1&quot;; virtual ArrayView&lt;Codec&gt;       Codecs()   const = 0; virtual ArrayView&lt;Profile&gt;     Profiles(Codec) const = 0; virtual ArrayView&lt;InputFormat&gt; InputFormats(Profile) const = 0;   // carries optimality virtual ArrayView&lt;uint64_t&gt;    DrmModifiers(Profile, VkFormat) const = 0; virtual const RateControlCaps&amp;  RateControl(Profile) const = 0; virtual const QpRange&amp;          QpRange(Profile)     const = 0; virtual bool  Supports(Feature) const = 0; }; </code>``</p>
+
+<p>Returning an <code>ArrayView</code> (§2.6) over library-owned storage removes the two-call <code>(nullptr, &amp;count)</code> → <code>(buffer, &amp;count)</code> dance from every enumerator, and with it the class of bug where the two calls disagree.</p>
+
+<h3>3.2 Configuration — a builder, not a struct</h3>
+
+<p>This is where the 113 lines of caller-side derivation go home (§0).</p>
+
+<p>```cpp class IEncoderConfig : public IObject { public: static constexpr std::string_view kId = "vk.video.enc.IEncoderConfig/1";</p>
+
+<p>virtual IEncoderConfig&amp; SetResolution(uint32_t width, uint32_t height) = 0; virtual IEncoderConfig&amp; SetFrameRate(uint32_t num, uint32_t den) = 0; virtual IEncoderConfig&amp; SetRateControl(const RateControl&amp;) = 0; virtual IEncoderConfig&amp; SetGop(const GopStructure&amp;) = 0; virtual IEncoderConfig&amp; SetInputFormat(VkFormat, ColorModel) = 0; virtual IEncoderConfig&amp; SetInputColour(const ColourInfo&amp;) = 0;</p>
+
+<p>// What the library knows and the caller should not have to re-derive: virtual InputPath  ResolveInputPath() const = 0;   // Direct | Copy | ComputeFilter virtual VkFormat   ResolveSessionFormat() const = 0; virtual Status     Validate() const = 0;           // one place, before a session exists }; ```</p>
+
+<p><code>ResolveInputPath()</code> is the whole point. Today the caller decides whether a compute filter is needed, from a struct field it sets itself, using classification logic it reimplemented. Here it asks. The rule the library actually wants to enforce — <em>use the copy engine unless the layout, colour model, or format demands a filter</em> — becomes one method with one implementation, and the caller can log the answer instead of guessing it.</p>
+
+<p>Optional feature blocks stop being chained structs and become optional interfaces:</p>
+
+<p>``<code>cpp if (auto hdr = Query&lt;IHdrMetadataConfig&gt;(config)) { hdr-&gt;SetMasteringDisplay(...); hdr-&gt;SetContentLightLevel(...); } </code>``</p>
+
+<p><code>Query</code> returns null for an H.264 config, because H.264 has no mastering-display SEI. The rule that today is a runtime rejection at <code>InitializeExt</code> — after the caller has built the struct, chained it, and passed it — is expressed where the caller can act on it, at zero cost, in one <code>if</code>.</p>
+
+<h3>3.3 Session scope</h3>
+
+<p><code>IEncoderSession</code> is deliberately small: lifecycle only. Everything else is a queried role.</p>
+
+<p>``<code>cpp class IEncoderSession : public IObject { public: static constexpr std::string_view kId = &quot;vk.video.enc.IEncoderSession/1&quot;; virtual Status Reconfigure(const Ref&lt;IEncoderConfig&gt;&amp;) = 0; virtual Status Flush() = 0; virtual Status Drain() = 0; virtual Expected&lt;uint32_t&gt; AbandonAll() = 0; }; </code>``</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Role interface</th>
+    <th>Absorbs (today's methods)</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>IFrameSubmitter</code></td>
+    <td><code>SubmitExternalFrame</code>, <code>SubmitRegisteredFrame</code>, <code>CancelFrame</code>, <code>GetFrameStatus</code></td>
+  </tr>
+  <tr>
+    <td><code>IBitstreamSource</code></td>
+    <td><code>AcquireNextEncodedFrame</code>, <code>AcquireEncodedFrame</code>, <code>GetEncodedFrame</code>, <code>ReleaseEncodedFrame</code></td>
+  </tr>
+  <tr>
+    <td><code>ICompletionSignal</code></td>
+    <td><code>SetCompletionCallback</code>, <code>GetCompletionCounter</code>, <code>GetCompletionInfo</code>, <code>GetCompletionEventHandle</code>, <code>GetCompletionSemaphore</code>, <code>ExportCompletionSemaphoreHandle</code></td>
+  </tr>
+  <tr>
+    <td><code>IResourceRegistry</code></td>
+    <td><code>RegisterImageResource</code>, <code>UnregisterImageResource</code>, <code>RegisterSemaphore</code>, <code>UnregisterSemaphore</code>, <code>QueryImageSupport</code></td>
+  </tr>
+  <tr>
+    <td><code>IDeviceBinding</code></td>
+    <td><code>GetVkDevice</code>, <code>GetVkPhysicalDevice</code>, <code>GetVkInstance</code>, <code>GetVkGetInstanceProcAddr</code></td>
+  </tr>
+  <tr>
+    <td><code>IDiagnostics</code></td>
+    <td><code>GetRuntimeInfo</code>, plus the diagnostic surface</td>
+  </tr>
+</tbody>
+</table>
+
+<p>29 methods on one class become 4 + six focused interfaces averaging five methods. A reader asking "how do I get a bitstream out" reads one 4-method interface.</p>
+
+<h3>3.4 What this does to the test fake</h3>
+
+<p><code>media/gpu/vulkan/fake_vulkan_video_encoder_ext.h</code> is 392 lines because a fake must implement all 29 pure virtuals whether the test touches them or not. Under this design a fake implements the roles the test exercises and answers <code>nullptr</code> for the rest — and the <code>nullptr</code> is <em>meaningful</em>, because it is exactly how a real implementation reports an absent feature. The fake stops being a wall of <code>NOTREACHED()</code>.</p>
+
+<h3>3.5 Value types</h3>
+
+<p>Types the caller constructs (<code>RateControl</code>, <code>GopStructure</code>, <code>ColourInfo</code>, <code>PlaneLayout</code>, <code>Rect</code>) stay plain aggregates — no <code>sType</code>, no <code>pNext</code>, no reserved padding. The rule that keeps this safe is one line:</p>
+
+<blockquote class="pull"><p><strong>A type the caller constructs may never be extended. A type the library owns may.</strong></p></blockquote>
+
+<p>Extension always happens on an interface. A value type that turns out to need a new field gets a new setter taking a new value type on a <code>/2</code> interface; the old one keeps its meaning forever.</p>
+
+<hr>
+
+<h2>4. A caller, end to end</h2>
+
+<p>The Chromium <code>VulkanVideoEncodeAccelerator::Initialize</code> path, as it would read:</p>
+
+<p>```cpp PlatformCreateInfo pci;                 // plain aggregate the caller owns pci.instance = vk_instance; pci.device   = vk_device; Ref&lt;IEncoderPlatform&gt; platform; if (VkResult r = VkEncCreatePlatform(pci, platform); r != VK_SUCCESS) return Fail(r);</p>
+
+<p>auto caps = platform-&gt;Caps(); if (!caps-&gt;Supports(Feature::kDmaBufImport)) return Fail("no dma-buf import");</p>
+
+<p>auto config = platform-&gt;CreateConfig(Codec::kH265, Profile::kMain); if (!config) return Fail(config.status()); RateControl rc;                         // aggregate; no designated initialisers (§2.6) rc.mode    = RateControlMode::kCq; rc.quality = 26; (*config)-&gt;SetResolution(w, h) .SetFrameRate(num, den) .SetRateControl(rc) .SetInputFormat(vk_format, ColorModel::kBt709Limited);</p>
+
+<p>if (auto hdr = Query&lt;IHdrMetadataConfig&gt;(*config)) hdr-&gt;SetContentLightLevel(max_cll, max_fall);</p>
+
+<p>if (Status s = (*config)-&gt;Validate(); !s) return Fail(s); input_path_ = (*config)-&gt;ResolveInputPath();          // logged, not re-derived</p>
+
+<p>auto session = platform-&gt;CreateSession(*config); if (!session) return Fail(session.status());</p>
+
+<p>submitter_  = Query&lt;IFrameSubmitter&gt;(*session); bitstream_  = Query&lt;IBitstreamSource&gt;(*session); completion_ = Query&lt;ICompletionSignal&gt;(*session);     // may be null; poll instead registry_   = Query&lt;IResourceRegistry&gt;(*session);     // may be null; submit unregistered ```</p>
+
+<p>Everything the caller must know is a compile-checked type or a null check. Nothing is a <code>sType</code> constant, a <code>pNext</code> cast, or a field the caller had to derive.</p>
+
+<hr>
+
+<h2>4a. What implementing it changed</h2>
+
+<p>The header and a translating implementation are on <code>vk_video_encoder/include/vulkan_video_encoder_v3.h</code> and <code>.../src/vulkan_video_encoder_v3.cpp</code>, with <code>test/encoder-v3-interface</code> driving them. Three constraints surfaced only from compiling against the real tree, and each changed the design.</p>
+
+<h3>4a.1 Xlib owns <code>Success</code>, <code>None</code> and <code>Status</code></h3>
+
+<p>The library builds with <code>VK_USE_PLATFORM_XLIB_KHR</code>, as does every browser and compositor on Linux, and Xlib defines <code>Success</code>, <code>None</code>, <code>Status</code>, <code>Bool</code>, <code>Always</code>, <code>Complex</code>, <code>Convex</code>, <code>Above</code>, <code>Below</code>, <code>KeyPress</code> and <code>CursorShape</code> as <strong>object-like macros</strong>. A namespace is no defence against the preprocessor, and <code>#undef</code>-ing them in a public header would silently break the consumer's own use of Xlib.</p>
+
+<p>So the status type is <strong><code>Result</code></strong> and its code type is <strong><code>ResultCode</code></strong>, and the "no handle" enumerator is <code>NoHandle</code>. This is not a style preference: with the original spelling the header does not parse in any translation unit that has seen Xlib, which is the entire target audience.</p>
+
+<h3>4a.2 The library builds <code>-fno-rtti</code>, so <code>dynamic_cast</code> is unavailable</h3>
+
+<p>A session has to verify that a configuration handed back to it is one this library made. <code>dynamic_cast</code> is the reflex, and it does not compile here — nor would it in Chromium, which also builds without RTTI.</p>
+
+<p><code>QueryInterface</code> already <em>is</em> a typed downcast that needs no RTTI, so it serves for this too, through an <code>IConfigAccess</code> id kept out of the public header. The mechanism that replaces <code>pNext</code> turns out to replace RTTI as well, and there is one mechanism to understand rather than two. This is a point in the design's favour that was not visible from the design alone.</p>
+
+<h3>4a.3 <code>RegisterSemaphore</code> imports a handle; it does not adopt a <code>VkSemaphore</code></h3>
+
+<p>The sketch had <code>RegisterSemaphore(VkSemaphore)</code>. The implementation imports an <strong>OS handle</strong> into a new timeline semaphore — a binary semaphore cannot report a completion to a consumer that was not already waiting. The interface takes an <code>ExternalSemaphore</code> accordingly. A design reviewed only on paper would have shipped the wrong signature.</p>
+
+<h3>4a.4 <code>Flush()</code> is terminal, and the name hid it</h3>
+
+<p>The sketch had <code>Flush()</code> and <code>Drain()</code> as a checkpoint and a stronger checkpoint. They are not. In the implementation, <code>Flush()</code> <strong>releases the encoder</strong>: it writes the trailing bitstream a reordered GOP still owes, drops the encoder object, and every later submission is refused with <code>ERROR_NOT_INITIALIZED</code>. <code>DrainPendingFrames()</code> is the non-terminal one — the session stays fully usable and may be drained repeatedly.</p>
+
+<p>This was found by running frames through, not by reading. The first working version of the test encoded eight frames, called what it thought was a checkpoint, and then could not submit a ninth; the failure surfaced as <code>encoder status 16</code> and nothing else, which is precisely why the <code>IDiagnostics</code> channel exists.</p>
+
+<p>The interface therefore names the two operations for what they do:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>v3</th>
+    <th>Underlying</th>
+    <th>Meaning</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>Drain()</code></td>
+    <td><code>DrainPendingFrames()</code></td>
+    <td>Encode everything submitted and wait. The session stays usable. Callable repeatedly.</td>
+  </tr>
+  <tr>
+    <td><code>Finish()</code></td>
+    <td><code>Flush()</code></td>
+    <td>End the stream. Terminal; later submissions refused. Encoded frames stay acquirable.</td>
+  </tr>
+</tbody>
+</table>
+
+<p><code>Flush</code> is not carried forward as a name. It reads like a checkpoint in every other API a caller has used, and here it ends the session — a caller who reaches for it by habit loses a stream and gets one error code to explain it.</p>
+
+<h3>4a.5 <code>ExternalImage</code> needs the usage the image was created with</h3>
+
+<p>A <code>VkImage</code> handle does not carry its own <code>VkImageUsageFlags</code> or <code>VkImageCreateFlags</code>, and the library needs both to decide whether the encoder can read the image directly or must stage it. The first version of the value type omitted them, and registration then succeeded while submission failed. <code>usage</code>, <code>createFlags</code> and <code>residency</code> are now fields, which is exactly the kind of thing §3.5's rule is about: a caller-constructed type has to be right the first time, because it can never grow one.</p>
+
+<h3>4a.6 Driving the completion roles found a deadlock</h3>
+
+<p><code>ICompletionSignal</code> and <code>Reconfigure</code> were implemented and, for a while, only checked for being <em>present</em> — <code>Query</code> returned non-null, so the role "worked". Driving them found two defects that presence checks cannot reach, and both were in this design's own implementation rather than in the layer below.</p>
+
+<p><strong><code>SetCallback</code> deadlocked against its own quiesce point.</strong> Installing or clearing a completion callback returns only once any in-flight invocation has returned. The implementation held its callback mutex across that call — and the in-flight invocation was a trampoline waiting on the same mutex. The fix is ordering, not locking: release before the library call, clear the cookie only <em>after</em> the library has quiesced (which is what makes "you may now destroy what it pointed at" true), and route a <em>replacement</em> through a detach, because the library sees the same trampoline pointer either way and would not quiesce on its own.</p>
+
+<p><strong><code>Reconfigure</code> replaced rather than overlaid.</strong> A caller wanting to change the bitrate had to restate the resolution, format and frame rate it was not touching, or be refused for changing them. The session now keeps the configuration it was created with and overlays only what the new one states, with an unset field meaning "leave it alone". That is the same principle as <code>ResolveInputPath</code>: the library holds the rule, and the caller is not made to know it.</p>
+
+<p>One thing the tests deliberately do <strong>not</strong> assert: one callback per frame. Notifications coalesce — the header says so — so the check is that the callback fires and never more often than frames complete, and that retrieval reconciles against the counter the way consumers are told to. A test asserting one-to-one would pass today and encode a promise the library does not make.</p>
+
+<p>The timeline semaphore is checked for what it means (<code>lastFrameId + 1</code> once the encodes retire, observed at 4006 for a last id of 4005) and for being withdrawn when the stream ends. Detachment is shown to stop notifications by encoding <em>further</em> frames and requiring the count not to move; an earlier version compared the counter with itself and would have passed on a detach that did nothing.</p>
+
+<h3>4a.7 What porting a real host found that review could not</h3>
+
+<p>The design was reviewed, prototyped, compiled, and exercised by an 83-check suite on hardware before Chromium's encode accelerator was moved onto it. That port then found <strong>ten</strong> things the interface could not express or expressed wrongly. Every one is a place where the design modelled what a caller receives when things work and lost what only matters when they do not.</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>#</th>
+    <th>What was missing</th>
+    <th>What it would have cost</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>1</td>
+    <td>Acquire/release fences on <code>FrameSubmit</code></td>
+    <td>zero-copy reads a half-rendered frame; caller never learns when it may write the buffer again</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>Per-frame outcome on <code>EncodedFrame</code></td>
+    <td>a <code>VK_TIMEOUT</code> deadline drop emitted as an empty bitstream and called output</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td><code>RuntimeInfo::supportsNativeHandle</code> and three siblings</td>
+    <td>the host allocates the wrong kind of buffer</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>A release callback on <code>SetCallback</code></td>
+    <td>a heap-allocated cookie with no correct owner</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>The ownership echo on registration</td>
+    <td>nothing for the host to assert against</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>An invented <code>int32</code> index instead of the library's handle</td>
+    <td>a second registry that existed only to translate</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td><code>IDeviceBinding</code> on a session, not only a platform</td>
+    <td><strong>the CPU dma-buf tier silently disabled; every frame demoted to staging</strong></td>
+  </tr>
+  <tr>
+    <td>8</td>
+    <td>Device provenance on <code>ExternalImage</code></td>
+    <td>the library's cross-device check disabled, not merely weakened</td>
+  </tr>
+  <tr>
+    <td>9</td>
+    <td>The echo returned inside <code>Expected</code></td>
+    <td>lost on exactly the refusal path where it is the only way to know</td>
+  </tr>
+  <tr>
+    <td>10</td>
+    <td><code>QueryImageSupport</code> reading the status and not the reply</td>
+    <td>every refusal read as an acceptance</td>
+  </tr>
+</tbody>
+</table>
+
+<p>Number 7 is the one to dwell on, because it is the failure mode this project exists to prevent: nothing crashed, no test asserted anything false, and the encoder produced correct output — by the slowest path available. It was caught only because a test counts which tier ran.</p>
+
+<p>Number 8 is the one to be least comfortable about. An earlier pass of this document recorded that <code>ExternalImage</code> covered every field the accelerator sets, having checked for assignments to each. The provenance fields are filled by a span copy, so the check missed them and cleared a gap that was real.</p>
+
+<p><strong>Three further defects were in the porting, not the design</strong>, and they share one shape: a rich answer converted to a boolean. The stall watchdog asked for the completion counters and kept only whether the call succeeded, so it could no longer name which side had stalled. Registration refusals were flattened to a single failure code at eight sites, collapsing <code>NOT_READY</code> — park and re-submit — into a fatal refusal that memoizes a descriptor as unusable. And the completion echo was read into a variable the refusal path then discarded.</p>
+
+<p>The lesson the whole exercise supports is narrow and worth stating without inflation: an interface is not finished when it compiles, nor when its own tests pass. It is finished when something that did not write it has to answer real questions through it.</p>
+
+<h3>4a.8 Two conveniences that survived contact</h3>
+
+<p><code>ResolveInputPath()</code> is implemented against <code>VkEncClassifyInput</code>, which lives in the <em>internal</em> header. Because the translation unit sits in <code>src/</code>, it can reach it — so the rule the caller currently re-derives is answered by the library, with the real classifier, at no layering cost.</p>
+
+<p><code>Query&lt;IHdrMetadataConfig&gt;</code> returns null on an H.264 configuration and non-null on H.265, checked on hardware. The refusal that today happens inside session creation is now a null check the caller writes once.</p>
+
+<hr>
+
+<h2>4b. How this sits with the browser's own interfaces</h2>
+
+<p>Worth settling explicitly, because it decides whether v3 is an invention or a convergence.</p>
+
+<h3>4b.1 The config builder is ours, not Chromium's</h3>
+
+<p><code>media/gpu/vulkan/vulkan_video_encoder_config_builder.{h,cc}</code> has exactly one commit in its history — <code>61ebb410d232</code> <em>"media: the Vulkan Video encode accelerator"</em> — and upstream Chromium has no <code>media/gpu/vulkan/</code> directory at all. It is not pre-existing browser code we must live with: it is an adapter this integration had to grow, and it exists <strong>because</strong> the library speaks in descriptor structs. The descriptor API did not merely fail to help; it created the adapter.</p>
+
+<p>How much work that is, stated honestly: 429 lines of code, of which 113 are the library-policy derivation of §0. Not 1537 — that is the file count and two thirds of it is comment.</p>
+
+<h3>4b.2 Chromium's own encoder interface already looks like v3</h3>
+
+<p><code>media::VideoEncodeAccelerator</code> — the interface our accelerator implements — is built from exactly the pieces proposed here:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Chromium, today</th>
+    <th>v3</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Pure-virtual abstract class, library-allocated, caller never lays it out</td>
+    <td><code>IEncoderSession</code> and the role interfaces</td>
+  </tr>
+  <tr>
+    <td>Nested pure-virtual <code>VideoEncodeAccelerator::Client</code> for completion</td>
+    <td><code>ICompletionSignal</code></td>
+  </tr>
+  <tr>
+    <td><code>EncoderStatus = TypedStatus&lt;EncoderStatusTraits&gt;</code> — <strong>one</strong> error currency, code plus payload</td>
+    <td><code>Status</code> (§2.2)</td>
+  </tr>
+  <tr>
+    <td><code>Config</code>: a plain struct with real constructors</td>
+    <td><code>PlatformCreateInfo</code> and the value types (§3.5)</td>
+  </tr>
+  <tr>
+    <td><strong>Zero</strong> occurrences of <code>pNext</code> in the header</td>
+    <td>zero</td>
+  </tr>
+</tbody>
+</table>
+
+<p>So v3 is not a new idiom; it is the idiom on the other side of the seam. Today the accelerator is a translator between two philosophies, and the translation is where the config builder lives.</p>
+
+<p>Two differences are real and worth naming rather than papering over:</p>
+
+<ul>
+  <li><strong>Ref-counting spelling.</strong> Chromium uses <code>scoped_refptr&lt;T&gt;</code> over <code>base::RefCountedThreadSafe</code>;</li>
+</ul>
+
+<p>we use <code>std::shared_ptr</code> (§2.3). Both are intrusive-vs-external variants of the same idea, and the accelerator holds both kinds already. This is a boundary, not a conflict.</p>
+
+<ul>
+  <li><strong>Completion style.</strong> Chromium wants one style — a <code>Client</code> callback. <code>ICompletionSignal</code></li>
+</ul>
+
+<p>offers six entry points (callback, counter, semaphore, event handle, fence export) because TRV and the AQ library want the others. Making it a <em>role</em> is what keeps that generality out of the browser's way: the browser queries the interface, uses the callback, and never sees the rest.</p>
+
+<h3>4b.3 How the rest of the browser communicates</h3>
+
+<p>Two layers, and neither resembles a descriptor chain:</p>
+
+<ol>
+  <li><strong>In-process (within the GPU process, where we live):</strong> pure-virtual C++ abstract classes,</li>
+</ol>
+
+<p><code>scoped_refptr</code> for shared ownership, <code>base::OnceCallback</code>/<code>RepeatingCallback</code> for completion. <code>VideoEncodeAccelerator</code>, <code>VideoDecoder</code>, <code>ImageBacking</code> are all this shape.</p>
+
+<ol>
+  <li><strong>Cross-process:</strong> Mojo. Interfaces are declared in IDL (<code>media/mojo/mojom/video_encode_accelerator.mojom</code></li>
+</ol>
+
+<p>defines <code>VideoEncodeAcceleratorProvider</code>, <code>VideoEncodeAcceleratorConfig</code> and friends), the bindings are generated, and structs cross the boundary through typemap traits. Extension is the IDL's job — a new field is added to the <code>.mojom</code> and the generated code handles both ends.</p>
+
+<p>The relevant conclusion for us: <strong>Chromium never asks a caller to lay out a struct that crosses a version boundary.</strong> In-process it uses vtables; cross-process it uses generated serialisation. The <code>sType</code>/<code>pNext</code> pattern has no analogue anywhere in the media stack, which is why the adapter had to be written by hand.</p>
+
+<p>We are static-linked (Model D), so layer 1 is the one we join. v3 joins it directly.</p>
+
+<hr>
+
+<h2>4c. The existing clients, and the process boundary</h2>
+
+<h3>4c.1 Who actually consumes this</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Consumer</th>
+    <th>Linkage</th>
+    <th>Surface it uses</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><strong>Chromium</strong></td>
+    <td>static, vendored (Model D)</td>
+    <td>the ext API in full: config, submit, acquire, register, capabilities</td>
+  </tr>
+  <tr>
+    <td><strong>TRV</strong> (<code>vk-encoder-instance</code>)</td>
+    <td>dynamic <code>libvkvideo-encoder.so.1</code>, <strong>optional</strong> — Windows <code>DELAYLOAD</code>, and a display-only mode when absent</td>
+    <td><strong>seven calls</strong>: <code>CreateVulkanVideoEncoderExt</code>, <code>InitializeExt</code>, <code>SubmitExternalFrame</code>, <code>ReleaseEncodedFrame</code>, <code>Flush</code>, <code>GetVkDevice</code>, <code>GetVkPhysicalDevice</code></td>
+  </tr>
+  <tr>
+    <td><strong>Samples demos</strong> (<code>vk-video-enc-test</code>)</td>
+    <td>in-tree</td>
+    <td>the original four-method interface, driven by <code>CreateVulkanVideoEncoder(codec, argc, argv)</code></td>
+  </tr>
+  <tr>
+    <td><strong>AQ</strong> (<code>nvenc_aq_vulkan</code>)</td>
+    <td><strong>not a client</strong> — <code>add_subdirectory</code>d <em>into</em> the library</td>
+    <td>none; it is a provider linked in below the interface</td>
+  </tr>
+</tbody>
+</table>
+
+<p>Three things follow.</p>
+
+<p><strong>TRV's real surface is seven calls, and it is fire-and-forget.</strong> It submits frames and releases them; it never retrieves a bitstream, because the library writes the output. Migrating it means <code>VkEncCreatePlatform</code> + <code>CreateConfig</code>/<code>CreateSession</code>, then <code>Query&lt;IFrameSubmitter&gt;</code>, <code>Query&lt;IBitstreamSource&gt;</code> for the release, and <code>Query&lt;IDeviceBinding&gt;</code> for the two getters. That is a day, not a project — and it is worth knowing before anyone budgets the migration off the 29-method count.</p>
+
+<p><strong>The <code>shared_ptr</code> ABI constraint of §2.3 is real for TRV, not hypothetical.</strong> TRV compiles with <code>VK_VIDEO_ENCODER_SHAREDLIB=1</code> and resolves <code>libvkvideo-encoder.so.1</code> at load time. TRV and the library must be built with the same toolchain and standard library. They already are; this is a constraint to record, not a defect to fix.</p>
+
+<p><strong>TRV treats the encoder as an optional, delay-loadable dependency, and that dictates the factory.</strong> A <code>DELAYLOAD</code>ed or <code>dlsym</code>'d entry point must have a stable, unmangled name, so <code>IEncoderPlatform::Create</code> as a static member is the wrong shape — a mangled symbol is not something a delay-load stub or a <code>dlsym</code> call can name portably. The design therefore keeps <strong>exactly one exported C symbol</strong>, <code>VkEncCreatePlatform</code>, mirroring today's <code>CreateVulkanVideoEncoderExt</code>; everything else is reached through virtuals on the object it returns. One symbol to resolve, one symbol whose absence means "run without the encoder."</p>
+
+<h3>4c.2 Is the interface serialisable across processes?</h3>
+
+<p><strong>Not by itself — and no consumer needs it to be.</strong></p>
+
+<p>Both consumers draw the process boundary <em>above</em> the library, not through it:</p>
+
+<ul>
+  <li><strong>TRV</strong> runs the encoder in a separate process, <code>vk-encoder-instance</code>, and talks to it over</li>
+</ul>
+
+<p><code>AF_UNIX</code>/<code>SOCK_STREAM</code> with <code>sendmsg</code>/<code>recvmsg</code> and <strong><code>SCM_RIGHTS</code></strong> to pass dma-buf file descriptors. The protocol is TRV's own; the library sits entirely inside the encoder process.</p>
+
+<ul>
+  <li><strong>Chromium</strong> puts the boundary between the renderer and the GPU process, in Mojo. The library</li>
+</ul>
+
+<p>is inside the GPU process.</p>
+
+<ul>
+  <li>The library itself contains no IPC. The only mention of <code>SCM_RIGHTS</code> in the public header is a</li>
+</ul>
+
+<p>comment describing how a <em>host</em> passes a handle in.</p>
+
+<p>That is not a coincidence, and it is the answer to the question. The library's objects are a <code>VkDevice</code>, a <code>VkImage</code>, a video session — things that have no meaning outside the process that owns them. What crosses a boundary is never the object, it is the <strong>OS handle</strong> exported from it: a dma-buf fd, an external semaphore handle, a shared-memory region. The API already treats those as an explicit, separate concern (<code>VkVideoEncoderExternalHandleType</code>, <code>ExportCompletionSemaphoreHandle</code>, the DRM modifier query), and v3 keeps that discipline unchanged. So the encoder always runs where the device is, and the boundary goes above it.</p>
+
+<p><strong>What the descriptor style would have given up.</strong> One honest point in its favour: a tagged struct chain is <em>self-describing</em>. A generic marshaller can walk a <code>pNext</code> chain reading <code>sType</code> and copying payloads without knowing any of the types. A vtable offers nothing comparable — it is a pointer to code in one address space. That is a real property being traded away.</p>
+
+<p>It is a smaller loss than it appears, for two reasons. A <code>pNext</code> chain still contains pointers, so a marshaller needs a per-type size and a per-type pointer walk anyway — the tag saves the dispatch, not the work. And the payloads that matter are handles, which are never serialisable by any style.</p>
+
+<p><strong>If a proxy is ever wanted, the role split makes it easier, not harder.</strong> Each role is a small, single-purpose interface — <code>IFrameSubmitter</code> is four methods — which is exactly the shape of a Mojo interface or a generated stub. Proxying six focused interfaces is mechanical; proxying one 29-method object with a <code>pNext</code>-extensible config is not. The discipline that keeps it mechanical is already a rule of this design (§3.5): <strong>every method parameter is either a plain serialisable value type or an explicitly exportable OS handle.</strong> Nothing in the design takes a pointer to a caller-owned structure whose layout the wire would have to know.</p>
+
+<p><strong>Decision: v3 is an in-process interface.</strong> No Mojo, no proxy, no wire format, and no serialisation requirement on any method signature. Both consumers already arrange the boundary above the library and neither asks for anything else, so building a transport into the design would be speculative work carried by every caller.</p>
+
+<p>What keeps that decision cheap to revisit is the discipline in §3.5, which the design follows for its own reasons: every method parameter is a plain value type or an explicitly exportable OS handle, and no method takes a pointer to a caller-owned structure whose layout a wire would need to know. If a third consumer ever needs a proxy, the role interfaces are already the right granularity to generate one from. Nothing is being designed <em>for</em> that case; it is simply not being designed <em>out</em>.</p>
+
+<h3>4c.3 Chromium's out-of-process encoding mode</h3>
+
+<p>Chromium is moving hardware encode out of the GPU process into a dedicated utility process. It matters here because it decides <strong>which process our library runs in</strong>, and because one of its gates excludes us.</p>
+
+<p>The shape, as it stands upstream:</p>
+
+<ul>
+  <li><strong>Feature:</strong> <code>kUseOutOfProcessVideoEncoding</code>, Linux and ChromeOS only,</li>
+</ul>
+
+<p><code>FEATURE_DISABLED_BY_DEFAULT</code>. Its comment: <em>"Spawn utility processes to perform hardware encode acceleration instead of using the GPU process."</em></p>
+
+<ul>
+  <li><strong>Launch:</strong> the browser process calls <code>ServiceProcessHost::Launch(...)</code> with display name</li>
+</ul>
+
+<p><code>&quot;Video Encoder&quot;</code> (<code>content/browser/media/video_encode_accelerator_provider_launcher.cc</code>).</p>
+
+<ul>
+  <li><strong>Interface chain:</strong> browser → <code>VideoEncodeAcceleratorProviderFactory</code> → (renderer)</li>
+</ul>
+
+<p><code>VideoEncodeAcceleratorProvider</code> → <code>CreateVideoEncodeAccelerator(EncodeCommandBufferId?, pending_receiver&lt;VideoEncodeAccelerator&gt;)</code>. All Mojo, all generated.</p>
+
+<ul>
+  <li><strong>Sandbox:</strong> <code>ServiceSandbox=sandbox.mojom.Sandbox.kHardwareVideoEncoding</code>, which on Linux</li>
+</ul>
+
+<p>returns <code>GetGpuProcessSandbox(...)</code> under an explicit <em>"TODO(b/255554267): we're using the GPU process sandbox policy for now as a transition step… we should create a policy that's tighter just for hardware video encoding."</em> So today it is exactly as permissive as the GPU process, and that is stated to be temporary.</p>
+
+<p><strong>What it does not change for this design.</strong> The Mojo boundary sits above <code>media::VideoEncodeAccelerator</code>, which sits above our library. The library still runs in whichever process owns the <code>VkDevice</code>; out-of-process encoding only changes which process that is. v3 needs nothing added for it — the same conclusion as §4c.2, reached from the browser's side.</p>
+
+<p><strong>Position:</strong> the integration targets the GPU process, where the feature is off by default and where the zero-copy seam works. Out-of-process encoding is not in scope for v3. The two items below are recorded so that enabling it later is a decision with known consequences rather than a surprise; neither is work for this design.</p>
+
+<p><strong>Two things it does change, and both are risks worth naming.</strong></p>
+
+<p><em>Zero-copy depends on SharedImage access that a utility process does not have by default.</em> Our zero-copy tier is built on <code>OzoneImageBacking::ProduceVulkanVideo</code>. In the OOP model a caller may only supply shared-image-backed frames when <code>EncodeCommandBufferId</code> carries a valid <code>channel_token</code> and <code>route_id</code> <strong>and</strong> the profile advertises <code>supports_gpu_shared_images</code>; otherwise the accelerator accepts CPU-memory or <code>GpuMemoryBuffer</code> frames only. The sibling feature for decoding, <code>kUseSharedImageInOOPVDProcess</code>, is disabled with <em>"TODO(crbug.com/457296322): Enable after fixing issue where SharedImages are missing from the SharedImageManager."</em> Running our encoder out of process without setting <code>supports_gpu_shared_images</code> would therefore demote it from <code>zero-copy</code> to <code>cpu-dmabuf</code> or <code>staging</code> — silently, and functionally green. That is precisely the degradation the Tier-3 harness exists to catch, and it is the reason that harness reports a tier rather than a pass.</p>
+
+<p><em>The service is gated on a flag that Vulkan encode does not set.</em> Every piece above — <code>RunVideoEncodeAcceleratorProviderFactory</code> in <code>content/utility/services.cc</code>, the <code>kHardwareVideoEncoding</code> sandbox case — is behind <code>BUILDFLAG(USE_LINUX_VIDEO_ACCELERATION)</code>, and <code>media/gpu/args.gni</code> defines:</p>
+
+<p>``<code>gn use_linux_video_acceleration = use_vaapi || use_v4l2_codec </code>``</p>
+
+<p><code>enable_vulkan_video_encode</code> does not participate. A Vulkan-only build does not compile the out-of-process encoding service at all. If that mode ever becomes the default, such a configuration has no service to launch — the same gap that already keeps the in-tree VEA test targets unreachable without VA-API or V4L2. Making <code>use_linux_video_acceleration</code> include <code>enable_vulkan_video_encode</code> is a one-line change, and it should be made deliberately rather than discovered.</p>
+
+<hr>
+
+<h2>5. Migration</h2>
+
+<p>Neither Chromium nor <code>ThreadedRenderingVk_Standalone</code> nor the AQ library can switch atomically, so the two surfaces coexist for exactly one release.</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Step</th>
+    <th>Work</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>1</td>
+    <td>Land <code>vk_video_encoder/include/vulkan_video_encoder_v3.h</code> — interfaces only, no implementation. Compiles standalone; reviewable on its own.</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>Implement v3 as a <strong>shim over the existing implementation</strong>. No behaviour change, no risk to the RC-6 test results.</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>Port the C++ ctest suites to v3. They are the proof that the shim is faithful.</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>Port Chromium: <code>vulkan_video_encode_accelerator.cc</code> first, then delete the resolvable parts of <code>vulkan_video_encoder_config_builder.cc</code> as <code>IEncoderConfig</code> absorbs them. The absorbable derivation is 113 code lines (§0); the gain is that it stops being duplicated per caller, not the count.</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>Port TRV — seven call sites (§4c.1). The AQ library is not a client and needs no port.</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>Invert: v3 becomes the implementation, <code>VulkanVideoEncoderExt</code> becomes the shim.</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td>Delete the shim, the 22 <code>sType</code> enumerants, the 21 <code>sType</code>/<code>pNext</code> pairs, the layout-pin tests, and the second error enum.</td>
+  </tr>
+</tbody>
+</table>
+
+<p>Steps 1–3 are self-contained and testable without touching a caller. Step 4 is where the payoff is measurable, and it is measurable in deleted lines.</p>
+
+<hr>
+
+<h2>6. Costs, honestly</h2>
+
+<ul>
+  <li><strong>One extra indirection per feature acquisition.</strong> Paid once per session at <code>Query</code>, never per</li>
+</ul>
+
+<p>frame. The per-frame path (<code>SubmitFrame</code>, <code>AcquireEncodedFrame</code>) is one virtual call, exactly as it is today.</p>
+
+<ul>
+  <li><strong>Virtual calls on config setters.</strong> Configuration path, not hot; measured in nanoseconds</li>
+</ul>
+
+<p>against a session creation measured in milliseconds.</p>
+
+<ul>
+  <li><strong><code>shared_ptr</code>/<code>std::string</code> in the ABI</strong> constrains shared-library consumers to a matching</li>
+</ul>
+
+<p>toolchain (§2.3). Static-linked Chromium is unaffected.</p>
+
+<ul>
+  <li><strong>A shim release.</strong> Two surfaces to keep working for one cycle, which is the price of not</li>
+</ul>
+
+<p>breaking three consumers at once.</p>
+
+<ul>
+  <li><strong>String interface ids cost a comparison</strong> at <code>Query</code>. Once per session. The alternative — a</li>
+</ul>
+
+<p>central enum — is the thing we are removing.</p>
+
+<ul>
+  <li><strong>Self-describing marshalling is given up</strong> (§4c.2): a <code>pNext</code> chain can be walked generically</li>
+</ul>
+
+<p>by tag, and a vtable cannot. No current consumer marshals the interface — both put the process boundary above the library — but it is a real property, traded knowingly.</p>
+
+<h2>7. What is explicitly <em>not</em> changing</h2>
+
+<ul>
+  <li>The library keeps <code>std::shared_ptr</code> semantics it already has; this is not a refcount rewrite.</li>
+  <li>Vulkan handles stay Vulkan handles. No wrapping <code>VkDevice</code>.</li>
+  <li>The encode pipeline, the DPB logic, the compute filter, the parameter caches: untouched. This</li>
+</ul>
+
+<p>is a surface redesign, and the 12611-line implementation is reached through a shim until every caller has moved.</p>
+
+<hr>
+
+<h2>8. The mechanism is compiled, not asserted</h2>
+
+<p><code>vulkan_video_encoder_v3_prototype.cpp</code> in this directory is a self-contained, runnable reduction of every mechanism above:</p>
+
+<p>``<code>sh g++     -std=c++17 -Wall -Wextra -Werror -O2 vulkan_video_encoder_v3_prototype.cpp -o v3proto clang++ -std=c++17 -Wall -Wextra -Werror -O2 vulkan_video_encoder_v3_prototype.cpp -o v3proto </code>``</p>
+
+<p>Clean at <code>-Wall -Wextra -Werror</code> in all four combinations — GCC 14 and Chromium's bundled clang, at <code>-std=c++17</code> and <code>-std=c++20</code>. It asserts seven properties:</p>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>#</th>
+    <th>Property proven</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>1</td>
+    <td><code>Query&lt;IFrameSubmitter&gt;</code> resolves a role off a session held as <code>Ref&lt;IEncoderSession&gt;</code>.</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><code>IFrameSubmitterV2</code> is discovered on the <strong>same object</strong> by its own id — versioning by inheritance works without a size field or a <code>pNext</code> walk.</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>An unimplemented role (<code>ICompletionSignal</code>) yields <code>nullptr</code>, cleanly — the capability query and the feature check are the same operation.</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>The aliasing <code>shared_ptr</code> constructor keeps the owner alive: the session ref is <code>reset()</code> and the bitstream role still reads correctly. A caller cannot outlive-dangle a role.</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>The H.264-has-no-HDR rule holds in the type system: <code>Query&lt;IHdrMetadataConfig&gt;</code> is non-null on an H.265 config and null on an H.264 one, with no session created and no call refused.</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>Chained setters return <code>IEncoderConfig&amp;</code>, <code>Validate()</code> reports <code>InvalidArgument</code> with detail, and <code>ResolveInputPath()</code> answers from the library.</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td><code>Status</code> is 16 bytes and <code>std::is_trivially_copyable</code> — no allocation and no STL type on the per-frame return path.</td>
+  </tr>
+</tbody>
+</table>
+
+<p>Property 4 is what makes handing a caller six separate role pointers safe. Property 5 is the one that pays: a runtime rejection deep in <code>InitializeExt</code> becomes a null check written once.</p>
+
+<h3>8.1 Keep the floor honest</h3>
+
+<p>The floor is a claim that decays silently the first time someone writes <code>std::span</code> in the header. It is also trivially checkable — the probe is one translation unit:</p>
+
+<p>``<code>sh echo &#x27;#include &quot;vulkan_video_encoder_v3.h&quot; int main(){return 0;}&#x27; &gt; /tmp/probe.cpp g++ -std=c++17 -fsyntax-only -I vk_video_encoder/include /tmp/probe.cpp </code>``</p>
+
+<p>Add it to the ctest suite alongside the existing header checks, so a C++20 construct in the public header fails a build rather than a downstream consumer.</p>
+
+</div>
+</article>
+
+<footer>
+    <div class="container">
+        <p></p>
+    </div>
+</footer>
+</body>
+</html>

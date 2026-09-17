@@ -17,6 +17,11 @@ limitations under the License.
 -->
 # Vulkan Video Integration into Chromium: Complete Design Document
 
+<!-- DOC-STATUS -->
+> **Status: CURRENT.** Design of record for the DECODE integration.
+> Index: [`README.md`](README.md).
+
+
 **Version**: 1.0  
 **Date**: December 4, 2025  
 **Authors**: Engineering Team  

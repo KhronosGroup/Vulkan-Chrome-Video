@@ -17,12 +17,17 @@ limitations under the License.
 -->
 # Plugging the NVIDIA Vulkan-Video-Samples Encoder Library into Chromium
 
+<!-- DOC-STATUS -->
+> **Status: CURRENT.** Gap analysis. **Defines the `G-*` / `G-NEW-*` ids used in commit messages.**
+> Index: [`README.md`](README.md).
+
+
 **Version**: 1.3 (adds Model D — static link via `third_party/vulkan_video_samples/`)
 **Date**: May 19, 2026
 **Status**: Evaluation
 **Scope**: Determine if the public encoder library shipping under `vk_video_encoder/include/` can be **directly plugged** into Chromium as a backend, what is missing, and what the new development estimate becomes when we target the library instead of writing every codec delegate from scratch.
 
-**Related docs**: [`VULKAN_VIDEO_ENCODE_INTEGRATION_DESIGN_DOCUMENT.md`](VULKAN_VIDEO_ENCODE_INTEGRATION_DESIGN_DOCUMENT.md) (v1.1), [`VULKAN_VIDEO_TEST_PLAN.md`](VULKAN_VIDEO_TEST_PLAN.md), [`VULKAN_VIDEO_ENCODE_DESIGN_REVIEW_FINDINGS.md`](VULKAN_VIDEO_ENCODE_DESIGN_REVIEW_FINDINGS.md).
+**Related docs**: [`VULKAN_VIDEO_ENCODE_INTEGRATION_DESIGN_DOCUMENT.md`](VULKAN_VIDEO_ENCODE_INTEGRATION_DESIGN_DOCUMENT.md) (v1.1), [`VULKAN_VIDEO_TEST_PLAN.md`](VULKAN_VIDEO_TEST_PLAN.md), `VULKAN_VIDEO_ENCODE_DESIGN_REVIEW_FINDINGS`.
 
 ---
 
@@ -2628,7 +2633,6 @@ Phase 1 lands G-NEW-1, 2, 3, 8, 9, 11 upstream (~1,130 LoC at v1.3 sizing, ~2 we
 
 - [`VULKAN_VIDEO_ENCODE_INTEGRATION_DESIGN_DOCUMENT.md`](VULKAN_VIDEO_ENCODE_INTEGRATION_DESIGN_DOCUMENT.md) — main design (v1.1 baseline)
 - [`VULKAN_VIDEO_TEST_PLAN.md`](VULKAN_VIDEO_TEST_PLAN.md) — test infrastructure
-- [`VULKAN_VIDEO_ENCODE_DESIGN_REVIEW_FINDINGS.md`](VULKAN_VIDEO_ENCODE_DESIGN_REVIEW_FINDINGS.md) — F1–F13 review items
 
 ---
 

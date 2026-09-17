@@ -17,6 +17,11 @@ limitations under the License.
 -->
 # Browser HW Encoder: Use Cases, Processing Graphs, and Zero-Copy Plug-In Points
 
+<!-- DOC-STATUS -->
+> **Status: CURRENT.** Browser encode use cases U1-U6 and per-use-case frame flow.
+> Index: [`README.md`](README.md).
+
+
 **Status:** v1.1 — 2026-07-07 (v1.1 folds in web-verified flag names, getStats verification
 fields, sample-page inventory, and CI environment caveats)
 **HTML version:** [vulkan_video_encoder_use_cases.html](vulkan_video_encoder_use_cases.html)
@@ -479,7 +484,7 @@ Full text with context in the [HTML version](vulkan_video_encoder_use_cases.html
 - **C11** — `RequestEncodingParametersChange` is a no-op pending library G-NEW-3/G-NEW-6; U1 bitrate assertions are expected-fail.
 - **C12** — `kVaapiOnNvidiaGPUs` is default-off; the meaningful control run is software, not VA-API.
 - **C13** — GPU RGBA frames silently drop to CPU libyuv `ConvertAndScale` in the adapter until P3-RGBA (§3.1) advertises RGBA formats.
-- **C14** — zero-copy is Wayland-only today; X11 silently degrades to staging (missing import override + F7 native-pixmap availability, §3.2).
+- **C14** — **CORRECTED, measured on bare metal.** Wayland reaches `zero-copy` (480/480 frames, NVENC 35%); X11 reaches `cpu-dmabuf` (398–475/480), not staging. A host reaches staging when its X SERVER runs on a GPU whose GBM cannot allocate NV12 `SCANOUT_CPU_READ_WRITE` — a property of the host, not of X11. On a hybrid host the compositor and the encoder can land on different GPUs, which fails before the tier is reached at all. See `VULKAN_VIDEO_ENCODE_SURFACES_AND_GPU_TOPOLOGY.md`.
 
 ## 6. Open architecture questions
 

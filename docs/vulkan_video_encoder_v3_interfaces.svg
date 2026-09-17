@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 700" font-family="Segoe UI,Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5a6b7d"/></marker>
+    <marker id="ai" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#fff" stroke="#2f6f4f" stroke-width="1.4"/></marker>
+    <style>
+      .ttl{font-size:19px;font-weight:600;fill:#1b2733}
+      .grp{font-size:12px;font-weight:600;fill:#5a6b7d;letter-spacing:.09em}
+      .ifc{font-size:13.5px;font-weight:600;fill:#12314d}
+      .mth{font-size:11px;fill:#4a5a6a}
+      .lbl{font-size:11px;fill:#5a6b7d;font-style:italic}
+      .box{fill:#f4f8fb;stroke:#9fb8cc;stroke-width:1.3;rx:6}
+      .boxv{fill:#eef6f0;stroke:#7aa98d;stroke-width:1.3;rx:6}
+      .boxc{fill:#fdf6ec;stroke:#d4ab6a;stroke-width:1.3;rx:6}
+      .pane{fill:none;stroke:#c8d6e2;stroke-width:1.1;stroke-dasharray:5 4;rx:9}
+      .ln{stroke:#5a6b7d;stroke-width:1.4;fill:none}
+    </style>
+  </defs>
+
+  <text class="ttl" x="26" y="34">Encoder API v3 — interface graph</text>
+  <text class="lbl" x="26" y="54">solid arrow = creates · dashed arrow = Query&lt;I&gt;() , null when absent · hollow arrow = inherits</text>
+
+  <rect class="pane" x="24" y="74" width="420" height="252"/>
+  <text class="grp" x="40" y="96">PLATFORM SCOPE — before any session exists</text>
+
+  <rect class="box" x="44" y="110" width="196" height="72"/>
+  <text class="ifc" x="56" y="130">IEncoderPlatform</text>
+  <text class="mth" x="56" y="148">Create(PlatformCreateInfo)</text>
+  <text class="mth" x="56" y="163">CreateConfig(Codec, Profile)</text>
+  <text class="mth" x="56" y="176">CreateSession(config)</text>
+
+  <rect class="box" x="266" y="110" width="158" height="72"/>
+  <text class="ifc" x="278" y="130">IEncoderCaps</text>
+  <text class="mth" x="278" y="148">Codecs / Profiles</text>
+  <text class="mth" x="278" y="163">InputFormats / DrmModifiers</text>
+  <text class="mth" x="278" y="176">Supports(Feature)</text>
+  <path class="ln" d="M240,146 L262,146" marker-end="url(#a)" stroke-dasharray="4 3"/>
+
+  <rect class="boxc" x="44" y="212" width="196" height="96"/>
+  <text class="ifc" x="56" y="232">IEncoderConfig</text>
+  <text class="mth" x="56" y="250">SetResolution / SetFrameRate</text>
+  <text class="mth" x="56" y="264">SetRateControl / SetGop</text>
+  <text class="mth" x="56" y="278">ResolveInputPath()  &#8592; library</text>
+  <text class="mth" x="56" y="292">Validate()</text>
+  <path class="ln" d="M142,182 L142,208" marker-end="url(#a)"/>
+
+  <rect class="boxc" x="266" y="212" width="158" height="60"/>
+  <text class="ifc" x="278" y="232">IHdrMetadataConfig</text>
+  <text class="mth" x="278" y="250">SetMasteringDisplay</text>
+  <text class="mth" x="278" y="264">SetContentLightLevel</text>
+  <path class="ln" d="M240,242 L262,242" marker-end="url(#a)" stroke-dasharray="4 3"/>
+  <text class="lbl" x="266" y="288">null on an H.264 config</text>
+
+  <rect class="pane" x="476" y="74" width="480" height="600"/>
+  <text class="grp" x="492" y="96">SESSION SCOPE</text>
+
+  <rect class="box" x="496" y="110" width="200" height="72"/>
+  <text class="ifc" x="508" y="130">IEncoderSession</text>
+  <text class="mth" x="508" y="148">Reconfigure / Flush</text>
+  <text class="mth" x="508" y="163">Drain / AbandonAll</text>
+  <text class="mth" x="508" y="176">— lifecycle only —</text>
+  <path class="ln" d="M240,150 C400,150 430,146 492,146" marker-end="url(#a)"/>
+
+  <rect class="boxv" x="496" y="212" width="212" height="62"/>
+  <text class="ifc" x="508" y="232">IFrameSubmitter</text>
+  <text class="mth" x="508" y="250">SubmitFrame / SubmitRegistered</text>
+  <text class="mth" x="508" y="264">CancelFrame / GetFrameStatus</text>
+
+  <rect class="boxv" x="740" y="212" width="200" height="46"/>
+  <text class="ifc" x="752" y="232">IFrameSubmitterV2</text>
+  <text class="mth" x="752" y="249">SubmitWithDeadline</text>
+  <path class="ln" d="M736,234 L712,234" marker-end="url(#ai)"/>
+
+  <rect class="boxv" x="496" y="296" width="212" height="62"/>
+  <text class="ifc" x="508" y="316">IBitstreamSource</text>
+  <text class="mth" x="508" y="334">Acquire / AcquireNext</text>
+  <text class="mth" x="508" y="348">Get / Release</text>
+
+  <rect class="boxv" x="496" y="380" width="212" height="62"/>
+  <text class="ifc" x="508" y="400">ICompletionSignal</text>
+  <text class="mth" x="508" y="418">Callback / Counter / Semaphore</text>
+  <text class="mth" x="508" y="432">EventHandle / ExportFence</text>
+
+  <rect class="boxv" x="496" y="464" width="212" height="62"/>
+  <text class="ifc" x="508" y="484">IResourceRegistry</text>
+  <text class="mth" x="508" y="502">Register/Unregister image</text>
+  <text class="mth" x="508" y="516">Register/Unregister semaphore</text>
+
+  <rect class="boxv" x="496" y="548" width="212" height="48"/>
+  <text class="ifc" x="508" y="568">IDeviceBinding</text>
+  <text class="mth" x="508" y="586">VkDevice / VkPhysicalDevice / VkInstance</text>
+
+  <rect class="boxv" x="496" y="614" width="212" height="46"/>
+  <text class="ifc" x="508" y="634">IDiagnostics</text>
+  <text class="mth" x="508" y="651">RuntimeInfo / DiagnosticInfo</text>
+
+  <path class="ln" d="M486,186 L486,637 M486,240 L492,240 M486,324 L492,324 M486,408 L492,408 M486,492 L492,492 M486,570 L492,570 M486,637 L492,637" stroke-dasharray="4 3"/>
+  <path class="ln" d="M486,240 L492,240" marker-end="url(#a)" stroke-dasharray="4 3"/>
+  <path class="ln" d="M486,324 L492,324" marker-end="url(#a)" stroke-dasharray="4 3"/>
+  <path class="ln" d="M486,408 L492,408" marker-end="url(#a)" stroke-dasharray="4 3"/>
+  <path class="ln" d="M486,492 L492,492" marker-end="url(#a)" stroke-dasharray="4 3"/>
+  <path class="ln" d="M486,570 L492,570" marker-end="url(#a)" stroke-dasharray="4 3"/>
+  <path class="ln" d="M486,637 L492,637" marker-end="url(#a)" stroke-dasharray="4 3"/>
+
+  <rect class="pane" x="24" y="352" width="420" height="200"/>
+  <text class="grp" x="40" y="374">WHAT REPLACES WHAT</text>
+  <text class="mth" x="44" y="398">29 methods on one class   &#8594;   4 + six focused roles</text>
+  <text class="mth" x="44" y="420">12 extern &quot;C&quot; functions   &#8594;   IEncoderPlatform + IEncoderCaps</text>
+  <text class="mth" x="44" y="442">21 sType/pNext pairs      &#8594;   one QueryInterface(string_view)</text>
+  <text class="mth" x="44" y="464">22 sType enumerants       &#8594;   per-interface kId, no registry</text>
+  <text class="mth" x="44" y="486">2 error enums             &#8594;   Status + Expected&lt;T&gt;</text>
+  <text class="mth" x="44" y="508">1537 lines of caller-side  &#8594;   IEncoderConfig::ResolveInputPath()</text>
+  <text class="mth" x="44" y="522">config derivation in Chromium</text>
+
+  <text class="lbl" x="26" y="580">Extensibility moves from data layout to vtable extension:</text>
+  <text class="lbl" x="26" y="598">the caller never allocates a library type, so no layout is ever pinned.</text>
+  <text class="lbl" x="26" y="624">A missing feature is a null Ref, checked once at setup —</text>
+  <text class="lbl" x="26" y="642">the capability query and the feature check are one operation.</text>
+</svg>

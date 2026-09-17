@@ -17,6 +17,11 @@ limitations under the License.
 -->
 # Vulkan Video Decode Integration Development Plan
 
+<!-- DOC-STATUS -->
+> **Status: CURRENT.** The 4-phase execution plan.
+> Index: [`README.md`](README.md).
+
+
 ## Executive Summary
 
 This document outlines the development plan for integrating Vulkan Video decode capabilities into Chromium. The plan is structured into four parallel/sequential work streams that can be developed with some degree of parallelism.

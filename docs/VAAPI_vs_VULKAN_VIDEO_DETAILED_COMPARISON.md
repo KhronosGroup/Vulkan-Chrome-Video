@@ -17,6 +17,11 @@ limitations under the License.
 -->
 # VA-API vs Vulkan Video: Detailed Technical Comparison for Chromium Integration
 
+<!-- DOC-STATUS -->
+> **Status: CURRENT.** Comparison against the VA-API path.
+> Index: [`README.md`](README.md).
+
+
 **Date**: December 4, 2025  
 **Purpose**: Understand API differences to guide Vulkan Video integration into Chromium
 
@@ -35,6 +40,11 @@ limitations under the License.
 10. [Integration Challenges](#challenges)
 
 ---
+
+> **Scope.** This document compares what the two APIs **do**. It does not cover how they stay
+> **compatible** across versions — the handle model, struct extension and ABI strategy. For that,
+> and for what it implies about this project's own encoder interface, see
+> `VULKAN_VIDEO_ENCODER_INTERFACE_STYLE.md` §4b.
 
 ## 1. API Architecture Comparison <a name="api-architecture"></a>
 

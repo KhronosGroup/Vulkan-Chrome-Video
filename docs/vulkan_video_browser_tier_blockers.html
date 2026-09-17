@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: 2026 The Khronos Group, Inc.
+SPDX-License-Identifier: Apache-2.0
+
+Generated from the Markdown source by build_blog.py — edit the .md, not this file.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two blockers between the browser tier gate and a real verdict</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-card: #1a2332;
+            --accent-vulkan: #ac2d2d;
+            --accent-vulkan-bright: #e05252;
+            --accent-chrome: #5b9bff;
+            --accent-nvidia: #8bd90a;
+            --accent-firefox: #ff9d3d;
+            --text-primary: #eef2f8;
+            --text-body: #d3dce8;
+            --text-secondary: #b3c0d1;
+            --text-muted: #8a97a8;
+            --border: #2d3a4f;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', system-ui, sans-serif; font-weight: 400;
+            background: var(--bg-primary); color: var(--text-body);
+            line-height: 1.75; font-size: 17px;
+        }
+        .bg-pattern {
+            position: fixed; inset: 0; z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(172, 45, 45, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 90%, rgba(66, 133, 244, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 40%, rgba(118, 185, 0, 0.05) 0%, transparent 60%);
+        }
+        .container { max-width: 980px; margin: 0 auto; padding: 0 1.5rem; }
+        header.hero { padding: 4rem 0 2.5rem; text-align: center; }
+        .logo-strip {
+            display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
+            margin-bottom: 2rem; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em;
+        }
+        .logo-strip span { padding: 0.4rem 0.8rem; border-radius: 4px; border: 1px solid var(--border); }
+        .logo-strip .vulkan { color: var(--accent-vulkan-bright); border-color: var(--accent-vulkan); }
+        .logo-strip .nvidia { color: var(--accent-nvidia); border-color: var(--accent-nvidia); }
+        .logo-strip .ff { color: var(--accent-firefox); border-color: var(--accent-firefox); }
+        .logo-strip .chrome { color: var(--accent-chrome); border-color: var(--accent-chrome); }
+        .hero-banner {
+            display: block; width: 100%; height: auto;
+            border-radius: 12px; margin-bottom: 2rem;
+        }
+        h1 {
+            font-size: 2.7rem; font-weight: 700; line-height: 1.15; margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .hero .dek { font-size: 1.2rem; color: var(--text-secondary); max-width: 760px; margin: 0 auto; }
+        .byline { margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        article { padding-bottom: 5rem; }
+        h2 {
+            font-size: 1.7rem; font-weight: 700; margin: 3.2rem 0 1.1rem; color: var(--text-primary);
+            padding-left: 0.9rem; border-left: 4px solid var(--accent-nvidia);
+        }
+        h2.ff { border-left-color: var(--accent-firefox); }
+        h2.cr { border-left-color: var(--accent-chrome); }
+        h2.vk { border-left-color: var(--accent-vulkan-bright); }
+        h3 { font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.7rem; color: var(--text-primary); }
+        p { margin-bottom: 1.1rem; color: var(--text-body); }
+        p strong, li strong { color: var(--text-primary); }
+        em { color: var(--text-primary); font-style: italic; }
+        ul, ol { margin: 0 0 1.1rem 1.5rem; color: var(--text-body); }
+        li { margin-bottom: 0.5rem; }
+        a { color: var(--accent-chrome); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 0.1rem 0.35rem; border-radius: 4px; color: #a8ecb2;
+        }
+        figure.diagram {
+            margin: 1.8rem 0; padding: 1rem; background: #ffffff;
+            border: 1px solid var(--border); border-radius: 12px; text-align: center;
+        }
+        figure.diagram img, figure.diagram object { max-width: 100%; height: auto; }
+        figure.diagram figcaption { margin-top: 0.6rem; font-size: 0.85rem; color: #475569; font-style: italic; }
+        blockquote.pull {
+            border-left: 4px solid var(--accent-vulkan-bright);
+            background: var(--bg-card); border-radius: 0 10px 10px 0;
+            padding: 1.1rem 1.4rem; margin: 1.6rem 0;
+            font-size: 1.03rem; color: var(--text-primary);
+        }
+        blockquote.pull p { color: var(--text-primary); margin: 0; }
+        table.doc {
+            width: 100%; border-collapse: collapse; margin: 1.8rem 0;
+            font-size: 0.95rem; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 10px;
+            overflow: hidden; display: table;
+        }
+        table.doc th, table.doc td {
+            padding: 0.68rem 0.9rem; text-align: left; vertical-align: top;
+            border-bottom: 1px solid var(--border);
+        }
+        table.doc thead th {
+            background: rgba(118, 185, 0, 0.10);
+            color: var(--text-primary); font-weight: 650;
+            border-bottom: 2px solid var(--accent-vulkan-bright);
+            white-space: nowrap;
+        }
+        table.doc tbody tr:last-child td { border-bottom: none; }
+        table.doc tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+        table.doc code { white-space: nowrap; }
+        @media (max-width: 720px) {
+            table.doc { display: block; overflow-x: auto; }
+        }
+        aside.takeaways {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-vulkan-bright);
+            border-radius: 0 12px 12px 0; padding: 1.4rem 1.7rem;
+            margin: 2.2rem 0 2.6rem;
+        }
+        aside.takeaways h2 {
+            font-size: 0.95rem; margin: 0 0 0.9rem; padding: 0; border-left: none;
+            font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--accent-vulkan-bright);
+        }
+        aside.takeaways ul { margin: 0 0 0 1.2rem; }
+        aside.takeaways li:last-child { margin-bottom: 0; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+        footer {
+            border-top: 1px solid var(--border); padding: 2rem 0 3.5rem;
+            color: var(--text-muted); font-size: 0.88rem; text-align: center;
+        }
+        @media (max-width: 700px) {
+            h1 { font-size: 1.9rem; }
+            /* Keep the Key Takeaways panel readable on a phone: the box and
+               list indents eat a lot of a 390px viewport at desktop padding. */
+            aside.takeaways { padding: 1.1rem 1.15rem; border-radius: 0 8px 8px 0; }
+            aside.takeaways ul { margin-left: 1rem; }
+            figure.diagram { padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<header class="hero">
+    <div class="container">
+        <div class="logo-strip">
+            
+        </div>
+        <h1>Two blockers between the browser tier gate and a real verdict</h1>
+        <p class="dek"><strong>Status:</strong> one is a Chromium upstream gap and cannot be worked around on any machine. One is machine provisioning and is fixable with a display-manager restart.</p>
+        <div class="byline"></div>
+    </div>
+</header>
+
+<article>
+<div class="container">
+
+<p>Neither is caused by the encoder library. An A/B against the pre-change vendored library reproduces <strong>both failures identically</strong> -- same rows, same messages, same counters -- so nothing here is a regression from the encoder work.</p>
+
+<hr>
+
+<h2>B-1 - Chromium has no Vulkan device selection under the Wayland ozone platform</h2>
+
+<p><strong>Effect:</strong> every <code>--ozone-platform=wayland</code> row that expects a Vulkan encoder fails with <code>OperationError: Encoder creation error</code>, counters all zero, <code>adopt=0/0</code>. The encoder is never constructed.</p>
+
+<p><strong>Cause, from Chromium's own source.</strong> <code>ui/ozone/platform/wayland/gpu/vulkan_implementation_wayland.cc</code>:</p>
+
+<p>``<code>cpp bool VulkanImplementationWayland::GetPhysicalDevicePresentationSupport( VkPhysicalDevice device, const std::vector&lt;VkQueueFamilyProperties&gt;&amp; queue_family_properties, uint32_t queue_family_index) { NOTIMPLEMENTED(); return false; } </code>``</p>
+
+<p><code>gpu/vulkan/vulkan_implementation.cc</code> binds that method as the predicate every candidate physical device must satisfy:</p>
+
+<p>``<code>cpp auto callback = base::BindRepeating( &amp;VulkanImplementation::GetPhysicalDevicePresentationSupport, base::Unretained(vulkan_implementation)); </code>``</p>
+
+<p>Returning <code>false</code> unconditionally disqualifies every device, so the GPU process never obtains a <code>VkDevice</code>. <code>CreateViewSurface</code> in the same file is <code>NOTIMPLEMENTED()</code> as well.</p>
+
+<p>Chromium states the limitation itself before any of this, in <code>ui/ozone/platform/wayland/gpu/wayland_surface_factory.cc</code>:</p>
+
+<p>``<code> &#x27;--ozone-platform=wayland&#x27; is not compatible with Vulkan. Consider switching to &#x27;--ozone-platform=x11&#x27; or disabling Vulkan </code>``</p>
+
+<p>...and then returns the implementation anyway, so the failure surfaces several frames later as a video-capability refusal (<code>VK_ERROR_VIDEO_PROFILE_OPERATION_NOT_SUPPORTED_KHR</code>) rather than as the device-selection failure it is.</p>
+
+<p><strong>Consequence for the tier gate.</strong> Zero-copy is Wayland-only. With Wayland Vulkan unimplemented upstream, the zero-copy tier cannot be measured through this path at all -- on any machine, with any compositor. It is not a weston artifact and not a provisioning gap.</p>
+
+<p><strong>What would have to change upstream:</strong> <code>GetPhysicalDevicePresentationSupport</code> needs a real implementation for Wayland (the X11 ozone platform has one). Until then, a zero-copy row is asserting something the browser cannot do.</p>
+
+<hr>
+
+<h2>B-2 - A version-mismatched X server yields DRI3 without GBM</h2>
+
+<p><strong>Effect:</strong> <code>--ozone-platform=x11</code> rows encode correctly but always land on the <code>staging</code> tier. <code>handleType dma-buf=0 opaque-fd=480</code>: the browser hands the encoder no dma-buf, so there is nothing to import and the cpu-dmabuf tier is unreachable.</p>
+
+<p><strong>Cause.</strong> <code>ui/gfx/linux/gbm_support_x11.cc</code> obtains an authenticated DRM fd from the X server over DRI3 and creates a GbmDevice from it:</p>
+
+<p>``<code>cpp auto&amp; dri3 = connection-&gt;dri3(); if (!dri3.present()) { LOG(WARNING) &lt;&lt; &quot;dri3 extension not supported.&quot;; return nullptr; } auto reply = dri3.Open({connection-&gt;default_root(), 0}).Sync(); ... return ui::CreateGbmDevice(fd.release()); </code>``</p>
+
+<p>Two distinct failures were observed, in order:</p>
+
+<ol>
+  <li><strong>No DRI3 at all.</strong> Pointing <code>DISPLAY</code> at an Xwayland running under a</li>
+</ol>
+
+<p><em>headless</em> weston gives <code>dri3 extension not supported</code> -- headless weston has no DRM device to pass through, so its Xwayland exposes no DRI3. Confirmed with <code>xdpyinfo | grep -c DRI3</code> returning 0.</p>
+
+<ol>
+  <li><strong>DRI3 present, GBM still missing.</strong> Pointing <code>DISPLAY</code> at a real X server</li>
+</ol>
+
+<p>clears that warning, but <code>Can&#x27;t create buffer -- gbm device is missing</code> remains. On the machine measured, the running X server had loaded <strong>NVIDIA X Driver 580.142</strong> while the loaded kernel driver was <strong>630.00</strong>. An X server that predates a driver upgrade is a known cause of DRI3-present / GBM-broken.</p>
+
+<p>All other NVIDIA GBM prerequisites were satisfied and are worth checking first on any host before chasing this:</p>
+
+<p>/sys/module/nvidia_drm/parameters/modeset        -&gt; Y /usr/lib/x86_64-linux-gnu/gbm/nvidia-drm_gbm.so  -&gt; present /usr/lib/x86_64-linux-gnu/libnvidia-allocator.so -&gt; present /dev/dri/renderD128..130                         -&gt; present</p>
+
+<p><strong>Fix:</strong> restart the display manager (or reboot) so the X server runs on the same driver version as the kernel module, then re-run the x11 rows. This was not done on the measured host because it would disturb an active session.</p>
+
+<hr>
+
+<h2>Checking a host before trusting a tier verdict</h2>
+
+<p>xdpyinfo | grep -c DRI3                  # must be 1 nvidia-smi --query-gpu=driver_version --format=csv,noheader grep -i 'NVIDIA dlloader X Driver' /var/log/Xorg.0.log # the two version numbers above must match</p>
+
+<p>A tier of <code>staging</code> where <code>cpu-dmabuf</code> was expected means "no dma-buf was handed over", which is a statement about the PRODUCER, not about the encoder. Read <code>handleType dma-buf=N opaque-fd=N</code> in the accelerator's registration summary before concluding anything about the encoder.</p>
+
+</div>
+</article>
+
+<footer>
+    <div class="container">
+        <p></p>
+    </div>
+</footer>
+</body>
+</html>

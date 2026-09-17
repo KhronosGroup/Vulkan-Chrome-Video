@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1340" height="1010" viewBox="0 0 1340 1010" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="c" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#37474f"/></marker>
+    <marker id="cr" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#1565c0"/></marker>
+    <marker id="cg" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#2e7d32"/></marker>
+  </defs>
+  <text x="22" y="30" font-size="19" font-weight="700" fill="#1a237e">3 — Image import, tier selection, and the per-frame encode loop</text>
+  <text x="22" y="52" font-size="12.5" fill="#546e7a">Registration is once per producer pool slot. Only the shaded band repeats per frame.</text>
+
+  <g font-size="12" font-weight="600" fill="#0d47a1">
+    <rect x="34" y="72" width="168" height="46" rx="6" fill="#e3f2fd" stroke="#1976d2"/>
+    <text x="48" y="92">SharedImage /</text><text x="48" y="108">OzoneImageBacking</text>
+    <rect x="240" y="72" width="168" height="46" rx="6" fill="#e3f2fd" stroke="#1976d2"/>
+    <text x="254" y="92">VulkanVideoEncode</text><text x="254" y="108">Accelerator</text>
+    <rect x="446" y="72" width="184" height="46" rx="6" fill="#f1f8e9" stroke="#689f38"/>
+    <text x="460" y="92">Encoder Session</text><text x="460" y="108" font-size="10.5" fill="#33691e">VulkanVideoEncoderExt</text>
+    <rect x="668" y="72" width="184" height="46" rx="6" fill="#e8f5e9" stroke="#2e7d32"/>
+    <text x="682" y="92">import + registry</text><text x="682" y="108" font-size="10.5" fill="#1b5e20">resource ids</text>
+    <rect x="890" y="72" width="184" height="46" rx="6" fill="#fff8e1" stroke="#f9a825"/>
+    <text x="904" y="92">adaptation</text><text x="904" y="108" font-size="10.5" fill="#e65100">filter / staging</text>
+    <rect x="1112" y="72" width="168" height="46" rx="6" fill="#fff3e0" stroke="#ef6c00"/>
+    <text x="1126" y="92">encode queue</text>
+  </g>
+  <g stroke="#b0bec5" stroke-dasharray="4,5">
+    <line x1="118" y1="118" x2="118" y2="970"/><line x1="324" y1="118" x2="324" y2="970"/>
+    <line x1="538" y1="118" x2="538" y2="970"/><line x1="760" y1="118" x2="760" y2="970"/>
+    <line x1="982" y1="118" x2="982" y2="970"/><line x1="1196" y1="118" x2="1196" y2="970"/>
+  </g>
+
+  <rect x="34" y="134" width="1246" height="26" rx="4" fill="#eceff1"/>
+  <text x="46" y="152" font-size="12.5" font-weight="700" fill="#37474f">A · Export and ASK — the negotiation that decides which tier this buffer takes</text>
+
+  <line x1="118" y1="182" x2="318" y2="182" stroke="#37474f" stroke-width="1.6" marker-end="url(#c)"/>
+  <text x="130" y="176" font-size="11.5" fill="#263238">ExportHandle() → dma-buf fd + modifier + per-plane stride/offset</text>
+  <text x="130" y="198" font-size="10.5" fill="#78909c">independent of GrContextType — a GL compositor exports the same pixmap</text>
+
+  <line x1="324" y1="224" x2="532" y2="224" stroke="#5e35b1" stroke-width="1.8" marker-end="url(#c)"/>
+  <text x="336" y="218" font-size="11.5" font-weight="600" fill="#4527a0">QueryImageSupport(descriptor, &amp;support)</text>
+  <text x="336" y="240" font-size="10.5" fill="#546e7a">descriptor: handleType=DMA_BUF, format, extent, drmFormatModifier, planeLayouts[], imageUsage, deviceUUID</text>
+  <text x="336" y="256" font-size="10.5" fill="#546e7a">support.pNext → VkVideoEncoderImageSupportDetails { filterCapable, directModifierCount, directModifiers[] }</text>
+  <line x1="532" y1="278" x2="330" y2="278" stroke="#1565c0" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#cr)"/>
+  <text x="342" y="272" font-size="11.5" fill="#1565c0">supported + status + details — a verdict, not a failure</text>
+
+  <rect x="130" y="296" width="1130" height="96" rx="5" fill="#fafafa" stroke="#b0bec5"/>
+  <text x="144" y="315" font-size="12" font-weight="700" fill="#37474f">The verdict selects the tier — every outcome is encodable, only the cost differs</text>
+  <g font-size="11.5">
+    <text x="144" y="336" fill="#1b5e20"><tspan font-weight="700">supported = TRUE</tspan> → <tspan font-weight="700">DIRECT</tspan>. Modifier and format both encodable. Zero copy. On NVIDIA: NV12 on a block-linear modifier.</text>
+    <text x="144" y="356" fill="#e65100"><tspan font-weight="700">ERROR_CONVERSION_REQUIRED</tspan> + filterCapable → <tspan font-weight="700">FILTER</tspan>. RGBA in, NV12 out, one compute pass on the encoder's own queue.</text>
+    <text x="144" y="376" fill="#e65100"><tspan font-weight="700">ERROR_MODIFIER_UNSUPPORTED</tspan> (+ directModifiers = what WOULD work) → <tspan font-weight="700">STAGED</tspan>. vkCmdCopyImage into an encodable image.</text>
+  </g>
+  <text x="144" y="404" font-size="11" fill="#b71c1c"><tspan font-weight="700">ERROR_DEVICE_MISMATCH</tspan> is the one verdict adaptation cannot rescue — wrong physical GPU, nothing to preprocess. Pin via gpuUUID.</text>
+
+  <rect x="34" y="422" width="1246" height="26" rx="4" fill="#e8f5e9"/>
+  <text x="46" y="440" font-size="12.5" font-weight="700" fill="#1b5e20">B · Register — ONCE per producer pool slot, not per frame</text>
+
+  <line x1="324" y1="470" x2="754" y2="470" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#cg)"/>
+  <text x="336" y="464" font-size="11.5" font-weight="600" fill="#1b5e20">RegisterImageResource(descriptor, &amp;resourceId)</text>
+  <text x="336" y="486" font-size="10.5" fill="#546e7a">library does vkCreateImage + vkAllocateMemory from the fd. TRANSFER ownership: the fd is consumed on every exit path.</text>
+  <line x1="754" y1="508" x2="330" y2="508" stroke="#1565c0" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#cr)"/>
+  <text x="342" y="502" font-size="11.5" fill="#1565c0">resourceId — generation-counted; a stale id is rejected, never matched to a recycled slot</text>
+
+  <line x1="324" y1="534" x2="754" y2="534" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#cg)"/>
+  <text x="336" y="528" font-size="11.5" font-weight="600" fill="#1b5e20">RegisterSemaphore(descriptor, &amp;semaphoreId)  — OPAQUE_FD timeline, imported once and named repeatedly</text>
+
+  <rect x="130" y="556" width="1130" height="34" rx="5" fill="#fff8e1" stroke="#f9a825"/>
+  <text x="144" y="577" font-size="11.5" fill="#e65100"><tspan font-weight="700">Cache key must be the pool slot, not the frame id.</tspan> A frame-counter key produced duplicate-frame bitstreams in TRV. Destroy slots only behind vkDeviceWaitIdle.</text>
+
+  <!-- per-frame band -->
+  <rect x="34" y="606" width="1246" height="286" rx="6" fill="#e3f2fd" opacity="0.32"/>
+  <rect x="34" y="606" width="1246" height="26" rx="4" fill="#1976d2"/>
+  <text x="46" y="624" font-size="12.5" font-weight="700" fill="#ffffff">C · PER FRAME — the only part that repeats</text>
+
+  <line x1="118" y1="656" x2="318" y2="656" stroke="#37474f" stroke-width="1.6" marker-end="url(#c)"/>
+  <text x="130" y="650" font-size="11.5" fill="#263238">BeginAccess → acquire fence (sync_fd) on the kVulkanVideoEncode stream</text>
+
+  <line x1="324" y1="684" x2="532" y2="684" stroke="#37474f" stroke-width="2" marker-end="url(#c)"/>
+  <text x="336" y="678" font-size="12" font-weight="700" fill="#263238">SubmitRegisteredFrame(frameId, resourceId, acquire, release, …)</text>
+  <text x="336" y="700" font-size="10.5" fill="#546e7a">names the already-imported resource — no VkImage, no fd, no layout crosses here</text>
+
+  <line x1="538" y1="726" x2="976" y2="726" stroke="#ef6c00" stroke-width="1.6" marker-end="url(#c)"/>
+  <text x="550" y="720" font-size="11" fill="#e65100">tier != DIRECT → adapt first: compute filter (RGBA→NV12) or vkCmdCopyImage (tiling)</text>
+  <line x1="538" y1="752" x2="1190" y2="752" stroke="#37474f" stroke-width="1.6" marker-end="url(#c)"/>
+  <text x="550" y="746" font-size="11" fill="#263238">QFOT acquire from VK_QUEUE_FAMILY_FOREIGN_EXT → vkCmdEncodeVideoKHR → signal release</text>
+
+  <line x1="1196" y1="782" x2="330" y2="782" stroke="#5e35b1" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#cr)"/>
+  <text x="342" y="776" font-size="11.5" fill="#4527a0">completion event signalled (eventfd counts; the browser wakes, it does not poll)</text>
+
+  <line x1="324" y1="810" x2="532" y2="810" stroke="#37474f" stroke-width="1.6" marker-end="url(#c)"/>
+  <text x="336" y="804" font-size="11.5" fill="#263238">GetEncodedFrame(&amp;result)  /  AcquireEncodedFrame(frameId, &amp;result)</text>
+  <line x1="532" y1="836" x2="330" y2="836" stroke="#1565c0" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#cr)"/>
+  <text x="342" y="830" font-size="11.5" fill="#1565c0">bitstream bytes + frameId + timestamp + keyframe flag</text>
+  <line x1="324" y1="862" x2="532" y2="862" stroke="#37474f" stroke-width="1.6" marker-end="url(#c)"/>
+  <text x="336" y="856" font-size="11.5" fill="#263238">ReleaseEncodedFrame(frameId)  — returns the bitstream buffer to the library</text>
+  <text x="336" y="882" font-size="10.5" fill="#546e7a">GetFrameStatus(frameId) disambiguates; CancelFrame / Flush / DrainPendingFrames handle teardown</text>
+
+  <rect x="34" y="906" width="1246" height="26" rx="4" fill="#eceff1"/>
+  <text x="46" y="924" font-size="12.5" font-weight="700" fill="#37474f">D · Teardown — pool slot retired, not per frame</text>
+  <line x1="324" y1="954" x2="754" y2="954" stroke="#c62828" stroke-width="1.6" marker-end="url(#c)"/>
+  <text x="336" y="948" font-size="11.5" fill="#b71c1c">UnregisterImageResource(resourceId) / UnregisterSemaphore(semaphoreId) — after the last frame using them retires</text>
+</svg>

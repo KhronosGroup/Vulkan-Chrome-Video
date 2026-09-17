@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 760" font-family="Helvetica,Arial,sans-serif" font-size="13">
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 z" fill="#444"/>
+    </marker>
+    <marker id="ared" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 z" fill="#b00020"/>
+    </marker>
+  </defs>
+
+  <rect width="1180" height="760" fill="#ffffff"/>
+  <text x="24" y="34" font-size="20" font-weight="bold">Which encode input tier a host reaches — and who actually decides</text>
+  <text x="24" y="56" fill="#555">The encoder does not choose. The window system and the display server's GPU do.</text>
+
+  <!-- Decision 1 -->
+  <rect x="24" y="82" width="300" height="72" rx="6" fill="#eef3fb" stroke="#4a76c4"/>
+  <text x="40" y="106" font-weight="bold">1. Which window system?</text>
+  <text x="40" y="126" fill="#444">Chromium Ozone platform</text>
+  <text x="40" y="144" fill="#777" font-size="11">--ozone-platform=wayland | x11</text>
+
+  <!-- Wayland branch -->
+  <rect x="380" y="70" width="330" height="96" rx="6" fill="#e9f7ee" stroke="#2e8b57"/>
+  <text x="396" y="94" font-weight="bold">Wayland</text>
+  <text x="396" y="114" fill="#444">Producer's own dma-buf is imported</text>
+  <text x="396" y="132" fill="#444">directly — no copy.</text>
+  <text x="396" y="154" fill="#777" font-size="11">Vulkan compositing is disabled upstream;
+      the encoder is unaffected.</text>
+
+  <rect x="770" y="82" width="380" height="72" rx="6" fill="#2e8b57"/>
+  <text x="790" y="110" fill="#fff" font-size="16" font-weight="bold">tier = zero-copy</text>
+  <text x="790" y="134" fill="#dff3e6" font-size="12">measured: 480/480 frames, NVENC 35 % (RTX 4080)</text>
+
+  <line x1="324" y1="118" x2="374" y2="118" stroke="#444" stroke-width="1.6" marker-end="url(#a)"/>
+  <line x1="710" y1="118" x2="764" y2="118" stroke="#444" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- X11 branch -->
+  <line x1="174" y1="154" x2="174" y2="210" stroke="#444" stroke-width="1.6" marker-end="url(#a)"/>
+  <rect x="24" y="214" width="300" height="118" rx="6" fill="#fff7e6" stroke="#c98a00"/>
+  <text x="40" y="238" font-weight="bold">X11</text>
+  <text x="40" y="258" fill="#444">Zero-copy is not available here:</text>
+  <text x="40" y="276" fill="#444">the X11 path supplies no producer</text>
+  <text x="40" y="294" fill="#444">dma-buf to import.</text>
+  <text x="40" y="318" fill="#b00020" font-size="11" font-weight="bold">Ceiling = cpu-dmabuf</text>
+
+  <!-- Decision 2: the real gate -->
+  <line x1="324" y1="272" x2="374" y2="272" stroke="#444" stroke-width="1.6" marker-end="url(#a)"/>
+  <rect x="380" y="214" width="330" height="140" rx="6" fill="#eef3fb" stroke="#4a76c4"/>
+  <text x="396" y="238" font-weight="bold">2. Can the X SERVER's GPU allocate</text>
+  <text x="396" y="256" font-weight="bold">    NV12 SCANOUT_CPU_READ_WRITE?</text>
+  <text x="396" y="280" fill="#444" font-size="12">DRI3 hands Chromium the X server's node.</text>
+  <text x="396" y="298" fill="#444" font-size="12">GBMSupportX11 is a process-wide singleton;</text>
+  <text x="396" y="316" fill="#444" font-size="12">CreateNativePixmap discards the caller's</text>
+  <text x="396" y="334" fill="#444" font-size="12">VulkanDeviceQueue*. No caller gets a vote.</text>
+
+  <!-- yes -->
+  <line x1="710" y1="252" x2="764" y2="252" stroke="#444" stroke-width="1.6" marker-end="url(#a)"/>
+  <text x="716" y="244" font-size="11" fill="#2e8b57" font-weight="bold">yes</text>
+  <rect x="770" y="216" width="380" height="72" rx="6" fill="#4a76c4"/>
+  <text x="790" y="244" fill="#fff" font-size="16" font-weight="bold">tier = cpu-dmabuf</text>
+  <text x="790" y="268" fill="#e3ecfa" font-size="12">measured: 398–475/480, NVENC 28–46 % (RTX 4080)</text>
+
+  <!-- no -->
+  <line x1="710" y1="316" x2="764" y2="316" stroke="#444" stroke-width="1.6" marker-end="url(#a)"/>
+  <text x="716" y="308" font-size="11" fill="#b00020" font-weight="bold">no</text>
+  <rect x="770" y="296" width="380" height="72" rx="6" fill="#8a8f98"/>
+  <text x="790" y="324" fill="#fff" font-size="16" font-weight="bold">tier = staging</text>
+  <text x="790" y="348" fill="#eceef1" font-size="12">correct reroute, not a defect — copy via system memory</text>
+
+  <!-- capability table -->
+  <rect x="24" y="392" width="686" height="150" rx="6" fill="#fafbfc" stroke="#ccd2d9"/>
+  <text x="40" y="416" font-weight="bold">The gating capability, measured per render node</text>
+  <text x="40" y="440" font-size="12" fill="#555">probes/gbm_nv12_per_node.sh — NV12 SCANOUT|LINEAR</text>
+  <line x1="40" y1="450" x2="694" y2="450" stroke="#ccd2d9"/>
+  <text x="48" y="472" font-size="12">NVIDIA</text><text x="240" y="472" font-size="12" fill="#666">nvidia</text>
+  <text x="420" y="472" font-size="12" fill="#2e8b57" font-weight="bold">OK → cpu-dmabuf reachable</text>
+  <text x="48" y="496" font-size="12">Intel UHD 770</text><text x="240" y="496" font-size="12" fill="#666">i915</text>
+  <text x="420" y="496" font-size="12" fill="#b00020" font-weight="bold">DECLINED → staging only</text>
+  <text x="48" y="520" font-size="12">virtio (VM)</text><text x="240" y="520" font-size="12" fill="#666">virtio-pci</text>
+  <text x="420" y="520" font-size="12" fill="#b00020" font-weight="bold">DECLINED → staging only</text>
+
+  <!-- hybrid warning -->
+  <rect x="24" y="566" width="1126" height="168" rx="6" fill="#fdecef" stroke="#b00020"/>
+  <text x="40" y="592" font-weight="bold" fill="#b00020">Hybrid / mixed-vendor hosts fail BEFORE any of the above</text>
+  <text x="40" y="616" font-size="12" fill="#444">If the compositor renders on one vendor and the encoder on another, the tier is never reached at all.</text>
+
+  <rect x="40" y="630" width="250" height="56" rx="4" fill="#fff" stroke="#b00020"/>
+  <text x="54" y="652" font-size="12" font-weight="bold">Chromium</text>
+  <text x="54" y="670" font-size="11" fill="#555">allocates AB24 presentation</text>
+  <text x="54" y="684" font-size="11" fill="#555">buffer on the NVIDIA GPU</text>
+
+  <line x1="292" y1="658" x2="352" y2="658" stroke="#b00020" stroke-width="1.6" marker-end="url(#ared)"/>
+
+  <rect x="358" y="630" width="250" height="56" rx="4" fill="#fff" stroke="#b00020"/>
+  <text x="372" y="652" font-size="12" font-weight="bold">Compositor on Intel</text>
+  <text x="372" y="670" font-size="11" fill="#555">"no known conversion for</text>
+  <text x="372" y="684" font-size="11" fill="#555">format AB24 in the renderer"</text>
+
+  <line x1="610" y1="658" x2="670" y2="658" stroke="#b00020" stroke-width="1.6" marker-end="url(#ared)"/>
+
+  <rect x="676" y="630" width="250" height="56" rx="4" fill="#fff" stroke="#b00020"/>
+  <text x="690" y="652" font-size="12" font-weight="bold">Wayland protocol error</text>
+  <text x="690" y="670" font-size="11" fill="#555">wayland_event_watcher.cc:356</text>
+  <text x="690" y="684" font-size="11" fill="#555">CHECK: err == 32 || err == 104</text>
+
+  <line x1="928" y1="658" x2="988" y2="658" stroke="#b00020" stroke-width="1.6" marker-end="url(#ared)"/>
+
+  <rect x="994" y="630" width="140" height="56" rx="4" fill="#b00020"/>
+  <text x="1010" y="656" fill="#fff" font-size="13" font-weight="bold">browser</text>
+  <text x="1010" y="674" fill="#fff" font-size="13" font-weight="bold">killed</text>
+
+  <text x="40" y="712" font-size="11" fill="#b00020" font-weight="bold">The encoder is healthy throughout — zero-copy resolves succeed right up to the kill. Two upstream defects, neither in the encoder.</text>
+  <text x="40" y="728" font-size="11" fill="#777">Full detail: VULKAN_VIDEO_ENCODE_SURFACES_AND_GPU_TOPOLOGY.md §4</text>
+</svg>

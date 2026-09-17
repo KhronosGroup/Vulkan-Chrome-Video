@@ -414,6 +414,76 @@ limitations under the License.
                 </div>
                 <div class="doc-arrow">→</div>
             </a>
+
+            <a href="vulkan_video_encoder_ownership_principles.html" class="doc-card">
+                <div class="doc-icon">📐</div>
+                <div class="doc-content">
+                    <h2>Ownership &amp; Resource-Sharing Principles</h2>
+                    <p>The normative rules for every object crossing the embeddable boundary: why the refcount becomes an id, why ownership is per-registration and never per-outcome, what a protected registration must carry, and a checklist a new resource class must satisfy to be added safely.</p>
+                    <span class="tag">Specification · Ownership</span>
+                </div>
+                <div class="doc-arrow">→</div>
+            </a>
+
+            <a href="vulkan_video_encoder_ext_object_lifecycle.html" class="doc-card">
+                <div class="doc-icon">♻️</div>
+                <div class="doc-content">
+                    <h2>Ext API Object Lifecycle</h2>
+                    <p>Who allocates and who frees across the embeddable boundary, and what survives a client release racing an in-flight frame. Images are refcounted and defer; semaphores are not — two ways. Assessment of moving every resource onto library-owned refcounted references.</p>
+                    <span class="tag">Review · Ownership</span>
+                </div>
+                <div class="doc-arrow">→</div>
+            </a>
+
+            <a href="vulkan_video_encoder_ext_api_sequences.html" class="doc-card">
+                <div class="doc-icon">🔀</div>
+                <div class="doc-content">
+                    <h2>Ext API Call Sequences</h2>
+                    <p>Sequence diagrams for the NVPRO-to-browser interface: codec and format negotiation with no device, context and session creation with the OWN/ADOPT split, and the per-frame import, tier-selection and encode loop — every call named from vulkan_video_encoder_ext.h.</p>
+                    <span class="tag">Reference · Interface</span>
+                </div>
+                <div class="doc-arrow">→</div>
+            </a>
+
+            <a href="vulkan_video_encoder_rc5_review.html" class="doc-card">
+                <div class="doc-icon">✅</div>
+                <div class="doc-content">
+                    <h2>RC-5 Review Report</h2>
+                    <p>RC-5 against the device-independence and context designs: the device-model demotion, adopt-by-context, encode-site input adaptation and the glslang-enabled compute filter all landed. Conformance table, four findings, and two corrections back into our own design docs.</p>
+                    <span class="tag">Review · Conformance</span>
+                </div>
+                <div class="doc-arrow">→</div>
+            </a>
+
+            <a href="vulkan_video_encoder_device_independence.html" class="doc-card">
+                <div class="doc-icon">🧩</div>
+                <div class="doc-content">
+                    <h2>Encoder Device Independence Plan</h2>
+                    <p>Making the encoder renderer-agnostic: it creates its own Vulkan device and queues and takes frames as OS handles, with same-device sharing demoted to an optional fast tier. Research on whether Vulkan is even the renderer, what zero-copy genuinely requires, the RGBA compute-filter path, and a staged work breakdown.</p>
+                    <span class="tag">Architecture · Proposal</span>
+                </div>
+                <div class="doc-arrow">→</div>
+            </a>
+
+            <a href="vulkan_video_encoder_context_design.html" class="doc-card">
+                <div class="doc-icon">🧱</div>
+                <div class="doc-content">
+                    <h2>Encoder Context &amp; Renderer-Agnostic Interface</h2>
+                    <p>Design for a refcounted encoder context holding a live Vulkan instance and enumerated devices, answering capability queries without device churn, and exchanging frames as OS handles whatever the browser renders with. Covers Chromium's out-of-process encode mechanism, the sandbox delta, the capability projection, and staging.</p>
+                    <span class="tag">Design · Interface</span>
+                </div>
+                <div class="doc-arrow">→</div>
+            </a>
+
+            <a href="vulkan_video_glslang_shader_compiler.html" class="doc-card">
+                <div class="doc-icon">🔧</div>
+                <div class="doc-content">
+                    <h2>Replacing shaderc with glslang</h2>
+                    <p>Implementation guide for dropping shaderc from the NVPRO sample library: the twelve-entry-point shaderc surface, the glslang equivalents, a reference <code>VulkanShaderCompiler</code>, the CMake and GN build changes, the details that are easy to get wrong, and the verification path.</p>
+                    <span class="tag">Implementation · Build</span>
+                </div>
+                <div class="doc-arrow">→</div>
+            </a>
         </div>
 
         <footer>

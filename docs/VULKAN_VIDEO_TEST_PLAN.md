@@ -17,6 +17,11 @@ limitations under the License.
 -->
 # Vulkan Video Encode + Decode — Elaborate Test Plan
 
+<!-- DOC-STATUS -->
+> **Status: CURRENT.** Test strategy across the three layers.
+> Index: [`README.md`](README.md).
+
+
 **Version**: 1.0
 **Date**: May 19, 2026
 **Status**: Draft (proposal)

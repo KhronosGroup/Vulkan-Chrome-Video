@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#37474f"/></marker>
+    <marker id="arg" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#2e7d32"/></marker>
+    <marker id="arr" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#c62828"/></marker>
+  </defs>
+
+  <text x="24" y="32" font-size="19" font-weight="700" fill="#1a237e">Encoder context: one object, two hosts, one handle contract</text>
+  <text x="24" y="54" font-size="13" fill="#546e7a">The context owns Vulkan phases 1–2 (instance + physical devices). Sessions own phases 3–4 (logical device + queues). Frames always cross as OS handles.</text>
+
+  <!-- HOST A: GPU process -->
+  <rect x="24" y="72" width="548" height="256" rx="10" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.5"/>
+  <text x="42" y="98" font-size="14" font-weight="700" fill="#0d47a1">HOST A — GPU process (in-process, Stage 1)</text>
+  <text x="42" y="118" font-size="11.5" fill="#37474f">Has SharedImage, Ozone, CommandBufferHelper, VulkanDeviceQueue</text>
+
+  <rect x="42" y="130" width="248" height="76" rx="6" fill="#fff" stroke="#90a4ae"/>
+  <text x="54" y="151" font-size="12" font-weight="600" fill="#263238">Compositor / capture</text>
+  <text x="54" y="169" font-size="11" fill="#546e7a">GL · Vulkan · Dawn — any</text>
+  <text x="54" y="186" font-size="11" fill="#2e7d32" font-weight="600">OzoneImageBacking::ExportHandle()</text>
+  <text x="54" y="200" font-size="10.5" fill="#78909c">independent of GrContextType</text>
+
+  <rect x="304" y="130" width="250" height="76" rx="6" fill="#fff" stroke="#90a4ae"/>
+  <text x="316" y="151" font-size="12" font-weight="600" fill="#263238">VulkanVideoEncodeAccelerator</text>
+  <text x="316" y="169" font-size="11" fill="#546e7a">GetSupportedProfiles() — sync</text>
+  <text x="316" y="186" font-size="11" fill="#546e7a">answered from the cached</text>
+  <text x="316" y="200" font-size="11" fill="#546e7a">capability snapshot</text>
+
+  <rect x="42" y="220" width="512" height="92" rx="6" fill="#fff3e0" stroke="#ef6c00"/>
+  <text x="54" y="241" font-size="12" font-weight="700" fill="#e65100">Pre-sandbox hook — gpu_pre_sandbox_hook_linux.cc</text>
+  <text x="54" y="260" font-size="11" fill="#4e342e">Opens /dev/nvidiactl, /dev/nvidia*, ICD manifests BEFORE lockdown.</text>
+  <text x="54" y="278" font-size="11" fill="#4e342e">Already patched for NVIDIA in this port.</text>
+  <text x="54" y="298" font-size="11" fill="#c62828" font-weight="600">⇒ the context must be created here and never dropped to zero.</text>
+
+  <!-- HOST B: utility process -->
+  <rect x="628" y="72" width="548" height="256" rx="10" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="646" y="98" font-size="14" font-weight="700" fill="#4a148c">HOST B — utility process (OOP, Stage 3)</text>
+  <text x="646" y="118" font-size="11.5" fill="#c62828" font-weight="600">GPU-service-less: media_gpu_channel_manager = nullptr</text>
+
+  <rect x="646" y="130" width="248" height="76" rx="6" fill="#fff" stroke="#90a4ae"/>
+  <text x="658" y="151" font-size="12" font-weight="600" fill="#263238">VideoEncodeAccelerator</text>
+  <text x="658" y="169" font-size="12" font-weight="600" fill="#263238">ProviderFactory</text>
+  <text x="658" y="187" font-size="11" fill="#546e7a">ServiceSandbox =</text>
+  <text x="658" y="201" font-size="11" fill="#546e7a">kHardwareVideoEncoding</text>
+
+  <rect x="908" y="130" width="250" height="76" rx="6" fill="#fff" stroke="#90a4ae"/>
+  <text x="920" y="151" font-size="12" font-weight="600" fill="#263238">No SharedImage</text>
+  <text x="920" y="169" font-size="11" fill="#546e7a">No Ozone · No GpuChannel</text>
+  <text x="920" y="187" font-size="11" fill="#2e7d32" font-weight="600">Frames arrive as dma-buf</text>
+  <text x="920" y="201" font-size="11" fill="#2e7d32" font-weight="600">handles over mojo</text>
+
+  <rect x="646" y="220" width="512" height="92" rx="6" fill="#ffebee" stroke="#c62828"/>
+  <text x="658" y="241" font-size="12" font-weight="700" fill="#b71c1c">Sandbox gap — named dependency, not an assumption</text>
+  <text x="658" y="260" font-size="11" fill="#4e342e">use_nvidia_specific_policies is never computed for ANY utility process.</text>
+  <text x="658" y="278" font-size="11" fill="#4e342e">renderD* is ReadOnly unless AMD; ICD permissions are AMD-only.</text>
+  <text x="658" y="298" font-size="11" fill="#4e342e">use_linux_video_acceleration = use_vaapi || use_v4l2_codec — derived.</text>
+
+  <!-- arrows into context -->
+  <line x1="298" y1="328" x2="500" y2="372" stroke="#37474f" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="902" y1="328" x2="700" y2="372" stroke="#37474f" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="474" y="352" font-size="11.5" fill="#37474f" font-weight="600">same context interface, either host</text>
+
+  <!-- CONTEXT -->
+  <rect x="180" y="382" width="840" height="150" rx="10" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="200" y="408" font-size="15" font-weight="700" fill="#1b5e20">VulkanVideoEncoderContext — refcounted, in-process, immutable after construction</text>
+
+  <rect x="200" y="420" width="252" height="96" rx="6" fill="#fff" stroke="#66bb6a"/>
+  <text x="212" y="441" font-size="12" font-weight="700" fill="#1b5e20">Phase 1 — VkInstance</text>
+  <text x="212" y="459" font-size="11" fill="#33691e">dlopen + InitDispatchTableMiddle</text>
+  <text x="212" y="476" font-size="11" fill="#33691e">loads every vkGetPhysicalDevice*</text>
+  <text x="212" y="494" font-size="11" fill="#c62828" font-weight="600">NEVER dlclose()</text>
+  <text x="212" y="509" font-size="10.5" fill="#78909c">Chromium binds the same libvulkan</text>
+
+  <rect x="464" y="420" width="266" height="96" rx="6" fill="#fff" stroke="#66bb6a"/>
+  <text x="476" y="441" font-size="12" font-weight="700" fill="#1b5e20">Phase 2 — physical devices</text>
+  <text x="476" y="459" font-size="11" fill="#33691e">enumerate ALL, not first-match</text>
+  <text x="476" y="476" font-size="11" fill="#33691e">per-device capability snapshot</text>
+  <text x="476" y="494" font-size="11" fill="#33691e">codecs · profiles · formats</text>
+  <text x="476" y="509" font-size="11" fill="#33691e">DRM modifiers · quality levels</text>
+
+  <rect x="742" y="420" width="258" height="96" rx="6" fill="#fff" stroke="#66bb6a"/>
+  <text x="754" y="441" font-size="12" font-weight="700" fill="#1b5e20">Construction modes</text>
+  <text x="754" y="459" font-size="11" fill="#33691e"><tspan font-weight="600">ADOPT</tspan> — borrow embedder's</text>
+  <text x="754" y="474" font-size="11" fill="#33691e">instance + physical device</text>
+  <text x="754" y="492" font-size="11" fill="#33691e"><tspan font-weight="600">OWN</tspan> — create them itself</text>
+  <text x="754" y="509" font-size="10.5" fill="#78909c">Host A may adopt; Host B must own</text>
+
+  <!-- sessions -->
+  <line x1="420" y1="532" x2="420" y2="576" stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arg)"/>
+  <line x1="780" y1="532" x2="780" y2="576" stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arg)"/>
+  <text x="440" y="558" font-size="11.5" fill="#2e7d32" font-weight="600">CreateSession() — phases 3–4, per encode</text>
+
+  <rect x="180" y="586" width="400" height="104" rx="8" fill="#f1f8e9" stroke="#689f38" stroke-width="1.5"/>
+  <text x="198" y="610" font-size="13" font-weight="700" fill="#33691e">Session 1 — VkDevice + queues</text>
+  <text x="198" y="630" font-size="11.5" fill="#33691e">encode + compute + transfer, all created here</text>
+  <text x="198" y="648" font-size="11.5" fill="#33691e">no caller-supplied queue-family indices</text>
+  <text x="198" y="668" font-size="11.5" fill="#33691e">imports frames by handle; owns its own VkImages</text>
+  <text x="198" y="683" font-size="10.5" fill="#78909c">device lost ⇒ drop session, context survives</text>
+
+  <rect x="620" y="586" width="400" height="104" rx="8" fill="#f1f8e9" stroke="#689f38" stroke-width="1.5"/>
+  <text x="638" y="610" font-size="13" font-weight="700" fill="#33691e">Session N</text>
+  <text x="638" y="630" font-size="11.5" fill="#33691e">Many sessions per context. The device is created</text>
+  <text x="638" y="648" font-size="11.5" fill="#33691e">once per (context, physical device), not per encode.</text>
+  <text x="638" y="668" font-size="11.5" fill="#33691e">Capability answers never require a session.</text>
+  <text x="638" y="683" font-size="10.5" fill="#78909c">refcount identity = (instance, physDev, device)</text>
+
+  <text x="24" y="726" font-size="11.5" fill="#37474f"><tspan font-weight="700">Extensibility ruling:</tspan> pNext only where Vulkan already owns it (VkVideoCapabilitiesKHR and friends). Everything we add projects onto</text>
+  <text x="24" y="744" font-size="11.5" fill="#37474f">VideoEncodeAcceleratorSupportedProfile / VideoEncoderInfo — which forces the capability output to be flat serializable data, exactly what [Sync] mojo needs.</text>
+</svg>

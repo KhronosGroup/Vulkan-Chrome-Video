@@ -17,6 +17,11 @@ limitations under the License.
 -->
 # Chromium Video Decoder Architecture - VERIFIED
 
+<!-- DOC-STATUS -->
+> **Status: CURRENT.** Verified account of Chromium decode architecture.
+> Index: [`README.md`](README.md).
+
+
 **IMPORTANT: This document is verified against actual source code at `/data/LinuxExtra/chrome/chromium/src/media/gpu/`**
 
 ## Actual File Structure

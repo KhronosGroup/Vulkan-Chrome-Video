@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: 2026 The Khronos Group, Inc.
+SPDX-License-Identifier: Apache-2.0
+
+Generated from the Markdown source by build_blog.py — edit the .md, not this file.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VA-API vs Vulkan Video: Detailed Technical Comparison for Chromium Integration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-card: #1a2332;
+            --accent-vulkan: #ac2d2d;
+            --accent-vulkan-bright: #e05252;
+            --accent-chrome: #5b9bff;
+            --accent-nvidia: #8bd90a;
+            --accent-firefox: #ff9d3d;
+            --text-primary: #eef2f8;
+            --text-body: #d3dce8;
+            --text-secondary: #b3c0d1;
+            --text-muted: #8a97a8;
+            --border: #2d3a4f;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', system-ui, sans-serif; font-weight: 400;
+            background: var(--bg-primary); color: var(--text-body);
+            line-height: 1.75; font-size: 17px;
+        }
+        .bg-pattern {
+            position: fixed; inset: 0; z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(172, 45, 45, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 90%, rgba(66, 133, 244, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 40%, rgba(118, 185, 0, 0.05) 0%, transparent 60%);
+        }
+        .container { max-width: 980px; margin: 0 auto; padding: 0 1.5rem; }
+        header.hero { padding: 4rem 0 2.5rem; text-align: center; }
+        .logo-strip {
+            display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
+            margin-bottom: 2rem; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em;
+        }
+        .logo-strip span { padding: 0.4rem 0.8rem; border-radius: 4px; border: 1px solid var(--border); }
+        .logo-strip .vulkan { color: var(--accent-vulkan-bright); border-color: var(--accent-vulkan); }
+        .logo-strip .nvidia { color: var(--accent-nvidia); border-color: var(--accent-nvidia); }
+        .logo-strip .ff { color: var(--accent-firefox); border-color: var(--accent-firefox); }
+        .logo-strip .chrome { color: var(--accent-chrome); border-color: var(--accent-chrome); }
+        .hero-banner {
+            display: block; width: 100%; height: auto;
+            border-radius: 12px; margin-bottom: 2rem;
+        }
+        h1 {
+            font-size: 2.7rem; font-weight: 700; line-height: 1.15; margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .hero .dek { font-size: 1.2rem; color: var(--text-secondary); max-width: 760px; margin: 0 auto; }
+        .byline { margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        article { padding-bottom: 5rem; }
+        h2 {
+            font-size: 1.7rem; font-weight: 700; margin: 3.2rem 0 1.1rem; color: var(--text-primary);
+            padding-left: 0.9rem; border-left: 4px solid var(--accent-nvidia);
+        }
+        h2.ff { border-left-color: var(--accent-firefox); }
+        h2.cr { border-left-color: var(--accent-chrome); }
+        h2.vk { border-left-color: var(--accent-vulkan-bright); }
+        h3 { font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.7rem; color: var(--text-primary); }
+        p { margin-bottom: 1.1rem; color: var(--text-body); }
+        p strong, li strong { color: var(--text-primary); }
+        em { color: var(--text-primary); font-style: italic; }
+        ul, ol { margin: 0 0 1.1rem 1.5rem; color: var(--text-body); }
+        li { margin-bottom: 0.5rem; }
+        a { color: var(--accent-chrome); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 0.1rem 0.35rem; border-radius: 4px; color: #a8ecb2;
+        }
+        figure.diagram {
+            margin: 1.8rem 0; padding: 1rem; background: #ffffff;
+            border: 1px solid var(--border); border-radius: 12px; text-align: center;
+        }
+        figure.diagram img, figure.diagram object { max-width: 100%; height: auto; }
+        figure.diagram figcaption { margin-top: 0.6rem; font-size: 0.85rem; color: #475569; font-style: italic; }
+        blockquote.pull {
+            border-left: 4px solid var(--accent-vulkan-bright);
+            background: var(--bg-card); border-radius: 0 10px 10px 0;
+            padding: 1.1rem 1.4rem; margin: 1.6rem 0;
+            font-size: 1.03rem; color: var(--text-primary);
+        }
+        blockquote.pull p { color: var(--text-primary); margin: 0; }
+        table.doc {
+            width: 100%; border-collapse: collapse; margin: 1.8rem 0;
+            font-size: 0.95rem; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 10px;
+            overflow: hidden; display: table;
+        }
+        table.doc th, table.doc td {
+            padding: 0.68rem 0.9rem; text-align: left; vertical-align: top;
+            border-bottom: 1px solid var(--border);
+        }
+        table.doc thead th {
+            background: rgba(118, 185, 0, 0.10);
+            color: var(--text-primary); font-weight: 650;
+            border-bottom: 2px solid var(--accent-vulkan-bright);
+            white-space: nowrap;
+        }
+        table.doc tbody tr:last-child td { border-bottom: none; }
+        table.doc tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+        table.doc code { white-space: nowrap; }
+        @media (max-width: 720px) {
+            table.doc { display: block; overflow-x: auto; }
+        }
+        aside.takeaways {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-vulkan-bright);
+            border-radius: 0 12px 12px 0; padding: 1.4rem 1.7rem;
+            margin: 2.2rem 0 2.6rem;
+        }
+        aside.takeaways h2 {
+            font-size: 0.95rem; margin: 0 0 0.9rem; padding: 0; border-left: none;
+            font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--accent-vulkan-bright);
+        }
+        aside.takeaways ul { margin: 0 0 0 1.2rem; }
+        aside.takeaways li:last-child { margin-bottom: 0; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+        footer {
+            border-top: 1px solid var(--border); padding: 2rem 0 3.5rem;
+            color: var(--text-muted); font-size: 0.88rem; text-align: center;
+        }
+        @media (max-width: 700px) {
+            h1 { font-size: 1.9rem; }
+            /* Keep the Key Takeaways panel readable on a phone: the box and
+               list indents eat a lot of a 390px viewport at desktop padding. */
+            aside.takeaways { padding: 1.1rem 1.15rem; border-radius: 0 8px 8px 0; }
+            aside.takeaways ul { margin-left: 1rem; }
+            figure.diagram { padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<header class="hero">
+    <div class="container">
+        <div class="logo-strip">
+            
+        </div>
+        <h1>VA-API vs Vulkan Video: Detailed Technical Comparison for Chromium Integration</h1>
+        <p class="dek"><strong>Date</strong>: December 4, 2025 <strong>Purpose</strong>: Understand API differences to guide Vulkan Video integration into Chromium</p>
+        <div class="byline"></div>
+    </div>
+</header>
+
+<article>
+<div class="container">
+
+<hr>
+
+<h2>Table of Contents</h2>
+
+<ol>
+  <li><a href="#api-architecture">API Architecture Comparison</a></li>
+  <li><a href="#feature-matrix">Feature Matrix</a></li>
+  <li><a href="#surface-management">Surface/Buffer Management</a></li>
+  <li><a href="#dmabuf">DMABuf Export/Import</a></li>
+  <li><a href="#synchronization">Synchronization Mechanisms</a></li>
+  <li><a href="#protected-content">Protected Content (DRM)</a></li>
+  <li><a href="#frame-output">Frame Output Flow in Chromium</a></li>
+  <li><a href="#overlays">Overlays</a></li>
+  <li><a href="#code-mapping">Code Mapping: VA-API → Vulkan Video</a></li>
+  <li><a href="#challenges">Integration Challenges</a></li>
+</ol>
+
+<hr>
+
+<blockquote class="pull"><p><strong>Scope.</strong> This document compares what the two APIs <strong>do</strong>. It does not cover how they stay <strong>compatible</strong> across versions — the handle model, struct extension and ABI strategy. For that, and for what it implies about this project's own encoder interface, see <code>VULKAN_VIDEO_ENCODER_INTERFACE_STYLE.md</code> §4b.</p></blockquote>
+
+<h2>1. API Architecture Comparison &lt;a name="api-architecture"&gt;&lt;/a&gt;</h2>
+
+<h3>Abstraction Level</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Aspect</th>
+    <th>VA-API</th>
+    <th>Vulkan Video</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><strong>Level</strong></td>
+    <td>High-level, driver-managed</td>
+    <td>Low-level, explicit control</td>
+  </tr>
+  <tr>
+    <td><strong>Resource Management</strong></td>
+    <td>Driver handles internally</td>
+    <td>Application manages explicitly</td>
+  </tr>
+  <tr>
+    <td><strong>Synchronization</strong></td>
+    <td>Implicit (mostly)</td>
+    <td>Explicit (fences, semaphores)</td>
+  </tr>
+  <tr>
+    <td><strong>Buffer Allocation</strong></td>
+    <td>Driver allocates</td>
+    <td>Application allocates</td>
+  </tr>
+  <tr>
+    <td><strong>Memory Binding</strong></td>
+    <td>Automatic</td>
+    <td>Explicit binding required</td>
+  </tr>
+  <tr>
+    <td><strong>Error Handling</strong></td>
+    <td>Simple return codes</td>
+    <td>Detailed validation layers</td>
+  </tr>
+</tbody>
+</table>
+
+<h3>Initialization Sequence</h3>
+
+<p>#### VA-API Initialization (from <code>vaapi_wrapper.cc</code>)</p>
+
+<p>```cpp // 1. Open DRM device base::File drm_file(dev_path, base::File::FLAG_OPEN | FLAG_READ | FLAG_WRITE);</p>
+
+<p>// 2. Get VA Display from DRM FD VADisplay va_display = vaGetDisplayDRM(drm_fd.get());</p>
+
+<p>// 3. Initialize VA-API int major_version, minor_version; VAStatus va_res = vaInitialize(va_display, &amp;major_version, &amp;minor_version);</p>
+
+<p>// 4. Create config for profile/entrypoint VAConfigID va_config_id; vaCreateConfig(va_display, va_profile, va_entrypoint, attribs, &amp;va_config_id);</p>
+
+<p>// 5. Create context VAContextID va_context_id; vaCreateContext(va_display, va_config_id, width, height, VA_PROGRESSIVE, surfaces, num_surfaces, &amp;va_context_id); ```</p>
+
+<p>#### Vulkan Video Initialization (equivalent)</p>
+
+<p>```cpp // 1. Create Vulkan instance and device (existing Chromium infra) // 2. Query video capabilities VkVideoCapabilitiesKHR video_caps = {}; vkGetPhysicalDeviceVideoCapabilitiesKHR(physical_device, &amp;video_profile, &amp;video_caps);</p>
+
+<p>// 3. Create video session VkVideoSessionKHR video_session; VkVideoSessionCreateInfoKHR session_info = { .sType = VK_STRUCTURE_TYPE_VIDEO_SESSION_CREATE_INFO_KHR, .pVideoProfile = &amp;video_profile, .pictureFormat = VK_FORMAT_G8_B8R8_2PLANE_420_UNORM,  // NV12 .maxCodedExtent = {width, height}, .maxDpbSlots = num_dpb_slots, .maxActiveReferencePictures = max_refs, }; vkCreateVideoSessionKHR(device, &amp;session_info, nullptr, &amp;video_session);</p>
+
+<p>// 4. Allocate and bind session memory uint32_t mem_req_count; vkGetVideoSessionMemoryRequirementsKHR(device, video_session, &amp;mem_req_count, nullptr); // ... allocate and bind memory for each requirement ...</p>
+
+<p>// 5. Create session parameters (SPS/PPS container) VkVideoSessionParametersKHR session_params; vkCreateVideoSessionParametersKHR(device, &amp;params_info, nullptr, &amp;session_params); ```</p>
+
+<h3>Key Structural Differences</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>VA-API</th>
+    <th>Vulkan Video</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>VADisplay</code> (singleton)</td>
+    <td><code>VkDevice</code> + video queue family</td>
+  </tr>
+  <tr>
+    <td><code>VAContext</code></td>
+    <td><code>VkVideoSessionKHR</code></td>
+  </tr>
+  <tr>
+    <td><code>VASurface</code></td>
+    <td><code>VkImage</code> + <code>VkImageView</code></td>
+  </tr>
+  <tr>
+    <td><code>VABuffer</code> (params)</td>
+    <td>Inline structs in command buffer</td>
+  </tr>
+  <tr>
+    <td><code>VABuffer</code> (bitstream)</td>
+    <td><code>VkBuffer</code></td>
+  </tr>
+  <tr>
+    <td>N/A</td>
+    <td><code>VkVideoSessionParametersKHR</code> (SPS/PPS)</td>
+  </tr>
+</tbody>
+</table>
+
+<hr>
+
+<h2>2. Feature Matrix &lt;a name="feature-matrix"&gt;&lt;/a&gt;</h2>
+
+<h3>Parsing Levels</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Feature</th>
+    <th>VA-API</th>
+    <th>Vulkan Video</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><strong>Bitstream parsing</strong></td>
+    <td>Application (Chromium)</td>
+    <td>Application</td>
+  </tr>
+  <tr>
+    <td><strong>SPS/PPS parsing</strong></td>
+    <td>Application</td>
+    <td>Application</td>
+  </tr>
+  <tr>
+    <td><strong>Slice header parsing</strong></td>
+    <td>Application</td>
+    <td>Application</td>
+  </tr>
+  <tr>
+    <td><strong>Picture parameter assembly</strong></td>
+    <td>Driver consumes VA structs</td>
+    <td>Driver consumes Std structs</td>
+  </tr>
+  <tr>
+    <td><strong>Reference list management</strong></td>
+    <td>Application + some driver help</td>
+    <td>Application</td>
+  </tr>
+  <tr>
+    <td><strong>DPB management</strong></td>
+    <td>Application</td>
+    <td>Application</td>
+  </tr>
+</tbody>
+</table>
+
+<p><strong>Key Point</strong>: Both APIs are "stateless" - Chromium does all parsing using <code>H264Decoder</code>, <code>H265Decoder</code>, etc. The hardware only does the actual decode.</p>
+
+<h3>Codec Support</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Codec</th>
+    <th>VA-API</th>
+    <th>Vulkan Video</th>
+    <th>Notes</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>H.264/AVC</td>
+    <td>✅ Decode + Encode</td>
+    <td>✅ Decode + Encode</td>
+    <td><code>VK_KHR_video_decode_h264</code></td>
+  </tr>
+  <tr>
+    <td>H.265/HEVC</td>
+    <td>✅ Decode + Encode</td>
+    <td>✅ Decode + Encode</td>
+    <td><code>VK_KHR_video_decode_h265</code></td>
+  </tr>
+  <tr>
+    <td>VP8</td>
+    <td>✅ Decode + Encode</td>
+    <td>❌ Not available</td>
+    <td>No Vulkan extension</td>
+  </tr>
+  <tr>
+    <td>VP9</td>
+    <td>✅ Decode + Encode</td>
+    <td>⏳ Coming</td>
+    <td>Provisional extension</td>
+  </tr>
+  <tr>
+    <td>AV1</td>
+    <td>✅ Decode + Encode</td>
+    <td>✅ Decode</td>
+    <td><code>VK_KHR_video_decode_av1</code></td>
+  </tr>
+</tbody>
+</table>
+
+<h3>Profile Support (H.264 Example)</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>H.264 Profile</th>
+    <th>VA-API</th>
+    <th>Vulkan Video</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Baseline</td>
+    <td><code>VAProfileH264Baseline</code></td>
+    <td><code>STD_VIDEO_H264_PROFILE_IDC_BASELINE</code></td>
+  </tr>
+  <tr>
+    <td>Main</td>
+    <td><code>VAProfileH264Main</code></td>
+    <td><code>STD_VIDEO_H264_PROFILE_IDC_MAIN</code></td>
+  </tr>
+  <tr>
+    <td>High</td>
+    <td><code>VAProfileH264High</code></td>
+    <td><code>STD_VIDEO_H264_PROFILE_IDC_HIGH</code></td>
+  </tr>
+  <tr>
+    <td>High 10</td>
+    <td><code>VAProfileH264High10</code></td>
+    <td><code>STD_VIDEO_H264_PROFILE_IDC_HIGH_10</code></td>
+  </tr>
+  <tr>
+    <td>High 4:4:4</td>
+    <td><code>VAProfileH264High444</code></td>
+    <td><code>STD_VIDEO_H264_PROFILE_IDC_HIGH_444_PREDICTIVE</code></td>
+  </tr>
+</tbody>
+</table>
+
+<hr>
+
+<h2>3. Surface/Buffer Management &lt;a name="surface-management"&gt;&lt;/a&gt;</h2>
+
+<h3>VA-API Surface Creation (from <code>vaapi_wrapper.cc</code>)</h3>
+
+<p>```cpp // Method 1: Allocate surfaces std::vector&lt;VASurfaceID&gt; va_surfaces(num_surfaces); VASurfaceAttrib attribs[] = { {VASurfaceAttribPixelFormat, VA_SURFACE_ATTRIB_SETTABLE, {.value.i = VA_FOURCC_NV12}}, {VASurfaceAttribUsageHint, VA_SURFACE_ATTRIB_SETTABLE, {.value.i = VA_SURFACE_ATTRIB_USAGE_HINT_DECODER}}, }; vaCreateSurfaces(va_display, VA_RT_FORMAT_YUV420, width, height, va_surfaces.data(), num_surfaces, attribs, num_attribs);</p>
+
+<p>// Method 2: Import from DMABuf (external allocation) VASurfaceAttrib import_attribs[] = { {VASurfaceAttribMemoryType, ..., {.value.i = VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2}}, {VASurfaceAttribExternalBufferDescriptor, ..., {.value.p = &amp;descriptor}}, }; vaCreateSurfaces(va_display, VA_RT_FORMAT_YUV420, width, height, &amp;va_surface_id, 1, import_attribs, num_attribs); ```</p>
+
+<h3>Vulkan Video Image Creation (equivalent)</h3>
+
+<p>```cpp // Create VkImage for decode output VkImageCreateInfo image_info = { .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO, .pNext = &amp;video_profile_list,  // Link to video profile .flags = 0, .imageType = VK_IMAGE_TYPE_2D, .format = VK_FORMAT_G8_B8R8_2PLANE_420_UNORM,  // NV12 .extent = {width, height, 1}, .mipLevels = 1, .arrayLayers = 1, .samples = VK_SAMPLE_COUNT_1_BIT, .tiling = VK_IMAGE_TILING_OPTIMAL, .usage = VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR | VK_IMAGE_USAGE_SAMPLED_BIT, }; vkCreateImage(device, &amp;image_info, nullptr, &amp;image);</p>
+
+<p>// Allocate and bind memory VkMemoryRequirements mem_reqs; vkGetImageMemoryRequirements(device, image, &amp;mem_reqs); // ... allocate device memory ... vkBindImageMemory(device, image, memory, 0);</p>
+
+<p>// Create image view for video session VkImageViewCreateInfo view_info = { .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO, .image = image, .viewType = VK_IMAGE_VIEW_TYPE_2D, .format = VK_FORMAT_G8_B8R8_2PLANE_420_UNORM, // ... }; vkCreateImageView(device, &amp;view_info, nullptr, &amp;image_view); ```</p>
+
+<h3>Buffer Types Comparison</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Purpose</th>
+    <th>VA-API</th>
+    <th>Vulkan Video</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Picture params</td>
+    <td><code>VAPictureParameterBufferH264</code></td>
+    <td><code>VkVideoDecodeH264PictureInfoKHR</code></td>
+  </tr>
+  <tr>
+    <td>Slice params</td>
+    <td><code>VASliceParameterBufferH264</code></td>
+    <td>Inline in decode info</td>
+  </tr>
+  <tr>
+    <td>Bitstream data</td>
+    <td><code>VASliceDataBufferType</code></td>
+    <td><code>VkBuffer</code></td>
+  </tr>
+  <tr>
+    <td>Encoded output</td>
+    <td><code>VACodedBufferSegment</code></td>
+    <td><code>VkBuffer</code> with encode usage</td>
+  </tr>
+  <tr>
+    <td>IQ matrix</td>
+    <td><code>VAIQMatrixBufferH264</code></td>
+    <td><code>StdVideoH264ScalingLists</code></td>
+  </tr>
+</tbody>
+</table>
+
+<hr>
+
+<h2>4. DMABuf Export/Import &lt;a name="dmabuf"&gt;&lt;/a&gt;</h2>
+
+<h3>VA-API DMABuf Export (from <code>vaapi_wrapper.cc</code>)</h3>
+
+<p>```cpp std::unique_ptr&lt;NativePixmapAndSizeInfo&gt; VaapiWrapper::ExportVASurfaceAsNativePixmapDmaBufUnwrapped( VASurfaceID va_surface_id, const gfx::Size&amp; va_surface_size) {</p>
+
+<p>// Must sync surface first! VAStatus va_res = vaSyncSurface(va_display_, va_surface_id);</p>
+
+<p>// Export surface as DRM PRIME handles VADRMPRIMESurfaceDescriptor descriptor; va_res = vaExportSurfaceHandle( va_display_, va_surface_id, VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2, VA_EXPORT_SURFACE_READ_ONLY | VA_EXPORT_SURFACE_SEPARATE_LAYERS, &amp;descriptor);</p>
+
+<p>// Build NativePixmapHandle from descriptor gfx::NativePixmapHandle handle; handle.modifier = descriptor.objects[0].drm_format_modifier;</p>
+
+<p>for (uint32_t i = 0; i &lt; descriptor.num_layers; ++i) { // descriptor.objects[].fd are owned by caller // descriptor.layers[] describes each plane handle.planes.emplace_back( layer.pitch[0], layer.offset[0], 0, base::ScopedFD(descriptor.objects[object_index].fd)); }</p>
+
+<p>// Create NativePixmapDmaBuf auto pixmap = base::MakeRefCounted&lt;gfx::NativePixmapDmaBuf&gt;( va_surface_size, si_format, std::move(handle));</p>
+
+<p>return exported_pixmap; } ```</p>
+
+<h3>Vulkan Video DMABuf Export (equivalent)</h3>
+
+<p>```cpp // Export VkImage memory as DMABuf FD VkMemoryGetFdInfoKHR get_fd_info = { .sType = VK_STRUCTURE_TYPE_MEMORY_GET_FD_INFO_KHR, .memory = image_memory, .handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT, }; int dmabuf_fd; vkGetMemoryFdKHR(device, &amp;get_fd_info, &amp;dmabuf_fd);</p>
+
+<p>// Get image subresource layout for plane offsets/strides VkImageSubresource subresource = {VK_IMAGE_ASPECT_PLANE_0_BIT, 0, 0}; VkSubresourceLayout layout; vkGetImageSubresourceLayout(device, image, &amp;subresource, &amp;layout); // layout.offset, layout.rowPitch give plane 0 info // Repeat for plane 1 with VK_IMAGE_ASPECT_PLANE_1_BIT ```</p>
+
+<h3>DMABuf Import (Creating surface from external buffer)</h3>
+
+<p>```cpp // VA-API: vaCreateSurfaces with VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2 // Already shown above</p>
+
+<p>// Vulkan Video: Import DMABuf as external memory VkExternalMemoryImageCreateInfo ext_mem_info = { .sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO, .handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT, }; // Add to image create info pNext chain</p>
+
+<p>VkImportMemoryFdInfoKHR import_info = { .sType = VK_STRUCTURE_TYPE_IMPORT_MEMORY_FD_INFO_KHR, .handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT, .fd = dmabuf_fd,  // Takes ownership }; // Add to memory allocate info pNext chain ```</p>
+
+<h3>Key DMABuf Differences</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Aspect</th>
+    <th>VA-API</th>
+    <th>Vulkan Video</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Export API</td>
+    <td><code>vaExportSurfaceHandle()</code></td>
+    <td><code>vkGetMemoryFdKHR()</code></td>
+  </tr>
+  <tr>
+    <td>Import</td>
+    <td>Create surface with <code>DRM_PRIME_2</code></td>
+    <td>External memory import</td>
+  </tr>
+  <tr>
+    <td>Modifiers</td>
+    <td>In <code>VADRMPRIMESurfaceDescriptor</code></td>
+    <td><code>VkImageDrmFormatModifierExplicitCreateInfoEXT</code></td>
+  </tr>
+  <tr>
+    <td>Multi-plane</td>
+    <td>Separate FDs per plane possible</td>
+    <td>Typically single FD</td>
+  </tr>
+  <tr>
+    <td>Sync before export</td>
+    <td>Required (<code>vaSyncSurface</code>)</td>
+    <td>Required (explicit sync)</td>
+  </tr>
+</tbody>
+</table>
+
+<hr>
+
+<h2>5. Synchronization Mechanisms &lt;a name="synchronization"&gt;&lt;/a&gt;</h2>
+
+<h3>VA-API Synchronization</h3>
+
+<p>VA-API uses <strong>implicit synchronization</strong> for most operations:</p>
+
+<p>```cpp // From vaapi_wrapper.cc - synchronization points:</p>
+
+<p>// 1. vaSyncSurface() - Wait for decode to complete bool VaapiWrapper::SyncSurface(VASurfaceID va_surface_id) { VAStatus va_res = vaSyncSurface(va_display_, va_surface_id); // Blocks until surface is ready return va_res == VA_STATUS_SUCCESS; }</p>
+
+<p>// 2. vaMapBuffer() - Implicitly syncs on Intel drivers // From comments in code: // "vaSyncSurface() is not necessary on Intel platforms as long as //  there is a vaMapBuffer() like in ScopedVABufferMapping"</p>
+
+<p>// 3. Before export - MUST sync // ExportVASurfaceAsNativePixmapDmaBufUnwrapped(): VAStatus va_res = vaSyncSurface(va_display_, va_surface_id); va_res = vaExportSurfaceHandle(...);</p>
+
+<p>// 4. Between contexts - SHOULD sync // From vaapi_jpeg_encode_accelerator.cc: // "We should call vaSyncSurface() when passing surface between contexts" if (!vpp_vaapi_wrapper_-&gt;SyncSurface(va_surface_id_)) { return; } ```</p>
+
+<h3>Vulkan Video Synchronization</h3>
+
+<p>Vulkan requires <strong>explicit synchronization</strong>:</p>
+
+<p>```cpp // 1. Semaphores - GPU-GPU sync VkSemaphore decode_complete_semaphore; vkCreateSemaphore(device, &amp;semaphore_info, nullptr, &amp;decode_complete_semaphore);</p>
+
+<p>// 2. Fences - CPU-GPU sync VkFence decode_fence; vkCreateFence(device, &amp;fence_info, nullptr, &amp;decode_fence);</p>
+
+<p>// 3. In decode command recording: VkVideoBeginCodingInfoKHR begin_info = { .sType = VK_STRUCTURE_TYPE_VIDEO_BEGIN_CODING_INFO_KHR, .videoSession = video_session, .videoSessionParameters = session_params, // Reference slots for DPB }; vkCmdBeginVideoCodingKHR(cmd_buffer, &amp;begin_info);</p>
+
+<p>// Submit decode vkCmdDecodeVideoKHR(cmd_buffer, &amp;decode_info);</p>
+
+<p>// End coding scope VkVideoEndCodingInfoKHR end_info = {...}; vkCmdEndVideoCodingKHR(cmd_buffer, &amp;end_info);</p>
+
+<p>// 4. Submit with synchronization VkSubmitInfo submit_info = { .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO, .waitSemaphoreCount = num_wait_semaphores, .pWaitSemaphores = wait_semaphores, .pWaitDstStageMask = wait_stages, .commandBufferCount = 1, .pCommandBuffers = &amp;cmd_buffer, .signalSemaphoreCount = 1, .pSignalSemaphores = &amp;decode_complete_semaphore, }; vkQueueSubmit(video_queue, 1, &amp;submit_info, decode_fence);</p>
+
+<p>// 5. Wait for completion (CPU side) vkWaitForFences(device, 1, &amp;decode_fence, VK_TRUE, UINT64_MAX); ```</p>
+
+<h3>Sync Comparison Table</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Scenario</th>
+    <th>VA-API</th>
+    <th>Vulkan Video</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Wait for decode</td>
+    <td><code>vaSyncSurface()</code></td>
+    <td><code>vkWaitForFences()</code> / semaphore wait</td>
+  </tr>
+  <tr>
+    <td>Before export</td>
+    <td><code>vaSyncSurface()</code></td>
+    <td>Fence or semaphore</td>
+  </tr>
+  <tr>
+    <td>Cross-context</td>
+    <td><code>vaSyncSurface()</code></td>
+    <td>Timeline semaphores</td>
+  </tr>
+  <tr>
+    <td>Pipeline barrier</td>
+    <td>N/A (implicit)</td>
+    <td><code>vkCmdPipelineBarrier()</code></td>
+  </tr>
+  <tr>
+    <td>Memory barrier</td>
+    <td>N/A (implicit)</td>
+    <td><code>VkMemoryBarrier</code></td>
+  </tr>
+  <tr>
+    <td>DMA sync</td>
+    <td>Implicit</td>
+    <td><code>VK_ACCESS_HOST_READ_BIT</code> barrier</td>
+  </tr>
+</tbody>
+</table>
+
+<hr>
+
+<h2>6. Protected Content (DRM) &lt;a name="protected-content"&gt;&lt;/a&gt;</h2>
+
+<h3>VA-API Protected Content (from <code>vaapi_video_decoder_delegate.cc</code>)</h3>
+
+<p>```cpp // 1. Create protected session bool VaapiWrapper::CreateProtectedSession( EncryptionScheme encryption, const std::vector&lt;uint8_t&gt;&amp; hw_config, std::vector&lt;uint8_t&gt;* hw_identifier_out) {</p>
+
+<p>// Create protected config VAConfigID va_protected_config_id; vaCreateConfig(va_display_, VAProfileProtected, VAEntrypointProtectedContent, attribs, num_attribs, &amp;va_protected_config_id);</p>
+
+<p>// Create protected session VAProtectedSessionID va_protected_session_id; vaCreateProtectedSession(va_display_, va_protected_config_id, &amp;va_protected_session_id);</p>
+
+<p>// Attach to decode context vaAttachProtectedSession(va_display_, va_context_id_, va_protected_session_id);</p>
+
+<p>return true; }</p>
+
+<p>// 2. Per-frame encryption setup (from delegate) ProtectedSessionState SetupDecryptDecode( bool full_sample, size_t size, VAEncryptionParameters* crypto_params, std::vector&lt;VAEncryptionSegmentInfo&gt;* segments, const std::vector&lt;SubsampleEntry&gt;&amp; subsamples) {</p>
+
+<p>// Set encryption type (CENC CTR or CBC) crypto_params-&gt;encryption_type = ctr ? VA_ENCRYPTION_TYPE_SUBSAMPLE_CTR : VA_ENCRYPTION_TYPE_SUBSAMPLE_CBC;</p>
+
+<p>// Fill segment info for each subsample for (const auto&amp; entry : subsamples) { VAEncryptionSegmentInfo segment_info = {}; segment_info.segment_start_offset = offset; segment_info.segment_length = entry.clear_bytes + entry.cypher_bytes; memcpy(segment_info.aes_cbc_iv_or_ctr, iv.data(), 16); segment_info.init_byte_length = entry.clear_bytes; segments-&gt;push_back(segment_info); }</p>
+
+<p>// Copy wrapped key memcpy(crypto_params-&gt;wrapped_decrypt_blob, hw_key_data_map_[key_id].data(), 16);</p>
+
+<p>return ProtectedSessionState::kCreated; }</p>
+
+<p>// 3. Submit encrypted buffer // Encryption params submitted as additional VABuffer vaCreateBuffer(va_display, va_context_id_, VAEncryptionParameterBufferType, sizeof(VAEncryptionParameters), 1, &amp;crypto_params, &amp;enc_params_buffer_id); ```</p>
+
+<h3>Vulkan Video Protected Content</h3>
+
+<p>Vulkan uses <strong>Protected Memory</strong> extensions:</p>
+
+<p>```cpp // 1. Create protected queue // Query queue family with VK_QUEUE_PROTECTED_BIT</p>
+
+<p>// 2. Allocate protected memory VkMemoryAllocateInfo alloc_info = { .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO, .allocationSize = size, .memoryTypeIndex = protected_memory_type_index, }; VkMemoryAllocateFlagsInfo flags_info = { .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO, .flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT,  // if needed }; // Must use VK_MEMORY_PROPERTY_PROTECTED_BIT</p>
+
+<p>// 3. Create protected image VkImageCreateInfo image_info = { .flags = VK_IMAGE_CREATE_PROTECTED_BIT, // ... };</p>
+
+<p>// 4. Create protected command buffer VkCommandBufferAllocateInfo alloc_info = {...}; // Use protected command pool</p>
+
+<p>// 5. Submit to protected queue VkProtectedSubmitInfo protected_submit = { .sType = VK_STRUCTURE_TYPE_PROTECTED_SUBMIT_INFO, .protectedSubmit = VK_TRUE, }; VkSubmitInfo submit_info = { .pNext = &amp;protected_submit, // ... }; ```</p>
+
+<h3>DRM Support Comparison</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Feature</th>
+    <th>VA-API (ChromeOS)</th>
+    <th>Vulkan Video</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Protected session</td>
+    <td><code>VAProtectedSessionID</code></td>
+    <td>Protected command pool</td>
+  </tr>
+  <tr>
+    <td>Key management</td>
+    <td>CDM → <code>VAEncryptionParameters</code></td>
+    <td>CDM → application managed</td>
+  </tr>
+  <tr>
+    <td>Encryption modes</td>
+    <td>CENC CTR, CENC CBC</td>
+    <td>CENC (application handled)</td>
+  </tr>
+  <tr>
+    <td>Transcryption (AMD)</td>
+    <td>Handled by delegate</td>
+    <td>Application responsibility</td>
+  </tr>
+  <tr>
+    <td>Recovery</td>
+    <td><code>RecoverProtectedSession()</code></td>
+    <td>Recreate protected resources</td>
+  </tr>
+</tbody>
+</table>
+
+<hr>
+
+<h2>7. Frame Output Flow in Chromium &lt;a name="frame-output"&gt;&lt;/a&gt;</h2>
+
+<h3>Current VA-API Flow</h3>
+
+<p>``<code> ┌─────────────────────────────────────────────────────────────────────────┐ │                         DECODE SIDE (GPU Process)                        │ └─────────────────────────────────────────────────────────────────────────┘ │ VaapiVideoDecoder::SurfaceReady(va_surface_id, buffer_id, ...) │ ▼ ┌─────────────────────────────────────────────────────────────────────────┐ │  VaapiVideoDecoder::OnFrameDecoded()                                    │ │  - Get FrameResource from allocated_va_surfaces_ map                     │ │  - Associate VASurface with FrameResource                               │ │  - Set metadata (color space, HDR, timestamp)                           │ └─────────────────────────────────────────────────────────────────────────┘ │ ▼ ┌─────────────────────────────────────────────────────────────────────────┐ │  VideoDecoderPipeline::OnFrameDecoded()                                 │ │  - Optional: ImageProcessor (format conversion, scaling)                │ │  - Calls FrameResourceConverter                                         │ └─────────────────────────────────────────────────────────────────────────┘ │ ▼ ┌─────────────────────────────────────────────────────────────────────────┐ │  MailboxVideoFrameConverter::ConvertFrameImpl()                         │ │  1. Get origin frame (unwrap if needed)                                 │ │  2. Create GpuMemoryBufferHandle from DMABuf FDs                        │ │  3. Create SharedImage via SharedImageInterface                         │ │  4. Generate Mailbox for compositor                                     │ │  5. Wrap in VideoFrame with STORAGE_OPAQUE storage                      │ └─────────────────────────────────────────────────────────────────────────┘ │ ▼ ┌─────────────────────────────────────────────────────────────────────────┐ │  Output to Client (Renderer Process via IPC)                            │ │  - VideoFrame with gpu::Mailbox                                         │ │  - Client uses Mailbox to create texture for compositing                │ └─────────────────────────────────────────────────────────────────────────┘ │ ▼ ┌─────────────────────────────────────────────────────────────────────────┐ │                         COMPOSITOR SIDE                                 │ │  - Import SharedImage as texture                                        │ │  - Use for overlay or GPU composition                                   │ │  - Release reference when done → triggers FrameResource destruction     │ └─────────────────────────────────────────────────────────────────────────┘ </code>``</p>
+
+<h3>Key Data Structures</h3>
+
+<p>```cpp // FrameResource (media/gpu/chromeos/frame_resource.h) // - Abstract base for video frames // - NativePixmapFrameResource holds NativePixmapDmaBuf</p>
+
+<p>// NativePixmapDmaBuf (ui/gfx/linux/native_pixmap_dmabuf.h) // - Holds DMABuf FDs and plane info // - Can be imported into GPU as texture</p>
+
+<p>// GpuMemoryBufferHandle // - Platform handle for GPU memory // - On Linux: wraps NativePixmapHandle (DMABuf FDs)</p>
+
+<p>// SharedImage // - GPU-accessible image with Mailbox handle // - Created from GpuMemoryBuffer // - Compositor references via Mailbox ```</p>
+
+<h3>Surface Lifecycle</h3>
+
+<p>```cpp // 1. Surface creation (during Initialize or resolution change) CreateSurface() → VaapiWrapper::CreateVASurfaceForPixmap(pixmap) │ ▼ Import NativePixmap as VASurface Store in allocated_va_surfaces_ map</p>
+
+<p>// 2. Decode operation decoder_-&gt;Decode() │ └─→ delegate-&gt;SubmitDecode(pic) │ └─→ VaapiWrapper::ExecuteAndDestroyPendingBuffers(va_surface_id)</p>
+
+<p>// 3. Surface ready SurfaceReady(va_surface_id, ...) │ └─→ output_frames_[va_surface_id] holds FrameResource │ └─→ Pass to VideoDecoderPipeline</p>
+
+<p>// 4. Surface release // When VideoFrame ref count → 0: // - Destruction observer called // - FrameResource returned to pool // - VASurface can be reused ```</p>
+
+<hr>
+
+<h2>8. Overlays &lt;a name="overlays"&gt;&lt;/a&gt;</h2>
+
+<h3>Overlay Support in Chromium</h3>
+
+<p>Chromium supports <strong>hardware overlays</strong> for efficient video playback:</p>
+
+<p>```cpp // From VulkanOverlayAdaptor (media/gpu/chromeos/vulkan_overlay_adaptor.h) // Used for MM21/MT2T detiling on MediaTek platforms</p>
+
+<p>class VulkanOverlayAdaptor { // Process tiled image to linear for overlay display void Process(gpu::VulkanImage&amp; in_image, const gfx::Size&amp; input_visible_size, gpu::VulkanImage&amp; out_image, const gfx::RectF&amp; display_rect, const gfx::RectF&amp; crop_rect, gfx::OverlayTransform transform, std::vector&lt;VkSemaphore&gt;&amp; begin_semaphores, std::vector&lt;VkSemaphore&gt;&amp; end_semaphores); }; ```</p>
+
+<h3>Overlay Flow</h3>
+
+<p>``<code> ┌──────────────────────────────────────────────────────────────────┐ │                      VIDEO DECODER                               │ │  Output: NativePixmap (DMABuf) with decoded YUV                 │ └──────────────────────────────────────────────────────────────────┘ │ ▼ ┌──────────────────────────────────────────────────────────────────┐ │                    OVERLAY PROMOTION CHECK                       │ │  - Is format overlay-compatible?                                 │ │  - Is size within hardware limits?                               │ │  - Are there blocking overlapping elements?                      │ └──────────────────────────────────────────────────────────────────┘ │ ┌───────────────┴───────────────┐ ▼                               ▼ ┌─────────────────────────┐     ┌─────────────────────────┐ │     OVERLAY PATH        │     │   COMPOSITOR PATH       │ │  - Direct scanout       │     │  - GPU composition      │ │  - Zero-copy            │     │  - Texture sampling     │ │  - DRM/KMS plane        │     │  - Blending             │ └─────────────────────────┘     └─────────────────────────┘ </code>``</p>
+
+<h3>Overlay-Related APIs</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>Feature</th>
+    <th>VA-API</th>
+    <th>Vulkan Video</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Output format</td>
+    <td>NV12 (overlay friendly)</td>
+    <td>NV12, P010</td>
+  </tr>
+  <tr>
+    <td>Tiling</td>
+    <td>Driver handles</td>
+    <td>May need detiling</td>
+  </tr>
+  <tr>
+    <td>Modifier support</td>
+    <td>Yes (DRM modifiers)</td>
+    <td>Yes (external memory)</td>
+  </tr>
+  <tr>
+    <td>Overlay adaptor</td>
+    <td>N/A</td>
+    <td>VulkanOverlayAdaptor</td>
+  </tr>
+</tbody>
+</table>
+
+<hr>
+
+<h2>9. Code Mapping: VA-API → Vulkan Video &lt;a name="code-mapping"&gt;&lt;/a&gt;</h2>
+
+<h3>Class Mapping</h3>
+
+<table class="doc">
+<thead>
+  <tr>
+    <th>VA-API Class</th>
+    <th>Vulkan Video Equivalent</th>
+    <th>Purpose</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>VaapiWrapper</code></td>
+    <td><code>VulkanVideoWrapper</code></td>
+    <td>Low-level API wrapper</td>
+  </tr>
+  <tr>
+    <td><code>VaapiVideoDecoder</code></td>
+    <td><code>VulkanVideoDecoder</code></td>
+    <td><code>VideoDecoderMixin</code> impl</td>
+  </tr>
+  <tr>
+    <td><code>VaapiVideoDecoderDelegate</code></td>
+    <td><code>VulkanVideoDecoderDelegate</code></td>
+    <td>Base delegate class</td>
+  </tr>
+  <tr>
+    <td><code>H264VaapiVideoDecoderDelegate</code></td>
+    <td><code>H264VulkanVideoDecoderDelegate</code></td>
+    <td>H.264 accelerator</td>
+  </tr>
+  <tr>
+    <td><code>VaapiDecodeSurfaceHandler</code></td>
+    <td><code>VulkanDecodeSurfaceHandler</code></td>
+    <td>Surface management interface</td>
+  </tr>
+  <tr>
+    <td><code>ScopedVASurface</code></td>
+    <td><code>ScopedVulkanImage</code></td>
+    <td>RAII surface wrapper</td>
+  </tr>
+  <tr>
+    <td><code>ScopedVABuffer</code></td>
+    <td><code>ScopedVulkanBuffer</code></td>
+    <td>RAII buffer wrapper</td>
+  </tr>
+</tbody>
+</table>
+
+<h3>Method Mapping</h3>
+
+<p>```cpp // VaapiWrapper method → VulkanVideoWrapper equivalent</p>
+
+<p>// Display/Device vaGetDisplayDRM()          → (use existing VkDevice) vaInitialize()             → vkGetPhysicalDeviceVideoCapabilitiesKHR() vaTerminate()              → (device destruction)</p>
+
+<p>// Config/Session vaCreateConfig()           → vkCreateVideoSessionKHR() vaCreateContext()          → vkCreateVideoSessionKHR() (combined) vaDestroyContext()         → vkDestroyVideoSessionKHR()</p>
+
+<p>// Surface/Image vaCreateSurfaces()         → vkCreateImage() + vkAllocateMemory() vaDestroySurfaces()        → vkDestroyImage() + vkFreeMemory()</p>
+
+<p>// Buffers vaCreateBuffer()           → vkCreateBuffer() or inline structs vaMapBuffer()              → vkMapMemory() vaUnmapBuffer()            → vkUnmapMemory() vaDestroyBuffer()          → vkDestroyBuffer()</p>
+
+<p>// Decode execution vaBeginPicture()           → vkCmdBeginVideoCodingKHR() vaRenderPicture()          → (part of vkCmdDecodeVideoKHR setup) vaEndPicture()             → vkCmdDecodeVideoKHR() + vkCmdEndVideoCodingKHR()</p>
+
+<p>// Synchronization vaSyncSurface()            → vkWaitForFences() / semaphore</p>
+
+<p>// Export vaExportSurfaceHandle()    → vkGetMemoryFdKHR() ```</p>
+
+<h3>H.264 Structure Mapping</h3>
+
+<p>```cpp // VA-API structures → Vulkan Video structures</p>
+
+<p>// Picture parameters VAPictureParameterBufferH264 → VkVideoDecodeH264PictureInfoKHR + StdVideoDecodeH264PictureInfo</p>
+
+<p>// Slice parameters VASliceParameterBufferH264   → (inline in VkVideoDecodeInfoKHR) + StdVideoDecodeH264ReferenceInfo</p>
+
+<p>// Reference pictures VAPictureH264                → StdVideoDecodeH264ReferenceInfo + VkVideoReferenceSlotInfoKHR</p>
+
+<p>// IQ Matrix VAIQMatrixBufferH264         → StdVideoH264ScalingLists (in session parameters)</p>
+
+<p>// SPS/PPS // VA: Parsed by app, flat struct submitted per-frame // VK: Parsed by app, stored in VkVideoSessionParametersKHR ```</p>
+
+<hr>
+
+<h2>10. Integration Challenges &lt;a name="challenges"&gt;&lt;/a&gt;</h2>
+
+<h3>1. Synchronization Model Change</h3>
+
+<p><strong>Challenge</strong>: VA-API uses implicit sync; Vulkan requires explicit sync.</p>
+
+<p><strong>Solution</strong>:</p>
+
+<ul>
+  <li>Use <code>VkFence</code> for CPU waits (equivalent to <code>vaSyncSurface</code>)</li>
+  <li>Use semaphores for GPU-GPU sync</li>
+  <li>Implement proper barrier management</li>
+</ul>
+
+<h3>2. Session Parameters (SPS/PPS)</h3>
+
+<p><strong>Challenge</strong>: VA-API submits SPS/PPS per-frame; Vulkan caches in session parameters.</p>
+
+<p><strong>Solution</strong>: ``<code>cpp // Track active SPS/PPS IDs // On SPS/PPS change: vkUpdateVideoSessionParametersKHR(device, session_params, &amp;update_info); // Or recreate session parameters if needed </code>``</p>
+
+<h3>3. DPB Management</h3>
+
+<p><strong>Challenge</strong>: Vulkan requires explicit DPB slot management.</p>
+
+<p><strong>Solution</strong>:</p>
+
+<ul>
+  <li>Implement DPB slot allocator</li>
+  <li>Track reference frame states</li>
+  <li>Map H.264/H.265 DPB semantics to Vulkan slots</li>
+</ul>
+
+<h3>4. Memory Management</h3>
+
+<p><strong>Challenge</strong>: Vulkan requires explicit memory allocation/binding.</p>
+
+<p><strong>Solution</strong>:</p>
+
+<ul>
+  <li>Use existing Chromium GPU memory allocator</li>
+  <li>Implement proper memory type selection for video</li>
+  <li>Handle device-local vs host-visible requirements</li>
+</ul>
+
+<h3>5. VP8 Support Gap</h3>
+
+<p><strong>Challenge</strong>: Vulkan Video has no VP8 extension.</p>
+
+<p><strong>Solution</strong>:</p>
+
+<ul>
+  <li>Keep VA-API for VP8 (if needed)</li>
+  <li>Or use software decode for VP8</li>
+  <li>VP8 usage is declining (WebM → AV1)</li>
+</ul>
+
+<h3>6. Protected Content Complexity</h3>
+
+<p><strong>Challenge</strong>: Different DRM approaches.</p>
+
+<p><strong>Solution</strong>:</p>
+
+<ul>
+  <li>Start with unprotected content</li>
+  <li>Add protected memory support in phase 2</li>
+  <li>May need platform-specific CDM integration</li>
+</ul>
+
+<h3>7. Driver Maturity</h3>
+
+<p><strong>Challenge</strong>: Vulkan Video drivers are newer than VA-API drivers.</p>
+
+<p><strong>Solution</strong>:</p>
+
+<ul>
+  <li>Test on multiple vendors (NVIDIA, AMD, Intel)</li>
+  <li>Implement fallback to VA-API</li>
+  <li>Report driver issues upstream</li>
+</ul>
+
+<hr>
+
+<h2>Summary</h2>
+
+<h3>Key Takeaways</h3>
+
+<ol>
+  <li><strong>Parsing is the same</strong>: Chromium's codec parsers (H264Decoder, etc.) are fully reusable.</li>
+</ol>
+
+<ol>
+  <li><strong>Major difference is control model</strong>: VA-API = implicit, Vulkan = explicit.</li>
+</ol>
+
+<ol>
+  <li><strong>DMABuf interop is similar</strong>: Both support DRM PRIME / DMABuf export/import.</li>
+</ol>
+
+<ol>
+  <li><strong>Synchronization needs attention</strong>: Must implement explicit fences/semaphores.</li>
+</ol>
+
+<ol>
+  <li><strong>Session parameters are different</strong>: Vulkan caches SPS/PPS in session params object.</li>
+</ol>
+
+<ol>
+  <li><strong>Protected content needs work</strong>: Different approaches require careful mapping.</li>
+</ol>
+
+<ol>
+  <li><strong>Frame output path is reusable</strong>: MailboxVideoFrameConverter works with any NativePixmap source.</li>
+</ol>
+
+<h3>Recommended Implementation Order</h3>
+
+<ol>
+  <li><strong>VulkanVideoWrapper</strong> - Core API abstraction</li>
+  <li><strong>H264 unprotected decode</strong> - Most common codec</li>
+  <li><strong>H265 decode</strong> - Similar to H264</li>
+  <li><strong>DMABuf export/import</strong> - For compositor integration  </li>
+  <li><strong>VP9/AV1 decode</strong> - As extensions become available</li>
+  <li><strong>Protected content</strong> - DRM support</li>
+  <li><strong>Encode support</strong> - Future phase</li>
+</ol>
+
+<hr>
+
+<p><em>Generated from Chromium source analysis</em> <em>Source: <code>/data/LinuxExtra/chrome/chromium/src</code></em></p>
+
+</div>
+</article>
+
+<footer>
+    <div class="container">
+        <p></p>
+    </div>
+</footer>
+</body>
+</html>

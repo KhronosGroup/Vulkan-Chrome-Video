@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="800" viewBox="0 0 1320 800" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="l" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#37474f"/></marker>
+    <marker id="lg" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#2e7d32"/></marker>
+    <marker id="lr" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#c62828"/></marker>
+  </defs>
+  <text x="22" y="30" font-size="19" font-weight="700" fill="#1a237e">Object lifecycle across the ext boundary — four disciplines, only one of them safe by construction</text>
+  <text x="22" y="52" font-size="12.5" fill="#546e7a">Green = library protects the object against a client release racing an in-flight frame. Red = the client carries the obligation.</text>
+
+  <line x1="660" y1="72" x2="660" y2="768" stroke="#90a4ae" stroke-width="2" stroke-dasharray="8,6"/>
+  <text x="300" y="90" font-size="13" font-weight="700" fill="#0d47a1">CLIENT — Chromium VEA</text>
+  <text x="900" y="90" font-size="13" font-weight="700" fill="#1b5e20">LIBRARY — NVPRO encoder session</text>
+
+  <!-- 1 images -->
+  <rect x="30" y="104" width="1260" height="140" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.6"/>
+  <text x="46" y="126" font-size="14" font-weight="700" fill="#1b5e20">1 · Input images — registered, refcounted, deferred release  ✔ SAFE</text>
+  <text x="46" y="150" font-size="11.5" fill="#33691e">Client allocates the <tspan font-weight="700">dma-buf</tspan> (Ozone pixmap) and exports an <tspan font-weight="700">fd</tspan>.</text>
+  <text x="46" y="168" font-size="11.5" fill="#33691e">Ownership TRANSFER: the fd is <tspan font-weight="700">consumed on every exit path</tspan>,</text>
+  <text x="46" y="186" font-size="11.5" fill="#33691e">including failure. The client must not close it afterwards.</text>
+  <line x1="430" y1="200" x2="890" y2="200" stroke="#2e7d32" stroke-width="2" marker-end="url(#lg)"/>
+  <text x="470" y="194" font-size="11.5" font-weight="600" fill="#1b5e20">RegisterImageResource(desc, &amp;resourceId)</text>
+  <line x1="890" y1="224" x2="430" y2="224" stroke="#1565c0" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#l)"/>
+  <text x="470" y="218" font-size="11.5" fill="#1565c0">resourceId — generation-counted</text>
+  <text x="700" y="150" font-size="11.5" fill="#1b5e20"><tspan font-weight="700">Library allocates</tspan> the VkImage, VkDeviceMemory and view.</text>
+  <text x="700" y="168" font-size="11.5" fill="#1b5e20">Registration is <tspan font-weight="700">refcounted for the lifetime of each submitted frame</tspan>.</text>
+  <text x="700" y="186" font-size="11.5" fill="#1b5e20">UnregisterImageResource <tspan font-weight="700">defers</tspan> while frames are in flight —</text>
+  <text x="700" y="204" font-size="11.5" fill="#1b5e20">it never frees memory the GPU is still reading.</text>
+  <text x="700" y="228" font-size="11" fill="#33691e">Stale id → ERROR_RESOURCE_UNKNOWN, never a recycled-slot match.</text>
+
+  <!-- 2 registered semaphores -->
+  <rect x="30" y="256" width="1260" height="128" rx="8" fill="#fce4ec" stroke="#c62828" stroke-width="1.6"/>
+  <text x="46" y="278" font-size="14" font-weight="700" fill="#b71c1c">2 · Registered semaphores — same id shape, opposite lifetime guarantee  ✘ CLIENT'S BURDEN</text>
+  <text x="46" y="302" font-size="11.5" fill="#4e342e">Client creates the timeline semaphore and exports an OS handle.</text>
+  <text x="46" y="320" font-size="11.5" fill="#4e342e">On Windows the client must DuplicateHandle on the <tspan font-weight="700">importing</tspan> side</text>
+  <text x="46" y="338" font-size="11.5" fill="#4e342e">and close its duplicate once registration returns.</text>
+  <line x1="430" y1="352" x2="890" y2="352" stroke="#37474f" stroke-width="1.8" marker-end="url(#l)"/>
+  <text x="466" y="346" font-size="11.5" font-weight="600" fill="#263238">RegisterSemaphore(desc, osHandle, &amp;resourceId)</text>
+  <text x="700" y="302" font-size="11.5" fill="#b71c1c"><tspan font-weight="700">UnregisterSemaphore does NOT defer.</tspan> The imported VkSemaphore is</text>
+  <text x="700" y="320" font-size="11.5" fill="#b71c1c">destroyed <tspan font-weight="700">before the call returns</tspan>.</text>
+  <text x="700" y="338" font-size="11.5" fill="#b71c1c">The client must prove every batch that waits on or signals it has</text>
+  <text x="700" y="356" font-size="11.5" fill="#b71c1c">completed (VUID-vkDestroySemaphore-semaphore-01137) first.</text>
+  <text x="700" y="376" font-size="11" fill="#4e342e">Never-retired registrations are safe: destroyed at teardown, queue idle.</text>
+
+  <!-- 3 raw semaphores -->
+  <rect x="30" y="396" width="1260" height="112" rx="8" fill="#fce4ec" stroke="#c62828" stroke-width="1.6"/>
+  <text x="46" y="418" font-size="14" font-weight="700" fill="#b71c1c">3 · Raw semaphores in VkVideoEncoderFrameSubmitInfo — no id, no refcount, no defer  ✘ UNTRACKED</text>
+  <text x="46" y="442" font-size="11.5" fill="#4e342e">pWaitSemaphores / pSignalSemaphores are <tspan font-weight="700">raw VkSemaphore</tspan> arrays.</text>
+  <text x="46" y="460" font-size="11.5" fill="#4e342e">The header is explicit: <tspan font-style="italic">"the caller's semaphores belong to its own</tspan></text>
+  <text x="46" y="478" font-size="11.5" fill="#4e342e"><tspan font-style="italic">sync layer — outside this claim."</tspan></text>
+  <line x1="430" y1="492" x2="890" y2="492" stroke="#c62828" stroke-width="1.8" marker-end="url(#lr)"/>
+  <text x="470" y="486" font-size="11.5" font-weight="600" fill="#b71c1c">SubmitRegisteredFrame(info with raw handles)</text>
+  <text x="700" y="442" font-size="11.5" fill="#b71c1c">The library stores the handles into a submit batch and returns.</text>
+  <text x="700" y="460" font-size="11.5" fill="#b71c1c">Nothing records that the batch depends on them. Destroy one while</text>
+  <text x="700" y="478" font-size="11.5" fill="#b71c1c">the batch is pending and the failure is a driver-level use-after-free.</text>
+
+  <!-- 4 fences -->
+  <rect x="30" y="520" width="1260" height="128" rx="8" fill="#fff8e1" stroke="#f9a825" stroke-width="1.6"/>
+  <text x="46" y="542" font-size="14" font-weight="700" fill="#e65100">4 · Per-frame fences — fd ownership, and it flows BOTH ways  ◑ EXPLICIT, ASYMMETRIC</text>
+  <text x="46" y="566" font-size="11.5" fill="#4e342e"><tspan font-weight="700">acquireFenceFd</tspan> (in): the library <tspan font-weight="700">consumes</tspan> it on every exit —</text>
+  <text x="46" y="584" font-size="11.5" fill="#4e342e">including RESOURCE_LIMIT refusals, which import before they count.</text>
+  <line x1="430" y1="600" x2="890" y2="600" stroke="#ef6c00" stroke-width="1.8" marker-end="url(#l)"/>
+  <text x="470" y="594" font-size="11.5" font-weight="600" fill="#e65100">VkVideoEncoderFrameFenceDescriptor</text>
+  <line x1="890" y1="626" x2="430" y2="626" stroke="#ef6c00" stroke-width="1.8" marker-end="url(#l)"/>
+  <text x="470" y="620" font-size="11.5" font-weight="600" fill="#e65100">*pReleaseFenceFd — the CLIENT now owns this fd</text>
+  <text x="700" y="566" font-size="11.5" fill="#e65100"><tspan font-weight="700">pReleaseFenceFd</tspan> (out): the exported fd is the <tspan font-weight="700">caller's</tspan>. The library</text>
+  <text x="700" y="584" font-size="11.5" fill="#e65100">never closes it — close(2) it, or hand it to exactly one import.</text>
+  <text x="700" y="644" font-size="11" fill="#4e342e">−1 means "no fence", NOT failure, and never means "input already released".</text>
+
+  <!-- what the browser does -->
+  <rect x="30" y="660" width="1260" height="112" rx="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.6"/>
+  <text x="46" y="682" font-size="14" font-weight="700" fill="#0d47a1">What Chromium actually does — the two hazards are latent in the API, not live in this embedder</text>
+  <text x="46" y="706" font-size="11.5" fill="#263238">• Sets <tspan font-weight="700">pWaitSemaphores = pSignalSemaphores = nullptr</tspan>. Discipline 3 is never exercised; per-frame sync rides the fd fences instead.</text>
+  <text x="46" y="726" font-size="11.5" fill="#263238">• <tspan font-weight="700">Never calls UnregisterSemaphore.</tspan> Registrations live to session teardown, where the queue is already idle — so discipline 2's</text>
+  <text x="46" y="744" font-size="11.5" fill="#263238">  obligation is discharged by never invoking it, not by proving it safe.</text>
+  <text x="46" y="764" font-size="11" fill="#c62828">Both are avoidance, not protection. Another embedder using the documented API as written reaches both hazards immediately.</text>
+</svg>
