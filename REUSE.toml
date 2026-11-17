@@ -1,0 +1,45 @@
+version = 1
+SPDX-PackageName = "Vulkan Chrome Video"
+SPDX-PackageSupplier = "The Khronos Group, Inc."
+SPDX-PackageDownloadLocation = "https://github.com/KhronosGroup/Vulkan-Chrome-Video"
+
+[[annotations]]
+precedence = "closest"
+path = [
+    ".gitattributes",
+    ".github/workflows/pages.yml",
+    ".gitignore",
+    ".gitlab-ci.yml",
+    "build-chrome.sh",
+    "docs/video/Chromium_and_Vulkan_Video.mp4",
+    "docs/video/NotebookLM Mind Map.png",
+    "docs/images/blog_hero_banner.jpg",
+    "docs/E3_X11_ENCODE_PATH_RESPONSE.md",
+    "docs/README.md",
+    "docs/VULKAN_VIDEO_BROWSER_TIER_BLOCKERS.md",
+    "docs/VULKAN_VIDEO_ENCODER_CONTEXT_DESIGN.md",
+    "docs/VULKAN_VIDEO_ENCODER_EXT_API_SEQUENCES.md",
+    "docs/VULKAN_VIDEO_ENCODER_EXT_OBJECT_LIFECYCLE.md",
+    "docs/VULKAN_VIDEO_ENCODER_INTERFACE_DESIGN.md",
+    "docs/VULKAN_VIDEO_ENCODER_INTERFACE_STYLE.md",
+    "docs/VULKAN_VIDEO_ENCODER_OWNERSHIP_PRINCIPLES.md",
+    "docs/VULKAN_VIDEO_ENCODE_HOST_TIER_LIMITS.md",
+    "docs/VULKAN_VIDEO_ENCODE_SURFACES_AND_GPU_TOPOLOGY.md",
+    "docs/VULKAN_VIDEO_GLSLANG_SHADER_COMPILER.md",
+    "docs/diagrams/encode_tier_decision.svg",
+    "docs/diagrams/encoder_context_architecture.svg",
+    "docs/diagrams/ext_object_lifecycle.svg",
+    "docs/diagrams/ext_seq_1_negotiation.svg",
+    "docs/diagrams/ext_seq_2_context_creation.svg",
+    "docs/diagrams/ext_seq_3_import_encode.svg",
+    "docs/tools_encode_format_probe.cpp",
+    "docs/tools_modifier_probe.cpp",
+    "docs/vulkan_video_encoder_v3_interfaces.svg",
+    "docs/vulkan_video_encoder_v3_prototype.cpp",
+    "setup_chromium.py",
+]
+SPDX-FileCopyrightText = [
+  "Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.",
+  "2026 The Khronos Group, Inc.",
+]
+SPDX-License-Identifier = "Apache-2.0"
