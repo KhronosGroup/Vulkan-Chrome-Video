@@ -44,6 +44,7 @@ import re
 import sys
 from pathlib import Path
 
+# REUSE-IgnoreStart
 LICENSE_HEADER = (
     "<!--\n"
     "SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.\n"
@@ -52,6 +53,7 @@ LICENSE_HEADER = (
     "Generated from the Markdown source by build_blog.py — edit the .md, not this file.\n"
     "-->\n"
 )
+# REUSE-IgnoreEnd
 
 ACCENT_CLASS = {"vk": "vk", "ff": "ff", "cr": "cr", "nvidia": "", "": ""}
 
